@@ -23,6 +23,7 @@ bl_info = {
 }
 
 from os import remove
+import re
 import bpy
 from bpy import context
 from operator import attrgetter
@@ -34,12 +35,15 @@ OldStrip = ""
 prop_list = []
 
 
-class constraint_to_strip_camera(bpy.types.Operator):
+class VIEW3D_OP_constraint_to_strip_camera(bpy.types.Operator):
     bl_idname = "object.rotate_to_strip_camera"
-    bl_label = "Rotate Object to Strip Camera"
+    bl_label = "Enable Rotate to Strip Cameras to Active"
 
     def execute(self, context):
         obj = context.active_object
+        if obj is None:
+            self.report({"ERROR"}, "There is no active object")
+            return {"CANCELLED"}
         if obj.constraints is not None:
             for constraint in obj.constraints:
                 if constraint.type == "COPY_ROTATION":
@@ -47,13 +51,33 @@ class constraint_to_strip_camera(bpy.types.Operator):
         window = context.window_manager.windows[0]
         with context.temp_override(window=window):
             bpy.ops.object.constraint_add(type="COPY_ROTATION")
-
         for constraint in obj.constraints:
             if constraint.type == "COPY_ROTATION":
                 prop_list.append(constraint)
                 constraint.use_x = False
                 constraint.use_y = False
                 constraint.use_z = True
+        obj.rot_to_seq_cam = True
+        context.scene.frame_set(int(context.scene.frame_current_final - 1))
+        context.scene.frame_set(int(context.scene.frame_current_final + 1))
+        return {"FINISHED"}
+
+
+class VIEW3D_OP_constraint_to_strip_camera_remove(bpy.types.Operator):
+    bl_idname = "object.remove_object_from_list"
+    bl_label = "Disable Rotate to Strip Cameras from Active"
+
+    def execute(self, context):
+        rot_to_seq_cam = context.active_object.rot_to_seq_cam
+        if rot_to_seq_cam is None:
+            self.report({"ERROR"}, "Active Object is Not Rotated to Camera")
+            return {"CANCELLED"}
+        rot_to_seq_cam = False
+        for obj in context.scene.objects:
+            for constraint in obj.constraints:
+                if constraint.type == "COPY_ROTATION":
+                    obj.constraints.remove(constraint)
+
         return {"FINISHED"}
 
 
@@ -74,39 +98,102 @@ def update_constraint_camera(scene):
 
 
 def constraint_to_active_camera(strip):
-    for prop in prop_list:
-        prop.target = strip.scene_camera
-    print("CONSTRAINT TO ACTIVE CAMERA")
+    for obj in strip.scene.objects:
+        if obj.rot_to_seq_cam:
+            for constraint in obj.constraints:
+                if constraint.type == "COPY_ROTATION":
+                    constraint.target = strip.scene_camera
 
 
 class SEQUENCER_PT_constraint_to_strip_camera(bpy.types.Panel):
     bl_space_type = "SEQUENCE_EDITOR"
     bl_region_type = "UI"
     bl_idname = "SEQUENCER_PT_constraint_to_strip_camera"
-    bl_label = "Constraint to Strip Camera"
-    bl_category = "Constraint to Camera"
+    bl_label = "Constraint to Strip Cameras"
+    bl_category = "Tiny Sequence Tools"
 
     def draw(self, context):
-        self.layout.prop(
-            bpy.context.window_manager.constraint_camera,
-            "avaliable_properties",
-            text="",
+        layout = self.layout
+
+        layout.operator(
+            "object.rotate_to_strip_camera",
+            text="Rotate Active Object to Strip Camera",
+            icon="CON_ROTLIKE",
         )
-        self.layout.operator("object.rotate_to_strip_camera")
+        layout.operator("object.remove_object_from_list", icon="X")
+        layout.separator()
+        layout.label(text="Objects Rotated to Strip Cameras:", icon="OBJECT_DATA")
+
+        for obj in context.active_sequence_strip.scene.objects:
+            if obj.rot_to_seq_cam is True:
+                box = layout.box()
+                box.label(text=f"{obj.name}")
+        # row.prop(
+        #     context.window_manager.constraint_camera,
+        #     "avaliable_properties",
+        #     text="",
+        # )
+
+
+class VIEW3D_constraint_to_strip_object_panel(bpy.types.Panel):
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "constraint"
+    bl_idname = "VIEW3D_sequencer_constraints"
+    bl_label = "Rotate to Strip Camera"
+
+    def draw(self, context):
+        row = self.layout.row(align=True)
+        row.label(text="Rotate to Strip Cameras")
+        row.operator("object.rotate_to_strip_camera", icon="CON_ROTLIKE", text="Enable")
+        if context.object.rot_to_seq_cam is True:
+            row.operator("object.remove_object_from_list", icon="X", text="Disable")
 
 
 def enum_items_generator(self, context):
+    scene = context.active_sequence_strip.scene
     enum_items = []
-    if prop_list == []:
-        return enum_items
-    for e, d in enumerate(prop_list):
-        enum_items.append((str(d), f"Obj: {d.id_data.name}", f"Mod:{d.name}"))
+    for obj in scene.objects:
+        for constraint in obj.constraints:
+            if constraint.type == "COPY_ROTATION":
+                enum_items.append(
+                    (
+                        str(constraint),
+                        f"{constraint.id_data.name}",
+                        f"{constraint.id_data.name} - {constraint.name}",
+                    )
+                )
     return enum_items
+
+
+def get_rot_to_seq_cam_state(self):
+    obj = self.id_data
+    for constraint in obj.constraints:
+        if constraint.type == "COPY_ROTATION":
+            return True
+    return False
+
+
+def set_rot_to_seq_cam(self, value: bool):
+    if not self:
+        obj = self.id_data
+        if obj.constraints is not None:
+            for constraint in obj.constraints:
+                if constraint.type == "COPY_ROTATION":
+                    obj.constraints.remove(constraint)
+        bpy.ops.object.constraint_add(type="COPY_ROTATION")
+        for constraint in obj.constraints:
+            if constraint.type == "COPY_ROTATION":
+                prop_list.append(constraint)
+                constraint.use_x = False
+                constraint.use_y = False
+                constraint.use_z = True
+        return True
 
 
 class constraint_to_camera_items(bpy.types.PropertyGroup):
     avaliable_properties: bpy.props.EnumProperty(
-        items=enum_items_generator, name="Select Target Property"
+        items=enum_items_generator, name="Objects Rotated to Camera"
     )
 
 
@@ -118,7 +205,9 @@ def constraint_to_camera_handler(self, context):
 classes = (
     SEQUENCER_PT_constraint_to_strip_camera,
     constraint_to_camera_items,
-    constraint_to_strip_camera,
+    VIEW3D_OP_constraint_to_strip_camera,
+    VIEW3D_OP_constraint_to_strip_camera_remove,
+    VIEW3D_constraint_to_strip_object_panel,
 )
 
 
@@ -128,6 +217,13 @@ def register():
         bpy.utils.register_class(cls)
     bpy.types.WindowManager.constraint_camera = bpy.props.PointerProperty(
         type=constraint_to_camera_items
+    )
+    bpy.types.Object.rot_to_seq_cam = bpy.props.BoolProperty(
+        name="Enable Rotate to Strip Cameras",
+        default=False,
+        get=get_rot_to_seq_cam_state,
+        set=set_rot_to_seq_cam,
+        options=set(),
     )
 
 
