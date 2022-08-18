@@ -12,4 +12,4 @@ def unregister():
     ops.unregister()
     props.unregister()
     ui.unregister()
-    core.regsiter()
+    core.unregsiter()

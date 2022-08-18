@@ -1,6 +1,7 @@
 from . import (
     line_art_tools,
     constraint_to_camera,
+    tiny_status_tools,
 )
 
 bl_info = {
@@ -21,8 +22,10 @@ from bpy.utils import register_class, unregister_class
 def register():
     line_art_tools.register()
     constraint_to_camera.register()
+    tiny_status_tools.register()
 
 
 def unregister():
     line_art_tools.unregister()
     constraint_to_camera.unregister()
+    tiny_status_tools.unregister()
