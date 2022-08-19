@@ -1,16 +1,2 @@
-/__pycache__
+**/__pycache__
 constrainttoactivecamera.code-workspace
-constraintcam/__pycache__/core.cpython-310.pyc
-constraintcam/__pycache__/ops.cpython-310.pyc
-constraintcam/__pycache__/props.cpython-310.pyc
-constraintcam/__pycache__/ui.cpython-310.pyc
-line_art_tools/__pycache__/__init__.cpython-310.pyc
-line_art_tools/__pycache__/core.cpython-310.pyc
-line_art_tools/__pycache__/ops.cpython-310.pyc
-line_art_tools/__pycache__/props.cpython-310.pyc
-line_art_tools/__pycache__/ui.cpython-310.pyc
-constraint_to_camera/__pycache__/__init__.cpython-310.pyc
-constraint_to_camera/__pycache__/core.cpython-310.pyc
-constraint_to_camera/__pycache__/ops.cpython-310.pyc
-constraint_to_camera/__pycache__/props.cpython-310.pyc
-constraint_to_camera/__pycache__/ui.cpython-310.pyc
