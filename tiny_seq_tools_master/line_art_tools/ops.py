@@ -98,11 +98,9 @@ class SEQUENCER_OT_refresh_line_art_obj(bpy.types.Operator):
         line_art_items.clear()
         for obj in strip.scene.objects:
             if obj.line_art_seq_cam:
-                for mod in obj.grease_pencil_modifiers:
-                    if mod.type == "GP_LINEART":
-                        line_art_items = line_art_items.add()
-                        line_art_items.object = obj
-                        line_art_items.mod_name = mod.name
+                add_line_art_item = line_art_items.add()
+                add_line_art_item.object = obj
+                add_line_art_item.mod_name = obj.grease_pencil_modifiers[0].name
 
         return {"FINISHED"}
 
