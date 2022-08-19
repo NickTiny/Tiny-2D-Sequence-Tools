@@ -15,11 +15,10 @@ def update_line_art_objs(strip):
 
 
 def constraint_to_active_camera(strip):
-    for obj in strip.scene.objects:
-        if obj.rot_to_seq_cam:
-            for constraint in obj.constraints:
-                if constraint.type == "COPY_ROTATION":
-                    constraint.target = strip.scene_camera
+    for item in strip.scene.rot_to_seq_cam_items:
+        for constraint in item.object.constraints:
+            if constraint.type == "COPY_ROTATION":
+                constraint.target = strip.scene_camera
 
 
 def update_constraint_camera(scene):

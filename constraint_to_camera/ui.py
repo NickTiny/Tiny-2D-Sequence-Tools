@@ -11,6 +11,7 @@ class SEQUENCER_PT_constraint_to_strip_camera(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
+        layout.operator("object.refresh_copy_rot_items")
 
         layout.operator(
             "object.rotate_to_strip_camera",
@@ -21,15 +22,10 @@ class SEQUENCER_PT_constraint_to_strip_camera(bpy.types.Panel):
         layout.separator()
         layout.label(text="Objects Rotated to Strip Cameras:", icon="OBJECT_DATA")
 
-        for obj in context.active_sequence_strip.scene.objects:
-            if obj.rot_to_seq_cam is True:
-                box = layout.box()
-                box.label(text=f"{obj.name}")
-        # row.prop(
-        #     context.window_manager.constraint_camera,
-        #     "avaliable_properties",
-        #     text="",
-        # )
+        for item in context.scene.rot_to_seq_cam_items:
+            obj = item.object
+            box = layout.box()
+            box.label(text=f"{obj.name}")
 
 
 class VIEW3D_constraint_to_strip_object_panel(bpy.types.Panel):
@@ -43,8 +39,7 @@ class VIEW3D_constraint_to_strip_object_panel(bpy.types.Panel):
         row = self.layout.row(align=True)
         row.label(text="Rotate to Strip Cameras")
         row.operator("object.rotate_to_strip_camera", icon="CON_ROTLIKE", text="Enable")
-        if context.object.rot_to_seq_cam is True:
-            row.operator("object.remove_object_from_list", icon="X", text="Disable")
+        row.operator("object.remove_object_from_list", icon="X", text="Disable")
 
 
 classes = (

@@ -1,4 +1,4 @@
-from . import ops, props, ui, core
+from . import core, ops, props, ui
 
 
 def register():
@@ -9,7 +9,7 @@ def register():
 
 
 def unregister():
+    core.unregister()
     ops.unregister()
     props.unregister()
     ui.unregister()
-    core.unregsiter()
