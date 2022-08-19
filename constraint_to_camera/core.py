@@ -6,17 +6,18 @@ from bpy.utils import register_class, unregister_class
 OldStrip = ""
 
 
-def update_line_art_objs(strip):
-    for obj in strip.scene.objects:
-        if obj.line_art_seq_cam is True:
-            for mod in obj.grease_pencil_modifiers:
-                if mod.type == "GP_LINEART":
-                    mod.source_camera = strip.scene_camera
+# def update_line_art_objs(strip):
+#     for obj in strip.scene.objects:
+#         if obj.line_art_seq_cam is True:
+#             for mod in obj.grease_pencil_modifiers:
+#                 if mod.type == "GP_LINEART":
+#                     mod.source_camera = strip.scene_camera
 
 
-def constraint_to_active_camera(strip):
-    for item in strip.scene.rot_to_seq_cam_items:
-        for constraint in item.object.constraints:
+def constraint_to_active_camera(strip: bpy.types.Sequence):
+    for item in bpy.data.window_managers[0].rot_to_seq_cam_items:
+        obj = item.object
+        for constraint in obj.constraints:
             if constraint.type == "COPY_ROTATION":
                 constraint.target = strip.scene_camera
 
@@ -32,7 +33,7 @@ def update_constraint_camera(scene):
             if i.type == "SCENE" and i.name != OldStrip:
                 if i.frame_final_start <= cf and i.frame_final_end > cf and not i.mute:
                     constraint_to_active_camera(i)
-                    update_line_art_objs(i)
+                    # update_line_art_objs(i)
                     break
         except AttributeError:
             pass

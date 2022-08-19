@@ -5,6 +5,8 @@ from bpy.utils import register_class, unregister_class
 def enum_items_generator(self, context):
     scene = context.active_sequence_strip.scene
     enum_items = []
+    if not scene.objects:
+        return
     for obj in scene.objects:
         for constraint in obj.constraints:
             if constraint.type == "COPY_ROTATION":
@@ -68,7 +70,7 @@ def register():
         set=set_rot_to_seq_cam,
         options=set(),
     )
-    bpy.types.Scene.rot_to_seq_cam_items = bpy.props.CollectionProperty(
+    bpy.types.WindowManager.rot_to_seq_cam_items = bpy.props.CollectionProperty(
         type=rot_to_seq_cam_items
     )
 
