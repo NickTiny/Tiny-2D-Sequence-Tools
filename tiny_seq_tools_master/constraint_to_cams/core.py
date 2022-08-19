@@ -1,9 +1,3 @@
-# def update_line_art_objs(strip):
-#     for obj in strip.scene.objects:
-#         if obj.line_art_seq_cam is True:
-#             for mod in obj.grease_pencil_modifiers:
-#                 if mod.type == "GP_LINEART":
-#                     mod.source_camera = strip.scene_camera
 import bpy
 
 

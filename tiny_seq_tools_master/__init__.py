@@ -1,5 +1,5 @@
 from tiny_seq_tools_master import (
-    # line_art_tools,
+    line_art_tools,
     tiny_status_tools,
     constraint_to_cams,
 )
@@ -22,7 +22,7 @@ from bpy.utils import register_class, unregister_class
 
 def register():
 
-    # line_art_tools.register()
+    line_art_tools.register()
     constraint_to_cams.register()
     tiny_status_tools.register()
     sync_core.register()
@@ -30,7 +30,7 @@ def register():
 
 def unregister():
     sync_core.register()
-    # line_art_tools.unregister()
+    line_art_tools.unregister()
     constraint_to_cams.unregister()
     tiny_status_tools.unregister()
     sync_core.unregister()

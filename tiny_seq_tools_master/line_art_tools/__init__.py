@@ -1,4 +1,4 @@
-from line_art_tools import ops, props, ui
+from tiny_seq_tools_master.line_art_tools import ops, props, ui
 
 
 def register():

@@ -1,4 +1,5 @@
 from tiny_seq_tools_master.constraint_to_cams.core import constraints_to_active_camera
+from tiny_seq_tools_master.line_art_tools.core import sync_update_line_art_objs
 
 import bpy
 from operator import attrgetter
@@ -17,7 +18,7 @@ def update_constraint_camera(scene):
             if i.type == "SCENE" and i.name != OldStrip:
                 if i.frame_final_start <= cf and i.frame_final_end > cf and not i.mute:
                     constraints_to_active_camera(i)
-                    # update_line_art_objs(i)
+                    sync_update_line_art_objs(i)
                     break
         except AttributeError:
             pass

@@ -1,4 +1,4 @@
-from .core import (
+from tiny_seq_tools_master.line_art_tools.core import (
     check_animation_is_constant,
     make_animation_constant,
     check_keyframes_match_stnd,
@@ -15,10 +15,7 @@ class lr_seq_items(bpy.types.PropertyGroup):
     def get_thickness(self):
         obj = self.object
         if obj.type == "GPENCIL":
-            for mod in obj.grease_pencil_modifiers:
-                if mod.type == "GP_LINEART":
-                    return mod.thickness
-            return mod.thickness
+            return obj.grease_pencil_modifiers[self.mod_name].thickness
         return 0
 
     def set_thickness(self, thickness: int):
@@ -37,8 +34,6 @@ class lr_seq_items(bpy.types.PropertyGroup):
         for mod in line_art_mod:
             mod.thickness = thickness
             mod.keyframe_insert("thickness", frame=frame)
-            if check_animation_is_constant(mod) == False:
-                make_animation_constant(mod)
 
         for key in keyframes:
             if key.co[0] in range(
@@ -156,16 +151,12 @@ def set_line_art_seq_cam_state(self, value: bool):
         return
 
 
-classes = (
-    lr_seq_items,
-    lr_seq_load,
-)
+classes = (lr_seq_items,)
 
 
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
-    bpy.types.Scene.line_art_load = bpy.props.PointerProperty(type=lr_seq_load)
     bpy.types.Sequence.line_art_list = bpy.props.CollectionProperty(type=lr_seq_items)
     bpy.types.Object.line_art_seq_cam = bpy.props.BoolProperty(
         name="Enable Seq Line Art Control",

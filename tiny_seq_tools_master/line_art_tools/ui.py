@@ -5,8 +5,8 @@ class SEQUENCER_PT_line_art(bpy.types.Panel):
     bl_space_type = "SEQUENCE_EDITOR"
     bl_region_type = "UI"
     bl_idname = "SEQUENCER_PT_line_art_tools"
-    bl_label = "Line"
-    bl_category = "Strip"
+    bl_label = "Active Line Art"
+    bl_category = "Tiny Sequence Tools"
 
     def all_status_true(context):
         for item in context.scene.line_art_load.load:
@@ -15,26 +15,12 @@ class SEQUENCER_PT_line_art(bpy.types.Panel):
         return True
 
     def draw(self, context):
+        self.layout.operator("view3d.add_line_art_obj")
+        self.layout.operator("view3d.remove_line_art_obj")
+        self.layout.operator("view3d.refresh_line_art_obj")
         layout = self.layout
         col = layout.column()
         box = col.box()
-        box.prop(
-            context.scene.line_art_load,
-            "load",
-            slider=False,
-            expand=False,
-            icon="FILE_REFRESH",
-        )
-        if context.scene.line_art_load.error == False:
-            box.prop(
-                context.scene.line_art_load,
-                "error",
-                slider=False,
-                expand=False,
-                icon="ERROR",
-                text="A Strip has Error",
-            )
-
         for item in context.active_sequence_strip.line_art_list:
             row = box.row()
             row.prop(
