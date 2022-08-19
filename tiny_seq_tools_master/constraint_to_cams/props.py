@@ -40,7 +40,7 @@ def set_rot_to_seq_cam(self, value: bool):
             constraint.use_x = False
             constraint.use_y = False
             constraint.use_z = True
-        return True
+        return
 
 
 class rot_to_cam_settings(bpy.types.PropertyGroup):
@@ -70,7 +70,7 @@ def register():
         set=set_rot_to_seq_cam,
         options=set(),
     )
-    bpy.types.WindowManager.rot_to_seq_cam_items = bpy.props.CollectionProperty(
+    bpy.types.Scene.rot_to_seq_cam_items = bpy.props.CollectionProperty(
         type=rot_to_seq_cam_items
     )
 

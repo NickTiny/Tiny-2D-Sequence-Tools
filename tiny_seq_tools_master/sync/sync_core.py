@@ -1,25 +1,9 @@
+from tiny_seq_tools_master.constraint_to_cams.core import constraints_to_active_camera
+
 import bpy
 from operator import attrgetter
-from bpy.utils import register_class, unregister_class
-
 
 OldStrip = ""
-
-
-# def update_line_art_objs(strip):
-#     for obj in strip.scene.objects:
-#         if obj.line_art_seq_cam is True:
-#             for mod in obj.grease_pencil_modifiers:
-#                 if mod.type == "GP_LINEART":
-#                     mod.source_camera = strip.scene_camera
-
-
-def constraint_to_active_camera(strip: bpy.types.Sequence):
-    for item in bpy.data.window_managers[0].rot_to_seq_cam_items:
-        obj = item.object
-        for constraint in obj.constraints:
-            if constraint.type == "COPY_ROTATION":
-                constraint.target = strip.scene_camera
 
 
 def update_constraint_camera(scene):
@@ -32,7 +16,7 @@ def update_constraint_camera(scene):
         try:
             if i.type == "SCENE" and i.name != OldStrip:
                 if i.frame_final_start <= cf and i.frame_final_end > cf and not i.mute:
-                    constraint_to_active_camera(i)
+                    constraints_to_active_camera(i)
                     # update_line_art_objs(i)
                     break
         except AttributeError:
@@ -42,9 +26,6 @@ def update_constraint_camera(scene):
 @bpy.app.handlers.persistent
 def constraint_to_camera_handler(self, context):
     update_constraint_camera(self)
-
-
-classes = ()
 
 
 def register():

@@ -135,6 +135,27 @@ class lr_seq_load(bpy.types.PropertyGroup):
     )
 
 
+def get_line_art_seq_cam_state(self):
+    obj = self
+    if obj.grease_pencil_modifiers is None:
+        return False
+    for mod in obj.grease_pencil_modifiers:
+        if mod.type == "GP_LINEART":
+            if mod.use_custom_camera is True:
+                return True
+    return False
+
+
+def set_line_art_seq_cam_state(self, value: bool):
+    if not self:
+        obj = self
+        for mod in obj.grease_pencil_modifiers:
+            if mod.type == "GP_LINEART":
+                if mod.use_custom_camera:
+                    return True
+        return
+
+
 classes = (
     lr_seq_items,
     lr_seq_load,
@@ -146,6 +167,13 @@ def register():
         bpy.utils.register_class(cls)
     bpy.types.Scene.line_art_load = bpy.props.PointerProperty(type=lr_seq_load)
     bpy.types.Sequence.line_art_list = bpy.props.CollectionProperty(type=lr_seq_items)
+    bpy.types.Object.line_art_seq_cam = bpy.props.BoolProperty(
+        name="Enable Seq Line Art Control",
+        default=False,
+        get=get_line_art_seq_cam_state,
+        set=set_line_art_seq_cam_state,
+        options=set(),
+    )
 
 
 def unregister():

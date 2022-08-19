@@ -1,15 +1,16 @@
-from . import (
-    line_art_tools,
-    constraint_to_camera,
+from tiny_seq_tools_master import (
+    # line_art_tools,
     tiny_status_tools,
+    constraint_to_cams,
 )
+from tiny_seq_tools_master.sync import sync_core
 
 bl_info = {
     "name": "constraint_to_strip_camera",
     "author": "Nick Alberelli ",
     "description": "",
     "blender": (2, 80, 0),
-    "version": (0, 0, 1),
+    "version": (0, 0, 2),
     "location": "",
     "warning": "",
     "category": "Generic",
@@ -20,12 +21,16 @@ from bpy.utils import register_class, unregister_class
 
 
 def register():
-    line_art_tools.register()
-    constraint_to_camera.register()
+
+    # line_art_tools.register()
+    constraint_to_cams.register()
     tiny_status_tools.register()
+    sync_core.register()
 
 
 def unregister():
-    line_art_tools.unregister()
-    constraint_to_camera.unregister()
+    sync_core.register()
+    # line_art_tools.unregister()
+    constraint_to_cams.unregister()
     tiny_status_tools.unregister()
+    sync_core.unregister()

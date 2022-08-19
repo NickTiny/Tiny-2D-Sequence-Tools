@@ -1,4 +1,4 @@
-from . import ops, props, ui
+from tiny_seq_tools_master.constraint_to_cams import core, ops, props, ui
 
 
 def register():
