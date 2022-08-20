@@ -3,7 +3,7 @@ from tiny_seq_tools_master import (
     tiny_status_tools,
     constraint_to_cams,
 )
-from tiny_seq_tools_master.sync import sync_core
+from tiny_seq_tools_master.sync import sync_core, save_pre
 
 bl_info = {
     "name": "constraint_to_strip_camera",
@@ -26,6 +26,7 @@ def register():
     constraint_to_cams.register()
     tiny_status_tools.register()
     sync_core.register()
+    save_pre.register()
 
 
 def unregister():
@@ -34,3 +35,4 @@ def unregister():
     constraint_to_cams.unregister()
     tiny_status_tools.unregister()
     sync_core.unregister()
+    save_pre.unregister()

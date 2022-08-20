@@ -5,6 +5,9 @@ from tiny_seq_tools_master.line_art_tools.core import (
     sync_seq_line_art,
     load_line_art_mods,
 )
+from tiny_seq_tools_master.line_art_tools.line_art_cam.core import (
+    get_line_art_from_scene,  ## Exists because of LINEARTCAMBUG
+)
 import bpy
 
 
@@ -142,11 +145,16 @@ def get_line_art_seq_cam_state(self):
 
 
 def set_line_art_seq_cam_state(self, value: bool):
+    scenes = self.id_data.users_scene  ## Exists because of LINEARTCAMBUG
     if not self:
         obj = self
         for mod in obj.grease_pencil_modifiers:
             if mod.type == "GP_LINEART":
                 if mod.use_custom_camera:
+                    line_art_cam = get_line_art_from_scene(
+                        scenes[0]
+                    )  ## Exists because of LINEARTCAMBUG
+                    mod.source_camera = line_art_cam  ## Exists because of LINEARTCAMBUG
                     return True
         return
 
