@@ -100,10 +100,11 @@ def refresh_line_art_on_save():
     line_art_updated = False
     avl_scenes = [scene for scene in scenes if scene.name != "RENDER"]
     for scene in avl_scenes:
-        cur_frame = scene.frame_current
-        print(f"CUR FRAME{cur_frame}")
-        update_line_art_camera_from_sequence(scene)
-        line_art_updated = True
-        scene.frame_set(frame=cur_frame)
-        return line_art_updated
-    try_set_current_keyframe(frame)
+        if scene.update_line_art_on_save:
+            cur_frame = scene.frame_current
+            print(f"CUR FRAME{cur_frame}")
+            update_line_art_camera_from_sequence(scene)
+            line_art_updated = True
+            scene.frame_set(frame=cur_frame)
+            return line_art_updated
+        try_set_current_keyframe(frame)

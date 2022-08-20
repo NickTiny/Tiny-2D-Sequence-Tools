@@ -64,16 +64,16 @@ class SEQUENCER_OT_remove_line_art_obj(bpy.types.Operator):
         # Remove from list of line_art_items
         for item in context.active_sequence_strip.line_art_list:
             line_art_items = context.active_sequence_strip.line_art_list
-        for index, item in enumerate(line_art_items):
+        for index, item in enumerate(context.active_sequence_strip.line_art_list):
             if item.object == obj:
                 line_art_items.remove(index)
 
         # remove modifier
-        for modifier in obj.grease_pencil_modifiers:
-            if modifier.type == "GP_LINEART":
-                obj.constraints.remove(modifier)
-        add_line_art_item = line_art_items.add()
-        add_line_art_item.object = obj
+        # for modifier in obj.grease_pencil_modifiers:
+        #     if modifier.type == "GP_LINEART":
+        #         obj.grease_pencil_modifiers.remove(modifier)
+        # add_line_art_item = context.active_sequence_strip.line_art_list.add()
+        # add_line_art_item.object = obj
 
         # Set avaliablity to false
         obj.line_art_seq_cam = False

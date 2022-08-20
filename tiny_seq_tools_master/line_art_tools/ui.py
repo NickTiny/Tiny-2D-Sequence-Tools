@@ -21,6 +21,7 @@ class SEQUENCER_PT_line_art(bpy.types.Panel):
             "view3d.update_line_art_cam", icon="CAMERA_DATA"
         )  ## Exists because of LINEARTCAMBUG
         self.layout.separator()
+        self.layout.prop(context.scene, "update_line_art_on_save")
 
         self.layout
 
