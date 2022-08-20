@@ -11,20 +11,15 @@ class SEQUENCER_PT_constraint_to_strip_camera(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        layout.operator("object.refresh_copy_rot_items")
-
-        layout.operator(
-            "object.rotate_to_strip_camera",
-            text="Rotate Active Object to Strip Camera",
-            icon="CON_ROTLIKE",
-        )
-        layout.operator("object.remove_object_from_list", icon="X")
         layout.separator()
-        layout.label(text="Objects Rotated to Strip Cameras:", icon="OBJECT_DATA")
+        col = layout.box()
+        row = col.row()
+        row.label(text="Rotate to Strip Cameras:", icon="OBJECT_DATA")
+        row.operator("object.refresh_copy_rot_items", icon="FILE_REFRESH", text="")
 
         for item in context.scene.rot_to_seq_cam_items:
             obj = item.object
-            box = layout.box()
+            box = col.box()
             box.label(text=f"{obj.name}")
 
 
