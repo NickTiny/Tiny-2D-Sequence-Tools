@@ -13,12 +13,22 @@ class SEQUENCER_PT_scene_tools(bpy.types.Panel):
         col = layout.column(align=(False))
         col = col.box()
         manager = context.scene
-        col.prop(manager, "link_seq_to_3d_view", text="Link Sequencer to 3D Viewport")
+        col.prop(
+            manager,
+            "link_seq_to_3d_view",
+            text="Sync Strip Camera to 3D Viewport",
+            icon="LINKED",
+        )
 
         col.operator(
             "view3d.add_scene_strip",
             text="Add Camera as Scene Strip",
             icon="CAMERA_DATA",
+        )
+        col.prop(
+            manager,
+            "selection_to_active",
+            text="Sync Strip Selection to Viewport",
         )
 
         col = layout.box()
