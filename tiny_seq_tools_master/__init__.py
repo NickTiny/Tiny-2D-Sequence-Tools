@@ -2,6 +2,7 @@ from tiny_seq_tools_master import (
     line_art_tools,
     tiny_status_tools,
     constraint_to_cams,
+    scene_strip_tools,
 )
 from tiny_seq_tools_master.sync import sync_core, save_pre
 
@@ -27,6 +28,7 @@ def register():
     tiny_status_tools.register()
     sync_core.register()
     save_pre.register()
+    scene_strip_tools.register()
 
 
 def unregister():
@@ -36,3 +38,4 @@ def unregister():
     tiny_status_tools.unregister()
     sync_core.unregister()
     save_pre.unregister()
+    scene_strip_tools.unregister()

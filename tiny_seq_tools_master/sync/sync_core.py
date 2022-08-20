@@ -1,6 +1,7 @@
 from unittest.mock import NonCallableMagicMock
 from tiny_seq_tools_master.constraint_to_cams.core import constraints_to_active_camera
 from tiny_seq_tools_master.line_art_tools.core import sync_update_line_art_objs
+from tiny_seq_tools_master.scene_strip_tools.core import sync_seq_camera_to_viewport
 
 import bpy
 from operator import attrgetter
@@ -22,7 +23,12 @@ def update_constraint_camera(scene):
                 if i.frame_final_start <= cf and i.frame_final_end > cf and not i.mute:
                     constraints_to_active_camera(i)
                     # sync_update_line_art_objs(i) disabled because of LINEARTCAMBUG
-                    break
+                    if (
+                        i.scene.name == scene.name
+                    ):  # Only if current scene in scene-strip
+                        if sync_seq_camera_to_viewport(i):
+                            oldStrip = i.name
+                        break
         except AttributeError:
             pass
 
