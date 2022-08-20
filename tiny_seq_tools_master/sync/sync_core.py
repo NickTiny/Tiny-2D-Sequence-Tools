@@ -26,8 +26,9 @@ def update_constraint_camera(scene):
                     if (
                         i.scene.name == scene.name
                     ):  # Only if current scene in scene-strip
-                        if sync_seq_camera_to_viewport(i):
-                            oldStrip = i.name
+
+                        sync_seq_camera_to_viewport(i)
+                        oldStrip = i.name
                         break
         except AttributeError:
             pass
