@@ -1,3 +1,4 @@
+from operator import iconcat
 import bpy
 
 
@@ -16,22 +17,23 @@ class SEQUENCER_PT_line_art(bpy.types.Panel):
 
     def draw(self, context):
 
-        self.layout.label(text="update cam below")
         self.layout.operator(
-            "view3d.update_line_art_cam"
+            "view3d.update_line_art_cam", icon="CAMERA_DATA"
         )  ## Exists because of LINEARTCAMBUG
         self.layout.separator()
-        self.layout.operator("view3d.add_line_art_obj")
-        self.layout.operator("view3d.remove_line_art_obj")
-        self.layout.operator("view3d.refresh_line_art_obj")
+
+        self.layout
 
         layout = self.layout
         col = layout.column()
-        box = col.box()
+        col = col.box()
+        row = col.row(align=True)
+        row.label(text="Sequence Line Art Items", icon="MOD_LINEART")
+        row.operator("view3d.refresh_line_art_obj", icon="FILE_REFRESH", text="")
         if context.active_sequence_strip is None:
             return
         for item in context.active_sequence_strip.line_art_list:
-            row = box.row()
+            row = col.box()
             row.prop(
                 item, "thickness", slider=False, expand=False, text=item.object.name
             )
@@ -49,7 +51,21 @@ class SEQUENCER_PT_line_art(bpy.types.Panel):
                 row.operator("view3d.key_line_art", icon="LOOP_BACK", text="RESET")
 
 
-classes = (SEQUENCER_PT_line_art,)
+class VIEW3D_sequence_line_art_panel(bpy.types.Panel):
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "modifier"
+    bl_idname = "VIEW3D_sequencer_line_art"
+    bl_label = "Sequence Line Art"
+
+    def draw(self, context):
+        row = self.layout.row(align=True)
+        row.label(text="Sequence Line Art")
+        row.operator("view3d.add_line_art_obj", icon="MOD_LINEART", text="Enable")
+        row.operator("view3d.remove_line_art_obj", icon="X", text="Disable")
+
+
+classes = (SEQUENCER_PT_line_art, VIEW3D_sequence_line_art_panel)
 
 
 def register():
