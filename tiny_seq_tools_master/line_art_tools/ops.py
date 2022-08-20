@@ -1,4 +1,7 @@
-from .core import sync_seq_line_art
+from tiny_seq_tools_master.line_art_tools.core import (
+    sync_seq_line_art,
+)
+
 
 import bpy
 
@@ -42,6 +45,15 @@ class SEQUENCER_OT_add_line_art_obj(bpy.types.Operator):
                 add_line_art_item = line_art_items.add()
                 add_line_art_item.object = obj
                 add_line_art_item.mod_name = modifier.name
+        line_art_mod = obj.grease_pencil_modifiers["Line Art"]
+
+        for strip in context.scene.sequence_editor.sequences_all:
+            line_art_mod.keyframe_insert("thickness", frame=strip.frame_final_start)
+
+        for fcurve in line_art_mod.id_data.original.animation_data.action.fcurves:
+            for kf in fcurve.keyframe_points:
+                kf.interpolation = "CONSTANT"
+
         obj.line_art_seq_cam = True
 
         return {"FINISHED"}
