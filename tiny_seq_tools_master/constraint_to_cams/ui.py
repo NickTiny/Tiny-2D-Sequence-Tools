@@ -11,7 +11,6 @@ class SEQUENCER_PT_constraint_to_strip_camera(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        layout.separator()
         col = layout.box()
         row = col.row()
         row.label(text="Rotate to Strip Cameras:", icon="OBJECT_DATA")
