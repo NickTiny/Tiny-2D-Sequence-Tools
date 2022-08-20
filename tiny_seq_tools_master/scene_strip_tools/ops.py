@@ -65,7 +65,6 @@ class THREEDPREVIEW_PT_add_scene_strip(bpy.types.Operator):
         scn = bpy.context.scene
         seq = scn.sequence_editor
         cf = scn.frame_current
-        addSceneIn = cf
         addSceneOut = scn.frame_end
         addSceneChannel = 2
         addSceneTlStart = cf
