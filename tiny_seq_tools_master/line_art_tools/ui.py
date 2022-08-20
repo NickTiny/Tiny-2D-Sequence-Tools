@@ -17,16 +17,19 @@ class SEQUENCER_PT_line_art(bpy.types.Panel):
 
     def draw(self, context):
 
-        self.layout.operator(
-            "view3d.update_line_art_cam", icon="CAMERA_DATA"
-        )  ## Exists because of LINEARTCAMBUG
         self.layout.separator()
-        self.layout.prop(context.scene, "update_line_art_on_save")
-
-        self.layout
 
         layout = self.layout
-        col = layout.column()
+        col = layout.column(align=True)
+        col.prop(context.scene, "line_art_cam_override", icon="CAMERA_DATA")
+        if context.scene.line_art_cam_override:
+            col.operator("view3d.update_line_art_cam", icon="FILE_REFRESH")
+            col.prop(
+                context.scene,
+                "update_line_art_on_save",
+                text="Update Line Art Camera on Save",
+            )
+        col.separator()
         col = col.box()
         row = col.row(align=True)
         row.label(text="Sequence Line Art Items", icon="MOD_LINEART")

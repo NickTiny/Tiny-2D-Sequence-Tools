@@ -25,7 +25,7 @@ def update_constraint_camera(scene):
             if i.type == "SCENE" and i.name != OldStrip:
                 if i.frame_final_start <= cf and i.frame_final_end > cf and not i.mute:
                     constraints_to_active_camera(i)
-                    # sync_update_line_art_objs(i) disabled because of LINEARTCAMBUG
+                    sync_update_line_art_objs(i)
                     if (
                         i.scene.name == scene.name
                     ):  # Only if current scene in scene-strip

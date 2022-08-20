@@ -2,6 +2,8 @@ import bpy
 
 ## disabled  in sync_core.py because of LINEARTCAMBUG
 def sync_update_line_art_objs(strip):
+    if strip.id_data.line_art_cam_override:
+        return
     for obj in strip.scene.objects:
         if obj.line_art_seq_cam is True:
             for mod in obj.grease_pencil_modifiers:
