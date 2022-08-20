@@ -2,17 +2,24 @@ import string
 import bpy
 
 
-def sync_seq_camera_to_viewport(i):
+def sync_selection_to_viewport(strip):
+    scene = strip.id_data
+    if scene.selection_to_active:
+        scene.sequence_editor.active_strip = strip
+        return True
+    return False
+
+
+def sync_seq_camera_to_viewport(strip):
     updated_viewport = False
-    scene = i.id_data
+    scene = strip.id_data
     if not scene.link_seq_to_3d_view:
         updated_viewport = False
         return updated_viewport
     for area in bpy.context.screen.areas:
-
         if area.type == "VIEW_3D":
             bpy.context.scene.camera = bpy.data.objects[
-                i.scene_camera.name
+                strip.scene_camera.name
             ]  # Select camera as view
             area.spaces.active.region_3d.view_perspective = "CAMERA"  # Use camera view
             updated_viewport = True

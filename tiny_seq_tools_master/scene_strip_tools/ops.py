@@ -75,7 +75,6 @@ class THREEDPREVIEW_PT_add_scene_strip(bpy.types.Operator):
         seq.sequences_all[newScene.name].scene_camera = bpy.data.objects[
             bpy.context.scene.camera.name
         ]
-        seq.sequences_all[newScene.name].animation_offset_start = addSceneIn
         seq.sequences_all[newScene.name].frame_final_end = addSceneOut
         seq.sequences_all[newScene.name].frame_start = cf
 
