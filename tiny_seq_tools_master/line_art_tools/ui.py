@@ -33,23 +33,13 @@ class SEQUENCER_PT_line_art(bpy.types.Panel):
         row.operator("view3d.refresh_line_art_obj", icon="FILE_REFRESH", text="")
         if context.active_sequence_strip is None:
             return
-        for item in context.active_sequence_strip.line_art_list:
+        for item in context.scene.line_art_list:
             row = col.box()
+            if item.status == False:
+                row.alert = True
             row.prop(
                 item, "thickness", slider=False, expand=False, text=item.object.name
             )
-
-            if item.status == False:
-                row.alert = True
-                row.prop(
-                    item,
-                    "status",
-                    slider=False,
-                    expand=False,
-                    icon="ERROR",
-                    icon_only=True,
-                )
-                row.operator("view3d.key_line_art", icon="LOOP_BACK", text="RESET")
 
 
 class VIEW3D_sequence_line_art_panel(bpy.types.Panel):

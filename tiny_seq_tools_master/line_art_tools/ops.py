@@ -8,7 +8,7 @@ class SEQUENCER_OT_insert_keyframes(bpy.types.Operator):
     bl_label = "Insert/Replace Line Art Keyframes"
 
     def execute(self, context):
-        for item in context.active_sequence_strip.line_art_list:
+        for item in context.scene.line_art_list:
             if item.status == False:
                 obj = item.object
                 for mod in obj.grease_pencil_modifiers:
@@ -31,7 +31,7 @@ class SEQUENCER_OT_add_line_art_obj(bpy.types.Operator):
 
     def execute(self, context):
         obj = context.active_object
-        line_art_items = context.active_sequence_strip.line_art_list
+        line_art_items = context.scene.line_art_list
         for index, item in enumerate(line_art_items):
             if item.object == obj:
                 line_art_items.remove(index)
@@ -62,9 +62,9 @@ class SEQUENCER_OT_remove_line_art_obj(bpy.types.Operator):
     def execute(self, context):
         obj = context.active_object
         # Remove from list of line_art_items
-        for item in context.active_sequence_strip.line_art_list:
-            line_art_items = context.active_sequence_strip.line_art_list
-        for index, item in enumerate(context.active_sequence_strip.line_art_list):
+        for item in context.scene.line_art_list:
+            line_art_items = context.scene.line_art_list
+        for index, item in enumerate(context.scene.line_art_list):
             if item.object == obj:
                 line_art_items.remove(index)
 
@@ -72,7 +72,7 @@ class SEQUENCER_OT_remove_line_art_obj(bpy.types.Operator):
         # for modifier in obj.grease_pencil_modifiers:
         #     if modifier.type == "GP_LINEART":
         #         obj.grease_pencil_modifiers.remove(modifier)
-        # add_line_art_item = context.active_sequence_strip.line_art_list.add()
+        # add_line_art_item = context.scene.line_art_list.add()
         # add_line_art_item.object = obj
 
         # Set avaliablity to false
@@ -94,7 +94,7 @@ class SEQUENCER_OT_refresh_line_art_obj(bpy.types.Operator):
 
     def execute(self, context):
         strip = context.active_sequence_strip
-        line_art_items = context.active_sequence_strip.line_art_list
+        line_art_items = context.scene.line_art_list
         line_art_items.clear()
         for obj in strip.scene.objects:
             if obj.line_art_seq_cam:
