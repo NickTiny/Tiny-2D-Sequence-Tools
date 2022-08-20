@@ -15,6 +15,12 @@ class SEQUENCER_PT_line_art(bpy.types.Panel):
         return True
 
     def draw(self, context):
+
+        self.layout.label(text="update cam below")
+        self.layout.operator(
+            "view3d.update_line_art_cam"
+        )  ## Exists because of LINEARTCAMBUG
+        self.layout.separator()
         self.layout.operator("view3d.add_line_art_obj")
         self.layout.operator("view3d.remove_line_art_obj")
         self.layout.operator("view3d.refresh_line_art_obj")
@@ -22,6 +28,8 @@ class SEQUENCER_PT_line_art(bpy.types.Panel):
         layout = self.layout
         col = layout.column()
         box = col.box()
+        if context.active_sequence_strip is None:
+            return
         for item in context.active_sequence_strip.line_art_list:
             row = box.row()
             row.prop(
@@ -39,11 +47,6 @@ class SEQUENCER_PT_line_art(bpy.types.Panel):
                     icon_only=True,
                 )
                 row.operator("view3d.key_line_art", icon="LOOP_BACK", text="RESET")
-        self.layout.separator()
-        self.layout.label(text="update cam below")
-        self.layout.operator(
-            "view3d.update_line_art_cam"
-        )  ## Exists because of LINEARTCAMBUG
 
 
 classes = (SEQUENCER_PT_line_art,)
