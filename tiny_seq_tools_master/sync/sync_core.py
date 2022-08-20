@@ -1,3 +1,4 @@
+from unittest.mock import NonCallableMagicMock
 from tiny_seq_tools_master.constraint_to_cams.core import constraints_to_active_camera
 from tiny_seq_tools_master.line_art_tools.core import sync_update_line_art_objs
 
@@ -10,6 +11,8 @@ OldStrip = ""
 def update_constraint_camera(scene):
     global OldStrip
     scn = scene
+    if scn.sequence_editor is None:
+        return
     seq = scn.sequence_editor.sequences
     seq = sorted(seq, key=attrgetter("channel", "frame_final_start"))
     cf = scn.frame_current
