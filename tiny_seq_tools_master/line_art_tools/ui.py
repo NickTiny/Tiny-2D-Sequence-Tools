@@ -28,6 +28,15 @@ class SEQUENCER_PT_line_art(bpy.types.Panel):
                 text="",
             )
             row.label(text="Refresh Override Camera on Save", icon="FILE_TICK")
+            if context.scene.update_line_art_on_save:
+                row = col.row(align=True)
+                row.alert = True
+                row.separator(factor=4)
+                row.label(
+                    text="Refresh Override Camera on Save can be slow", icon="ERROR"
+                )
+                row = col.row(align=True)
+
             col.operator("view3d.update_line_art_cam", icon="FILE_REFRESH")
 
         col = layout.box()
