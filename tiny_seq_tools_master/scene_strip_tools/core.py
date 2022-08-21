@@ -2,7 +2,8 @@ import string
 import bpy
 
 
-def sync_selection_to_viewport(strip):
+def set_active_sequence_strip(strip: bpy.types.Sequence) -> bool:
+    """Set active strip to given strip"""
     scene = strip.id_data
     if scene.selection_to_active:
         scene.sequence_editor.active_strip = strip
@@ -10,7 +11,9 @@ def sync_selection_to_viewport(strip):
     return False
 
 
-def sync_seq_camera_to_viewport(strip):
+## TODO Build context better here
+def sync_strip_camera_to_viewport(strip: bpy.types.Sequence) -> bool:
+    """Set avaliable viewports to strip's camera"""
     updated_viewport = False
     scene = strip.id_data
     if not scene.link_seq_to_3d_view:
@@ -26,7 +29,8 @@ def sync_seq_camera_to_viewport(strip):
     return updated_viewport
 
 
-def make_render_scene(context):
+def make_render_scene(context: bpy.types.Context) -> (bpy.types.Scene):
+    """Create Scene called 'RENDER' from current scene settings, and copy all strips into it."""
     scene_name = "RENDER"
     user_scene_name = str(context.scene.name)
     for scene in bpy.data.scenes:
@@ -49,4 +53,4 @@ def make_render_scene(context):
     context.scene.frame_set(1)
     bpy.ops.sequencer.paste()
     context.window.scene = bpy.data.scenes[f"{user_scene_name}"]
-    return render_scene, user_scene_name
+    return render_scene

@@ -2,8 +2,8 @@ from unittest.mock import NonCallableMagicMock
 from tiny_seq_tools_master.constraint_to_cams.core import constraints_to_active_camera
 from tiny_seq_tools_master.line_art_tools.core import sync_strip_camera_to_seq_line_art
 from tiny_seq_tools_master.scene_strip_tools.core import (
-    sync_seq_camera_to_viewport,
-    sync_selection_to_viewport,
+    sync_strip_camera_to_viewport,
+    set_active_sequence_strip,
 )
 
 import bpy
@@ -30,8 +30,8 @@ def update_constraint_camera(scene):
                         i.scene.name == scene.name
                     ):  # Only if current scene in scene-strip
 
-                        sync_seq_camera_to_viewport(i)
-                        sync_selection_to_viewport(i)
+                        sync_strip_camera_to_viewport(i)
+                        set_active_sequence_strip(i)
                         oldStrip = i.name
                         break
         except AttributeError:

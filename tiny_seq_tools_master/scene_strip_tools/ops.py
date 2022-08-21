@@ -21,20 +21,21 @@ class SEQUENCER_preview_render(bpy.types.Operator):
         render_scene = bpy.data.scenes["RENDER"]
         context.window.scene = render_scene
         bpy.ops.render.opengl("INVOKE_DEFAULT", animation=True, sequencer=True)
+        self.report({"INFO"}, f"Preview Render Complete")
         return {"FINISHED"}
 
 
 class SEQUENCER_setup_render(bpy.types.Operator):
     bl_idname = "sequencer.setup_render"
     bl_label = "Setup Render Scene"
-    bl_description = ""
+    bl_description = "Build Render Scene based on current Scene Settings"
 
     def execute(self, context):
         if context.scene.name == "RENDER":
             self.report({"ERROR"}, "Render scene cannot be active")
             return {"CANCELLED"}
         make_render_scene(context)
-
+        self.report({"INFO"}, f"Render Scene has been setup")
         return {"FINISHED"}
 
 
@@ -48,12 +49,13 @@ class SEQUENCER_full_render(bpy.types.Operator):
             self.report({"ERROR"}, "Render scene must be active")
             return {"CANCELLED"}
         bpy.ops.render.render("INVOKE_DEFAULT", animation=True)
+        self.report({"INFO"}, f"Full Render Complete")
         return {"FINISHED"}
 
 
 class THREEDPREVIEW_PT_add_scene_strip(bpy.types.Operator):
-    """Adds current camera as a scene strip to the Sequencer"""
 
+    bl_description = """Adds current camera as a scene strip to the Sequencer"""
     bl_idname = "view3d.add_scene_strip"
     bl_label = "Camera"
     bl_options = {"REGISTER", "UNDO"}
@@ -62,6 +64,7 @@ class THREEDPREVIEW_PT_add_scene_strip(bpy.types.Operator):
 
         if not bpy.context.scene.sequence_editor:
             bpy.context.scene.sequence_editor_create()
+            self.report({"INFO"}, f"New Sequence Editor cerated in '{scn.name}'")
         scn = bpy.context.scene
         seq = scn.sequence_editor
         cf = scn.frame_current
@@ -76,7 +79,7 @@ class THREEDPREVIEW_PT_add_scene_strip(bpy.types.Operator):
         ]
         seq.sequences_all[newScene.name].frame_final_end = addSceneOut
         seq.sequences_all[newScene.name].frame_start = cf
-
+        self.report({"INFO"}, f"'{newScene.name}' added to '{scn.name}'")
         return {"FINISHED"}
 
 
