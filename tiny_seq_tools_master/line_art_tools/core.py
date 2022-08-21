@@ -44,6 +44,7 @@ def sync_line_art_obj_to_strip(
 def set_line_art_animation_to_constant(
     context: bpy.types.Context, line_art_mod: bpy.types.ObjectGpencilModifiers
 ):
+    """Insert Line Art Keyframes at Strip's frame start"""
     for strip in context.scene.sequence_editor.sequences_all:
         line_art_mod.keyframe_insert("thickness", frame=strip.frame_final_start)
 
