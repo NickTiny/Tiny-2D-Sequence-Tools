@@ -1,4 +1,3 @@
-from unittest import skip
 from tiny_seq_tools_master.line_art_tools.core import (
     sync_line_art_obj_to_strip,
     get_object_animation_is_constant,
@@ -10,7 +9,8 @@ import bpy
 
 class SEQUENCER_OT_add_line_art_obj(bpy.types.Operator):
     bl_idname = "view3d.add_line_art_obj"
-    bl_label = "add_line_art_obj"
+    bl_label = "Enable Sequence Line Art on Active Object"
+    bl_description = "Add Active Grese Pencil Object to Sequence Line Art Items"
 
     @classmethod
     def poll(cls, context: bpy.types.Context):
@@ -59,7 +59,8 @@ class SEQUENCER_OT_add_line_art_obj(bpy.types.Operator):
 
 class SEQUENCER_OT_remove_line_art_obj(bpy.types.Operator):
     bl_idname = "view3d.remove_line_art_obj"
-    bl_label = "remove_line_art_obj"
+    bl_label = "Disable Sequence Line Art for Active Object"
+    bl_description = "Remove Active Grese Pencil Object from Sequence Line Art Items"
 
     @classmethod
     def poll(cls, context: bpy.types.Context):
@@ -86,7 +87,8 @@ class SEQUENCER_OT_remove_line_art_obj(bpy.types.Operator):
 
 class SEQUENCER_OT_refresh_line_art_obj(bpy.types.Operator):
     bl_idname = "view3d.refresh_line_art_obj"
-    bl_label = "refresh_line_art_obj"
+    bl_label = "Refresh Sequence Line Art Items"
+    bl_description = "Check active strip's scene for avaliable Line Art Objects, and add them to Sequence Line Art Items"
 
     def execute(self, context):
         strip = context.active_sequence_strip
@@ -101,13 +103,14 @@ class SEQUENCER_OT_refresh_line_art_obj(bpy.types.Operator):
                 add_line_art_item = line_art_items.add()
                 add_line_art_item.object = obj
                 add_line_art_item.mod_name = obj.grease_pencil_modifiers[0].name
-        self.report({"INFO"}, "Line Art List Updated")
+        self.report({"INFO"}, "'Sequences Line Art Items' Refreshed")
         return {"FINISHED"}
 
 
 class SEQUENCER_OT_check_line_art_obj(bpy.types.Operator):
     bl_idname = "view3d.check_line_art_obj"
-    bl_label = "check_line_art_obj"
+    bl_label = "Check Line Art Items for Errors"
+    bl_description = "Check Sequence Line Art Items are in sync with sequence strips, report any errors if found"
 
     def execute(self, context):
         error_msg = ""
@@ -124,7 +127,7 @@ class SEQUENCER_OT_check_line_art_obj(bpy.types.Operator):
         if error_msg != "":
             self.report({"ERROR"}, error_msg)
             return {"CANCELLED"}
-        self.report({"INFO"}, "All Line Art Objects Good")
+        self.report({"INFO"}, "'Sequences Line Art Items' reported no errors")
         return {"FINISHED"}
 
 
