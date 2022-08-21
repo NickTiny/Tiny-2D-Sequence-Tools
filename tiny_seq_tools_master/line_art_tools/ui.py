@@ -15,6 +15,7 @@ class SEQUENCER_PT_line_art(bpy.types.Panel):
         return True
 
     def draw(self, context):
+
         layout = self.layout
         col = layout.column(align=False)
         row = col.row(align=True)
@@ -43,6 +44,7 @@ class SEQUENCER_PT_line_art(bpy.types.Panel):
         row = col.row(align=False)
         row.label(text="Sequence Line Art Items", icon="MOD_LINEART")
         row.operator("view3d.check_line_art_obj", icon="ERROR", text="Check Line Art")
+        row.operator("view3d.update_similar_strip_line_art", icon="DUPLICATE", text="")
         row.operator("view3d.refresh_line_art_obj", icon="FILE_REFRESH", text="")
 
         if context.active_sequence_strip is None:

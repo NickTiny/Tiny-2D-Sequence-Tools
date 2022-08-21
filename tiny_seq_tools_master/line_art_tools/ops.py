@@ -107,6 +107,50 @@ class SEQUENCER_OT_refresh_line_art_obj(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class SEQUENCER_OT_update_similar_strip_line_art(bpy.types.Operator):
+    bl_idname = "view3d.update_similar_strip_line_art"
+    bl_label = "Copy Line Art to Similar Strips"
+    bl_description = (
+        "If strip in Sequence Editor uses to active strip; copy all line art values"
+    )
+
+    def execute(self, context):
+        success_msg = ""
+        scene = context.scene
+        active_strip = scene.sequence_editor.active_strip
+
+        thickness_values = []
+        cam_name = active_strip.scene_camera.name
+
+        for item in scene.line_art_list:
+            thickness_values.append(item.thickness)
+
+        strips = [
+            strip
+            for strip in context.scene.sequence_editor.sequences_all
+            if (
+                strip.type == "SCENE"
+                and strip.name != active_strip.name
+                and strip.scene_camera.name == cam_name
+            )
+        ]
+        if not any(strips):
+            self.report({"ERROR"}, "No strips share a camera with active strip")
+            return {"CANCELLED"}
+
+        for strip in strips:
+            scene.frame_set(strip.frame_final_start)
+            scene.sequence_editor.active_strip = strip
+            for index, item in enumerate(scene.line_art_list):
+                item.thickness = thickness_values[index]
+                success_msg = (
+                    f"Thickness set to '{item.thickness}' on '{strip.name}' \n"
+                )
+
+        self.report({"INFO"}, f"All Similar strips Updated \n {success_msg}")
+        return {"FINISHED"}
+
+
 class SEQUENCER_OT_check_line_art_obj(bpy.types.Operator):
     bl_idname = "view3d.check_line_art_obj"
     bl_label = "Check Line Art Items for Errors"
@@ -136,6 +180,7 @@ classes = (
     SEQUENCER_OT_remove_line_art_obj,
     SEQUENCER_OT_refresh_line_art_obj,
     SEQUENCER_OT_check_line_art_obj,
+    SEQUENCER_OT_update_similar_strip_line_art,
 )
 
 
