@@ -30,6 +30,13 @@ class SEQUENCER_PT_scene_tools(bpy.types.Panel):
             icon="CAMERA_DATA",
         )
 
+        strip = context.scene.sequence_editor.active_strip
+        col = layout.box()
+        col = col.row(align=True)
+        col.label(text="", icon="SEQUENCE")
+
+        col.template_ID(strip, "scene_camera", text=f"{strip.name}")
+
         col = layout.box()
         col.label(text="Render Strips")
 
@@ -58,7 +65,19 @@ class SEQUENCER_PT_camera_from_view(bpy.types.Panel):
         )
 
 
-classes = (SEQUENCER_PT_scene_tools, SEQUENCER_PT_camera_from_view)
+class SEQUENCER_PT_camera(bpy.types.Panel):
+    bl_space_type = "SEQUENCE_EDITOR"
+    bl_region_type = "UI"
+    bl_idname = "SEQUENCER_PT_camera_panel"
+    bl_label = "Camera Settings"
+    bl_category = "Tiny Sequence Tools"
+
+    def draw(self, context):
+
+        self.layout
+
+
+classes = (SEQUENCER_PT_scene_tools, SEQUENCER_PT_camera_from_view, SEQUENCER_PT_camera)
 
 
 def register():

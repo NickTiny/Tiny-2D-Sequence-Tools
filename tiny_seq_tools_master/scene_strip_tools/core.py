@@ -54,3 +54,14 @@ def make_render_scene(context: bpy.types.Context) -> (bpy.types.Scene):
     bpy.ops.sequencer.paste()
     context.window.scene = bpy.data.scenes[f"{user_scene_name}"]
     return render_scene
+
+
+def get_scene_strip_cameras(scene):
+    return sorted(
+        (
+            obj
+            for obj in scene
+            if obj.type == "CAMERA" and obj.name != scene.line_art_cam_name
+        ),
+        key=lambda x: x.name,
+    )
