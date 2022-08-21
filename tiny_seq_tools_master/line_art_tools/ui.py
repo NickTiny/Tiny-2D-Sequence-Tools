@@ -27,7 +27,7 @@ class SEQUENCER_PT_line_art(bpy.types.Panel):
                 "update_line_art_on_save",
                 text="",
             )
-            row.label(text="Update Override Camera on Save", icon="FILE_TICK")
+            row.label(text="Refresh Override Camera on Save", icon="FILE_TICK")
             col.operator("view3d.update_line_art_cam", icon="FILE_REFRESH")
 
         col = layout.box()
