@@ -34,6 +34,7 @@ class SEQUENCER_PT_line_art(bpy.types.Panel):
         row = col.row(align=True)
         row.label(text="Sequence Line Art Items", icon="MOD_LINEART")
         row.operator("view3d.refresh_line_art_obj", icon="FILE_REFRESH", text="")
+        row.operator("view3d.check_line_art_obj", icon="DECORATE_OVERRIDE", text="")
         if context.active_sequence_strip is None:
             return
         for item in context.scene.line_art_list:

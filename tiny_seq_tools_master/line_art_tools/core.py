@@ -29,12 +29,13 @@ def load_line_art_mods(strip):
 
 
 def check_animation_is_constant(line_art_mod):
-    if line_art_mod.id_data.original.animation_data.action.fcurves is not None:
-        for fcurve in line_art_mod.id_data.original.animation_data.action.fcurves:
-            for kf in fcurve.keyframe_points:
-                if kf.interpolation != "CONSTANT":
-                    return False
-        return True
+    if line_art_mod.id_data.original.animation_data.action is None:
+        return False
+    for fcurve in line_art_mod.id_data.original.animation_data.action.fcurves:
+        for kf in fcurve.keyframe_points:
+            if kf.interpolation != "CONSTANT":
+                return False
+    return True
 
 
 def make_animation_constant(line_art_mod):
@@ -46,25 +47,26 @@ def make_animation_constant(line_art_mod):
         return True
 
 
-def check_keyframes_match_stnd(self):
-    obj = self.object
-    strip = self.id_data.original.sequence_editor.active_strip
-    scene = bpy.context.scene
-    sequences = scene.sequence_editor.sequences_all
-
+def check_keyframes_match_strip(obj, strip):
     if check_animation_is_constant(obj) == False:
         return False
     fcurves = obj.animation_data.action.fcurves
     keyframes = fcurves[0].keyframe_points
     keyframes = sorted(keyframes, key=lambda i: i.co[0], reverse=False)
-    all_seq = sorted(sequences, key=lambda i: i.frame_final_start, reverse=False)
-
     for key in keyframes:
         if key.co[0] in range(strip.frame_final_start, strip.frame_final_end):
             if key.co[0] != strip.frame_final_start:
                 return False
-
     return True
+
+
+def check_keyframes_match_stnd(self):
+    obj = self.object
+    scene = bpy.context.scene
+    strip = scene.sequence_editor.active_strip
+    if check_keyframes_match_strip(obj, scene):
+        return True
+    return False
 
 
 def sync_seq_line_art(context, line_art_mod):

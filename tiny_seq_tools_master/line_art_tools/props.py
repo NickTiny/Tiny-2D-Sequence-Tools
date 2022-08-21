@@ -1,9 +1,5 @@
 from tiny_seq_tools_master.line_art_tools.core import (
-    check_animation_is_constant,
-    make_animation_constant,
-    check_keyframes_match_stnd,
-    sync_seq_line_art,
-    load_line_art_mods,
+    check_keyframes_match_strip,
 )
 from tiny_seq_tools_master.line_art_tools.line_art_cam.core import (
     get_line_art_from_scene,  ## Exists because of LINEARTCAMBUG
@@ -53,7 +49,9 @@ class lr_seq_items(bpy.types.PropertyGroup):
         return
 
     def get_status(self):
-        return check_keyframes_match_stnd(self)
+        scene = self.id_data
+        strip = scene.sequence_editor.active_strip
+        return check_keyframes_match_strip(self.object, strip)
 
     status: bpy.props.BoolProperty(
         name="Keyframe Sync Status",
@@ -67,13 +65,6 @@ class lr_seq_items(bpy.types.PropertyGroup):
         set=set_thickness,
         options=set(),
     )
-
-
-def check_list_status(list):
-    if len(list) != 0:
-        return True
-    else:
-        return False
 
 
 def get_line_art_seq_cam_state(self):

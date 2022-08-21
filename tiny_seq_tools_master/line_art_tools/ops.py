@@ -1,5 +1,8 @@
+from unittest import skip
 from tiny_seq_tools_master.line_art_tools.core import (
     sync_seq_line_art,
+    check_keyframes_match_strip,
+    check_animation_is_constant,
 )
 
 
@@ -38,13 +41,23 @@ class SEQUENCER_OT_add_line_art_obj(bpy.types.Operator):
         for index, item in enumerate(line_art_items):
             if item.object == obj:
                 line_art_items.remove(index)
-
+        new_mod = False
+        if not any(
+            [mod for mod in obj.grease_pencil_modifiers if mod.type == "GP_LINEART"]
+        ):
+            obj.grease_pencil_modifiers.new(name="Line Art", type="GP_LINEART")
+            new_mod = True
         for modifier in obj.grease_pencil_modifiers:
             if modifier.type == "GP_LINEART":
+                modifier.target_layer = obj.data.layers[0].info
+                modifier.target_material = obj.data.materials[0]
                 modifier.use_custom_camera = True
                 add_line_art_item = line_art_items.add()
                 add_line_art_item.object = obj
                 add_line_art_item.mod_name = modifier.name
+                if new_mod:
+                    modifier.source_type = "SCENE"
+
         line_art_mod = obj.grease_pencil_modifiers["Line Art"]
 
         for strip in context.scene.sequence_editor.sequences_all:
@@ -79,17 +92,9 @@ class SEQUENCER_OT_remove_line_art_obj(bpy.types.Operator):
         for index, item in enumerate(context.scene.line_art_list):
             if item.object == obj:
                 line_art_items.remove(index)
-
-        # remove modifier
-        # for modifier in obj.grease_pencil_modifiers:
-        #     if modifier.type == "GP_LINEART":
-        #         obj.grease_pencil_modifiers.remove(modifier)
-        # add_line_art_item = context.scene.line_art_list.add()
-        # add_line_art_item.object = obj
-
-        # Set avaliablity to false
-        obj.line_art_seq_cam = False
-
+        for mod in obj.grease_pencil_modifiers:
+            if mod.type == "GP_LINEART":
+                obj.grease_pencil_modifiers.remove(mod)
         return {"FINISHED"}
 
 
@@ -117,11 +122,37 @@ class SEQUENCER_OT_refresh_line_art_obj(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class SEQUENCER_OT_check_line_art_obj(bpy.types.Operator):
+    bl_idname = "view3d.check_line_art_obj"
+    bl_label = "check_line_art_obj"
+
+    def execute(self, context):
+
+        error_msg = ""
+        for obj in context.scene.line_art_list:
+            constant_anim = check_animation_is_constant(
+                obj.object.grease_pencil_modifiers[0]
+            )
+            if constant_anim:
+                for strip in context.scene.sequence_editor.sequences_all:
+                    if strip.type == "SCENE":
+                        if not check_keyframes_match_strip(obj.object, strip):
+                            error_msg += f"Object: {obj.object.name} unexpected keyframes within Frame Range: ({strip.frame_final_start}-{strip.frame_final_end}) \n"
+            if not constant_anim:
+                error_msg += f"Object: {obj.object.name} has no keyframes \n"
+        if error_msg != "":
+            self.report({"ERROR"}, error_msg)
+            return {"CANCELLED"}
+        self.report({"INFO"}, "All Line Art Objects Good")
+        return {"FINISHED"}
+
+
 classes = (
     SEQUENCER_OT_insert_keyframes,
     SEQUENCER_OT_add_line_art_obj,
     SEQUENCER_OT_remove_line_art_obj,
     SEQUENCER_OT_refresh_line_art_obj,
+    SEQUENCER_OT_check_line_art_obj,
 )
 
 
