@@ -1,5 +1,6 @@
 from tiny_seq_tools_master.line_art_tools.core import (
     sync_line_art_obj_to_strip,
+    set_seq_line_art_thickness,
 )
 import bpy
 
@@ -15,35 +16,10 @@ class lr_seq_items(bpy.types.PropertyGroup):
         return 0
 
     def set_thickness(self, thickness: int):
-
-        frame = self.id_data.sequence_editor.active_strip.frame_final_start
-        if frame > self.id_data.sequence_editor.active_strip.scene.frame_current_final:
+        strip = self.id_data.sequence_editor.active_strip
+        set_thick_done = set_seq_line_art_thickness(self.object, thickness, strip)
+        if set_thick_done:
             return
-        if self.id_data.objects is None:
-            return 0
-        obj = self.object
-        line_art_mod = [
-            mod for mod in obj.grease_pencil_modifiers if mod.type == "GP_LINEART"
-        ]
-        fcurves = obj.animation_data.action.fcurves
-        keyframes = fcurves[0].keyframe_points
-        for mod in line_art_mod:
-            mod.thickness = thickness
-            mod.keyframe_insert("thickness", frame=frame)
-
-        for key in keyframes:
-            if key.co[0] in range(
-                frame, self.id_data.sequence_editor.active_strip.frame_final_end
-            ):
-                if key.co[0] == frame:
-                    key.co[1] = thickness
-                if key.co[0] in range(
-                    frame + 1, self.id_data.sequence_editor.active_strip.frame_final_end
-                ):
-                    for mod in line_art_mod:
-                        mod.keyframe_delete("thickness", frame=key.co[0])
-
-        return
 
     def get_status(self):
         scene = self.id_data

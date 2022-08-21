@@ -51,3 +51,32 @@ def set_line_art_animation_to_constant(
     for fcurve in line_art_mod.id_data.original.animation_data.action.fcurves:
         for kf in fcurve.keyframe_points:
             kf.interpolation = "CONSTANT"
+
+
+def set_seq_line_art_thickness(
+    obj: bpy.types.Object, thickness: int, strip: bpy.types.Sequence
+) -> bool:
+    """Set thickness of Seq Line Art for a strip"""
+    set_thickness = False
+    strip_start = strip.frame_final_start
+    strip_end = strip.frame_final_end
+
+    fcurves = obj.animation_data.action.fcurves
+    keyframes = fcurves[0].keyframe_points
+    line_art_mods = [
+        mod for mod in obj.grease_pencil_modifiers if mod.type == "GP_LINEART"
+    ]
+    for mod in line_art_mods:
+        mod.thickness = thickness
+        mod.keyframe_insert("thickness", frame=strip_start)
+        set_thickness = True
+
+    for key in keyframes:
+        if key.co[0] in range(strip_start, strip_end):
+            if key.co[0] == strip_start:
+                key.co[1] = thickness
+            if key.co[0] in range(strip_start + 1, strip_end):
+                for mod in line_art_mods:
+                    mod.keyframe_delete("thickness", frame=key.co[0])
+
+    return set_thickness
