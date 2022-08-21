@@ -1,3 +1,5 @@
+"""The Line Art Cam folder is made to cover a bug in line art, some of the code is not ideal but servicable until the bug is patched"""
+
 import bpy
 
 

@@ -1,9 +1,6 @@
 from tiny_seq_tools_master.line_art_tools.core import (
     sync_line_art_obj_to_strip,
 )
-from tiny_seq_tools_master.line_art_tools.line_art_cam.core import (
-    get_line_art_from_scene,  ## Exists because of LINEARTCAMBUG
-)
 import bpy
 
 
