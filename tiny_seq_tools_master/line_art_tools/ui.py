@@ -1,4 +1,3 @@
-from operator import iconcat
 import bpy
 
 
@@ -16,33 +15,41 @@ class SEQUENCER_PT_line_art(bpy.types.Panel):
         return True
 
     def draw(self, context):
-
-        self.layout.separator()
-
         layout = self.layout
-        col = layout.column(align=True)
-        col.prop(context.scene, "line_art_cam_override", icon="CAMERA_DATA")
+        col = layout.column(align=False)
+        row = col.row(align=True)
+        row.prop(context.scene, "line_art_cam_override", icon="CAMERA_DATA")
         if context.scene.line_art_cam_override:
             col.operator("view3d.update_line_art_cam", icon="FILE_REFRESH")
-            col.prop(
+            row.prop(
                 context.scene,
                 "update_line_art_on_save",
-                text="Update Line Art Camera on Save",
+                text="Refresh Camera on Save",
+                icon="FILE_TICK",
             )
-        col.separator()
-        col = col.box()
-        row = col.row(align=True)
+        col = layout.box()
+        row = col.row(align=False)
         row.label(text="Sequence Line Art Items", icon="MOD_LINEART")
+        row.operator("view3d.check_line_art_obj", icon="ERROR", text="Check Line Art")
         row.operator("view3d.refresh_line_art_obj", icon="FILE_REFRESH", text="")
-        row.operator("view3d.check_line_art_obj", icon="DECORATE_OVERRIDE", text="")
+
         if context.active_sequence_strip is None:
             return
         for item in context.scene.line_art_list:
-            row = col.box()
+            box = col.box()
+            row = box.row(align=True)
             if item.status == False:
                 row.alert = True
             row.prop(
                 item, "thickness", slider=False, expand=False, text=item.object.name
+            )
+            row.prop(
+                item,
+                "viewport",
+                slider=False,
+                expand=False,
+                text="",
+                icon="RESTRICT_VIEW_OFF",
             )
 
 

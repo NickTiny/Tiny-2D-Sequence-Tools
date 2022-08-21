@@ -53,6 +53,16 @@ class lr_seq_items(bpy.types.PropertyGroup):
         strip = scene.sequence_editor.active_strip
         return check_keyframes_match_strip(self.object, strip)
 
+    def get_viewport(self):
+        for modifier in self.object.grease_pencil_modifiers:
+            if modifier.type == "GP_LINEART":
+                return modifier.show_viewport
+
+    def set_viewport(self, val: bool):
+        for modifier in self.object.grease_pencil_modifiers:
+            if modifier.type == "GP_LINEART":
+                modifier.show_viewport = val
+
     status: bpy.props.BoolProperty(
         name="Keyframe Sync Status",
         get=get_status,
@@ -64,6 +74,13 @@ class lr_seq_items(bpy.types.PropertyGroup):
         get=get_thickness,
         set=set_thickness,
         options=set(),
+    )
+    viewport: bpy.props.BoolProperty(
+        name="Viewport Display Seq Line Art",
+        get=get_viewport,
+        set=set_viewport,
+        options=set(),
+        description="Hide and Show Line Art Modifiers in Viewports",
     )
 
 
