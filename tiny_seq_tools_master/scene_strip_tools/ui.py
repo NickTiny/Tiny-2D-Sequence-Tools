@@ -45,10 +45,10 @@ class SEQUENCER_PT_scene_tools(bpy.types.Panel):
         set_row.operator("sequencer.setup_render", icon="SCENE_DATA", text="")
 
 
-class SEQUENCER_PT_scene_tools(bpy.types.Panel):
+class SEQUENCER_PT_camera_from_view(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_idname = "SEQUENCER_PT_scene_tools"
+    bl_idname = "SEQUENCER_PT_camera_from_view"
     bl_label = "Camera from View"
     bl_category = "Add Camera"
 
@@ -58,7 +58,7 @@ class SEQUENCER_PT_scene_tools(bpy.types.Panel):
         )
 
 
-classes = (SEQUENCER_PT_scene_tools,)
+classes = (SEQUENCER_PT_scene_tools, SEQUENCER_PT_camera_from_view)
 
 
 def register():
