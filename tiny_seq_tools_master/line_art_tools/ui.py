@@ -18,15 +18,18 @@ class SEQUENCER_PT_line_art(bpy.types.Panel):
         layout = self.layout
         col = layout.column(align=False)
         row = col.row(align=True)
-        row.prop(context.scene, "line_art_cam_override", icon="CAMERA_DATA")
+        row.prop(context.scene, "line_art_cam_override", text="")
+        row.label(text="Override Line Art Camera", icon="CAMERA_DATA")
         if context.scene.line_art_cam_override:
-            col.operator("view3d.update_line_art_cam", icon="FILE_REFRESH")
+            row = col.row(align=True)
             row.prop(
                 context.scene,
                 "update_line_art_on_save",
-                text="Refresh Camera on Save",
-                icon="FILE_TICK",
+                text="",
             )
+            row.label(text="Update Override Camera on Save", icon="FILE_TICK")
+            col.operator("view3d.update_line_art_cam", icon="FILE_REFRESH")
+
         col = layout.box()
         row = col.row(align=False)
         row.label(text="Sequence Line Art Items", icon="MOD_LINEART")
