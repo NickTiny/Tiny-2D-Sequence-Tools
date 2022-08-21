@@ -65,19 +65,7 @@ class SEQUENCER_PT_camera_from_view(bpy.types.Panel):
         )
 
 
-class SEQUENCER_PT_camera(bpy.types.Panel):
-    bl_space_type = "SEQUENCE_EDITOR"
-    bl_region_type = "UI"
-    bl_idname = "SEQUENCER_PT_camera_panel"
-    bl_label = "Camera Settings"
-    bl_category = "Tiny Sequence Tools"
-
-    def draw(self, context):
-
-        self.layout
-
-
-classes = (SEQUENCER_PT_scene_tools, SEQUENCER_PT_camera_from_view, SEQUENCER_PT_camera)
+classes = (SEQUENCER_PT_scene_tools, SEQUENCER_PT_camera_from_view)
 
 
 def register():
