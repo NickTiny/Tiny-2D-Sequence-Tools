@@ -3,8 +3,8 @@ from tiny_seq_tools_master import (
     tiny_status_tools,
     constraint_to_cams,
     scene_strip_tools,
+    core,
 )
-from tiny_seq_tools_master.sync import sync_core, save_pre
 
 bl_info = {
     "name": "constraint_to_strip_camera",
@@ -18,24 +18,17 @@ bl_info = {
 }
 
 
-from bpy.utils import register_class, unregister_class
-
-
 def register():
-
     line_art_tools.register()
     constraint_to_cams.register()
     tiny_status_tools.register()
-    sync_core.register()
-    save_pre.register()
     scene_strip_tools.register()
+    core.register()
 
 
 def unregister():
-    sync_core.register()
     line_art_tools.unregister()
     constraint_to_cams.unregister()
     tiny_status_tools.unregister()
-    sync_core.unregister()
-    save_pre.unregister()
     scene_strip_tools.unregister()
+    core.unregister()
