@@ -102,14 +102,10 @@ class SEQUENCER_OT_refresh_line_art_obj(bpy.types.Operator):
     bl_idname = "view3d.refresh_line_art_obj"
     bl_label = "refresh_line_art_obj"
 
-    @classmethod
-    def poll(cls, context: bpy.types.Context):
-        return (
-            context.active_sequence_strip
-            and context.active_sequence_strip.type == "SCENE"
-        )
-
     def execute(self, context):
+        if not strip or strip.type != "SCENE":
+            self.report({"ERROR"}, "There is no active scene strip")
+            return {"CANCELLED"}
         strip = context.active_sequence_strip
         line_art_items = context.scene.line_art_list
         line_art_items.clear()

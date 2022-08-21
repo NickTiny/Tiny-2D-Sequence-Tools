@@ -94,7 +94,7 @@ class VIEW3D_OP_refresh_copy_rot_items(bpy.types.Operator):
         strip = context.active_sequence_strip
         rot_to_seq_cam_items = context.scene.rot_to_seq_cam_items
         rot_to_seq_cam_items.clear()
-        if strip is None or strip.type != "SCENE":
+        if not strip or strip.type != "SCENE":
             self.report({"ERROR"}, "There is no active scene strip")
             return {"CANCELLED"}
         for obj in strip.scene.objects:
