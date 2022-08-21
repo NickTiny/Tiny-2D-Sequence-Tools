@@ -5,7 +5,7 @@ class SEQUENCER_PT_line_art(bpy.types.Panel):
     bl_space_type = "SEQUENCE_EDITOR"
     bl_region_type = "UI"
     bl_idname = "SEQUENCER_PT_line_art_tools"
-    bl_label = "Active Line Art"
+    bl_label = "Active Strip Line Art"
     bl_category = "Tiny Sequence Tools"
 
     def all_status_true(context):
