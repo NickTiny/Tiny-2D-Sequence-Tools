@@ -1,6 +1,7 @@
 import bpy
 
 from tiny_seq_tools_master.scene_strip_tools.core import make_render_scene
+from bpy.props import StringProperty
 
 
 class SEQUENCER_preview_render(bpy.types.Operator):
@@ -53,6 +54,22 @@ class SEQUENCER_full_render(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class SEQUENCER_add_camera_from_view(bpy.types.Operator):
+    bl_idname = "sequencer.add_camera_from_view"
+    bl_label = "Add Camera from Current View"
+    bl_description = "Add Camera to active sequence strip based on viewport camera"
+    bl_context = "VIEW_3D"
+
+    def execute(self, context):
+        camera_name = "NEW CAMERA"
+        camera_data = bpy.data.cameras.new(camera_name)
+        camera_obj = bpy.data.objects.new(f"{camera_name}", camera_data)
+        context.scene.collection.objects.link(camera_obj)
+        context.scene.camera = bpy.data.objects[camera_name]
+        bpy.ops.view3d.camera_to_view("INVOKE_DEFAULT")
+        return {"FINISHED"}
+
+
 class THREEDPREVIEW_PT_add_scene_strip(bpy.types.Operator):
 
     bl_description = """Adds current camera as a scene strip to the Sequencer"""
@@ -85,6 +102,7 @@ class THREEDPREVIEW_PT_add_scene_strip(bpy.types.Operator):
 
 classes = (
     THREEDPREVIEW_PT_add_scene_strip,
+    SEQUENCER_add_camera_from_view,
     SEQUENCER_full_render,
     SEQUENCER_setup_render,
     SEQUENCER_preview_render,
