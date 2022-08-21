@@ -13,6 +13,8 @@ class VIEW3D_OP_constraint_to_strip_camera(bpy.types.Operator):
 
     def execute(self, context):
         obj = context.active_object
+
+        # check active object
         if obj is None:
             self.report({"ERROR"}, "There is no active object")
             return {"CANCELLED"}
@@ -46,8 +48,10 @@ class VIEW3D_OP_constraint_to_strip_camera(bpy.types.Operator):
         add_rot_to_cam_item = rot_to_seq_cam_items.add()
         add_rot_to_cam_item.object = obj
 
+        # Refresh UI
         context.scene.frame_set(int(context.scene.frame_current_final - 1))
         context.scene.frame_set(int(context.scene.frame_current_final + 1))
+        self.report({"INFO"}, f"Added {obj.name} to Rotate to Constraint Items")
         return {"FINISHED"}
 
 
@@ -82,7 +86,7 @@ class VIEW3D_OP_constraint_to_strip_camera_remove(bpy.types.Operator):
 
         # Set avaliablity to false
         rot_to_seq_cam = False
-
+        self.report({"INFO"}, f"Removed {obj.name} from Rotate to Constraint Items")
         return {"FINISHED"}
 
 
@@ -93,17 +97,23 @@ class VIEW3D_OP_refresh_copy_rot_items(bpy.types.Operator):
     def execute(self, context):
         strip = context.active_sequence_strip
         rot_to_seq_cam_items = context.scene.rot_to_seq_cam_items
+
+        # Clear line art list
         rot_to_seq_cam_items.clear()
-        if not strip or strip.type != "SCENE":
+
+        # Check for active strip type
+        if not strip and strip.type != "SCENE":
             self.report({"ERROR"}, "There is no active scene strip")
             return {"CANCELLED"}
+
+        # Build line art list
         for obj in strip.scene.objects:
             if obj.rot_to_seq_cam:
                 for constraint in obj.constraints:
                     if constraint.type == "COPY_ROTATION":
                         add_rot_to_cam_item = rot_to_seq_cam_items.add()
                         add_rot_to_cam_item.object = obj
-
+        self.report({"INFO"}, "Strip Cameras List Updated")
         return {"FINISHED"}
 
 

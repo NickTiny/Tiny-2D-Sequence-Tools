@@ -9,20 +9,6 @@ from tiny_seq_tools_master.line_art_tools.core import (
 import bpy
 
 
-class SEQUENCER_OT_insert_keyframes(bpy.types.Operator):
-    bl_idname = "view3d.key_line_art"
-    bl_label = "Insert/Replace Line Art Keyframes"
-
-    def execute(self, context):
-        for item in context.scene.line_art_list:
-            if item.status == False:
-                obj = item.object
-                for mod in obj.grease_pencil_modifiers:
-                    if mod.type == "GP_LINEART":
-                        sync_seq_line_art(context, mod)
-        return {"FINISHED"}
-
-
 class SEQUENCER_OT_add_line_art_obj(bpy.types.Operator):
     bl_idname = "view3d.add_line_art_obj"
     bl_label = "add_line_art_obj"
@@ -68,7 +54,7 @@ class SEQUENCER_OT_add_line_art_obj(bpy.types.Operator):
                 kf.interpolation = "CONSTANT"
 
         obj.line_art_seq_cam = True
-
+        self.report({"INFO"}, f"Added {obj.name} to Sequence_Line Art Items")
         return {"FINISHED"}
 
 
@@ -95,6 +81,7 @@ class SEQUENCER_OT_remove_line_art_obj(bpy.types.Operator):
         for mod in obj.grease_pencil_modifiers:
             if mod.type == "GP_LINEART":
                 obj.grease_pencil_modifiers.remove(mod)
+        self.report({"INFO"}, f"Removed {obj.name} from Sequence_Line Art Items")
         return {"FINISHED"}
 
 
@@ -103,10 +90,11 @@ class SEQUENCER_OT_refresh_line_art_obj(bpy.types.Operator):
     bl_label = "refresh_line_art_obj"
 
     def execute(self, context):
+        strip = context.active_sequence_strip
         if not strip or strip.type != "SCENE":
             self.report({"ERROR"}, "There is no active scene strip")
             return {"CANCELLED"}
-        strip = context.active_sequence_strip
+
         line_art_items = context.scene.line_art_list
         line_art_items.clear()
         for obj in strip.scene.objects:
@@ -114,7 +102,7 @@ class SEQUENCER_OT_refresh_line_art_obj(bpy.types.Operator):
                 add_line_art_item = line_art_items.add()
                 add_line_art_item.object = obj
                 add_line_art_item.mod_name = obj.grease_pencil_modifiers[0].name
-
+        self.report({"INFO"}, "Line Art List Updated")
         return {"FINISHED"}
 
 
@@ -123,7 +111,6 @@ class SEQUENCER_OT_check_line_art_obj(bpy.types.Operator):
     bl_label = "check_line_art_obj"
 
     def execute(self, context):
-
         error_msg = ""
         for obj in context.scene.line_art_list:
             constant_anim = check_animation_is_constant(
@@ -144,7 +131,6 @@ class SEQUENCER_OT_check_line_art_obj(bpy.types.Operator):
 
 
 classes = (
-    SEQUENCER_OT_insert_keyframes,
     SEQUENCER_OT_add_line_art_obj,
     SEQUENCER_OT_remove_line_art_obj,
     SEQUENCER_OT_refresh_line_art_obj,
