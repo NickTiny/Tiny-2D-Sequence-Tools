@@ -1,8 +1,7 @@
 from unittest import skip
 from tiny_seq_tools_master.line_art_tools.core import (
-    sync_seq_line_art,
-    check_keyframes_match_strip,
-    check_animation_is_constant,
+    sync_line_art_obj_to_strip,
+    get_object_animation_is_constant,
 )
 
 
@@ -54,7 +53,7 @@ class SEQUENCER_OT_add_line_art_obj(bpy.types.Operator):
                 kf.interpolation = "CONSTANT"
 
         obj.line_art_seq_cam = True
-        self.report({"INFO"}, f"Added {obj.name} to Sequence_Line Art Items")
+        self.report({"INFO"}, f"Added '{obj.name}' to Sequence_Line Art Items")
         return {"FINISHED"}
 
 
@@ -81,7 +80,7 @@ class SEQUENCER_OT_remove_line_art_obj(bpy.types.Operator):
         for mod in obj.grease_pencil_modifiers:
             if mod.type == "GP_LINEART":
                 obj.grease_pencil_modifiers.remove(mod)
-        self.report({"INFO"}, f"Removed {obj.name} from Sequence_Line Art Items")
+        self.report({"INFO"}, f"Removed '{obj.name}' from Sequence_Line Art Items")
         return {"FINISHED"}
 
 
@@ -112,17 +111,16 @@ class SEQUENCER_OT_check_line_art_obj(bpy.types.Operator):
 
     def execute(self, context):
         error_msg = ""
-        for obj in context.scene.line_art_list:
-            constant_anim = check_animation_is_constant(
-                obj.object.grease_pencil_modifiers[0]
-            )
+        for item in context.scene.line_art_list:
+            obj = item.object
+            constant_anim = get_object_animation_is_constant(obj)
             if constant_anim:
                 for strip in context.scene.sequence_editor.sequences_all:
                     if strip.type == "SCENE":
-                        if not check_keyframes_match_strip(obj.object, strip):
-                            error_msg += f"Object: {obj.object.name} unexpected keyframes within Frame Range: ({strip.frame_final_start}-{strip.frame_final_end}) \n"
+                        if not sync_line_art_obj_to_strip(obj, strip):
+                            error_msg += f"Object: '{obj.name}' unexpected keyframes within Frame Range: ({strip.frame_final_start}-{strip.frame_final_end}) \n"
             if not constant_anim:
-                error_msg += f"Object: {obj.object.name} has no keyframes \n"
+                error_msg += f"UNKOWN ERROR in Object: '{obj.name}' usually caused by wrong interpolation type or missing keyframe error \n"
         if error_msg != "":
             self.report({"ERROR"}, error_msg)
             return {"CANCELLED"}

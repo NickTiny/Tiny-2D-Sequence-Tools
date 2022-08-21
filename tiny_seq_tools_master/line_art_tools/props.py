@@ -1,5 +1,5 @@
 from tiny_seq_tools_master.line_art_tools.core import (
-    check_keyframes_match_strip,
+    sync_line_art_obj_to_strip,
 )
 from tiny_seq_tools_master.line_art_tools.line_art_cam.core import (
     get_line_art_from_scene,  ## Exists because of LINEARTCAMBUG
@@ -51,7 +51,7 @@ class lr_seq_items(bpy.types.PropertyGroup):
     def get_status(self):
         scene = self.id_data
         strip = scene.sequence_editor.active_strip
-        return check_keyframes_match_strip(self.object, strip)
+        return sync_line_art_obj_to_strip(self.object, strip)
 
     def get_viewport(self):
         for modifier in self.object.grease_pencil_modifiers:
@@ -90,27 +90,16 @@ def get_line_art_seq_cam_state(self):
         return False
     for mod in obj.grease_pencil_modifiers:
         if mod.type == "GP_LINEART":
-            if mod.use_custom_camera is True:
-                return True
+            return True
     return False
 
 
 def set_line_art_seq_cam_state(self, value: bool):
-    scenes = self.id_data.users_scene  ## Exists because of LINEARTCAMBUG
-    if not self:
-        obj = self
-        for mod in obj.grease_pencil_modifiers:
-            if mod.type == "GP_LINEART":
-                if mod.use_custom_camera:
-                    if scenes[0].line_art_cam_override:
-                        line_art_cam = get_line_art_from_scene(
-                            scenes[0]
-                        )  ## Exists because of LINEARTCAMBUG
-                        mod.source_camera = (
-                            line_art_cam  ## Exists because of LINEARTCAMBUG
-                        )
-                    return True
-        return
+    obj = self
+    for mod in obj.grease_pencil_modifiers:
+        if mod.type == "GP_LINEART":
+            return True
+    return False
 
 
 classes = (lr_seq_items,)

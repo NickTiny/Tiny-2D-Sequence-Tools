@@ -1,6 +1,6 @@
 from unittest.mock import NonCallableMagicMock
 from tiny_seq_tools_master.constraint_to_cams.core import constraints_to_active_camera
-from tiny_seq_tools_master.line_art_tools.core import sync_update_line_art_objs
+from tiny_seq_tools_master.line_art_tools.core import sync_strip_camera_to_seq_line_art
 from tiny_seq_tools_master.scene_strip_tools.core import (
     sync_seq_camera_to_viewport,
     sync_selection_to_viewport,
@@ -25,7 +25,7 @@ def update_constraint_camera(scene):
             if i.type == "SCENE" and i.name != OldStrip:
                 if i.frame_final_start <= cf and i.frame_final_end > cf and not i.mute:
                     constraints_to_active_camera(i)
-                    sync_update_line_art_objs(i)
+                    sync_strip_camera_to_seq_line_art(i)
                     if (
                         i.scene.name == scene.name
                     ):  # Only if current scene in scene-strip
