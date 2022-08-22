@@ -14,6 +14,13 @@ class SEQUENCER_PT_scene_tools(bpy.types.Panel):
         col = col.box()
         manager = context.scene
         row = col.row(align=True)
+        row.label(text="Sequencer Sync", icon="UV_SYNC_SELECT")
+        row.operator(
+            "sequencer.check_viewport_sync_errors",
+            icon="ERROR",
+            text="Check Sync Errors",
+        )
+        row = col.row(align=True)
         row.prop(manager, "link_seq_to_3d_view", text="")
         row.separator()
         row.label(
@@ -38,14 +45,14 @@ class SEQUENCER_PT_scene_tools(bpy.types.Panel):
         col.template_ID(strip, "scene_camera", text=f"{strip.name}")
 
         col = layout.box()
-        col.label(text="Render Strips")
+        row = col.row(align=False)
+        row.label(text="Render Strips")
 
         col.prop(
             context.scene.render,
             "filepath",
             text="Output",
         )
-
         col.operator("sequencer.preview_render", icon="FILE_MOVIE")
         set_row = col.row(align=True)
         set_row.operator("sequencer.batch_render", icon="RENDER_ANIMATION")

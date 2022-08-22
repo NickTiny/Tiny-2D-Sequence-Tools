@@ -70,6 +70,27 @@ class SEQUENCER_add_camera_from_view(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class SEQUENCER_check_viewport_sync_errors(bpy.types.Operator):
+    bl_idname = "sequencer.check_viewport_sync_errors"
+    bl_label = "Check for Sync Errors"
+    bl_description = "Check if Sequence's Strips have 'Hold Offset Start' greater than one and report as an error. \n If true, these strips will not appear in 'sync' during render"
+
+    def execute(self, context):
+        error_msg = ""
+        for strip in context.scene.sequence_editor.sequences_all:
+            if strip.type == "SCENE" and not strip.mute:
+                if strip.animation_offset_start != 0:
+                    error_msg += f"'{strip.name}' is out of sync. Frames: ({strip.frame_final_start}, {strip.frame_final_end})"
+        if error_msg != "":
+            self.report(
+                {"ERROR"},
+                f"Strips are out of sync, render animation will not match viewport \n {error_msg}",
+            )
+            return {"CANCELLED"}
+        self.report({"INFO"}, f"All Strips are in sync")
+        return {"FINISHED"}
+
+
 class THREEDPREVIEW_PT_add_scene_strip(bpy.types.Operator):
 
     bl_description = """Adds current camera as a scene strip to the Sequencer"""
@@ -106,6 +127,7 @@ classes = (
     SEQUENCER_full_render,
     SEQUENCER_setup_render,
     SEQUENCER_preview_render,
+    SEQUENCER_check_viewport_sync_errors,
 )
 
 

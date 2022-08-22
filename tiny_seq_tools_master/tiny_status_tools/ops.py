@@ -31,8 +31,9 @@ class TINYSEQ_STATUS_OP_check_file_status(bpy.types.Operator):
         return wm.invoke_props_dialog(self)
 
     def draw(self, context):
-        col = self.layout.column(align=True)
+        col = self.layout.column(align=False)
         col.operator("tiny.check_all_images_are_packed", icon="FILE_IMAGE")
+        col.operator("sequencer.check_viewport_sync_errors")
         col.separator()
         col.prop(context.scene.tiny_status, "file_path_status")
         col.prop(context.scene.tiny_status, "relative_links")
