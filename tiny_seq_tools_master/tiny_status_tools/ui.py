@@ -4,7 +4,7 @@ import bpy
 class TINYSEQ_STATUS_PG_sequencer(bpy.types.Panel):
     bl_space_type = "SEQUENCE_EDITOR"
     bl_region_type = "UI"
-    bl_idname = "3DVIEW_PT_tiny_status_sequencer"
+    bl_idname = "SEQUENCER_PT_tiny_file_status"
     bl_label = "Tiny Status"
     bl_category = "Tiny Sequence Tools"
 

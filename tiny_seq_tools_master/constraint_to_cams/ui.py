@@ -26,7 +26,7 @@ class VIEW3D_constraint_to_strip_object_panel(bpy.types.Panel):
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "constraint"
-    bl_idname = "VIEW3D_sequencer_constraints"
+    bl_idname = "VIEW3D_PT_sequencer_constraints"
     bl_label = "Rotate to Strip Camera"
 
     def draw(self, context):

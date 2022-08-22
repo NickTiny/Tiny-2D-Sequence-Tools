@@ -49,7 +49,7 @@ class SEQUENCER_PT_line_art(bpy.types.Panel):
 
         if context.active_sequence_strip is None:
             return
-        for item in context.scene.line_art_seq_items:
+        for item in context.scene.line_art_list:
             box = col.box()
             row = box.row(align=True)
             if item.status == False:
@@ -71,7 +71,7 @@ class VIEW3D_sequence_line_art_panel(bpy.types.Panel):
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "modifier"
-    bl_idname = "VIEW3D_sequencer_line_art"
+    bl_idname = "VIEW3D_PT_sequencer_line_art"
     bl_label = "Sequence Line Art"
 
     def draw(self, context):
