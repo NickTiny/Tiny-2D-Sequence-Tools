@@ -19,6 +19,13 @@ class VIEW3D_OP_constraint_to_strip_camera(bpy.types.Operator):
             self.report({"ERROR"}, "There is no active object")
             return {"CANCELLED"}
 
+        if obj.line_art_seq_obj:
+            self.report(
+                {"ERROR"},
+                "Cannot set Rotate to Strip Camera if 'Sequence Line Art' enabled",
+            )
+            return {"CANCELLED"}
+
         # remove if already on list
         rot_to_seq_cam_items = context.scene.rot_to_seq_cam_items
         for index, item in enumerate(rot_to_seq_cam_items):
@@ -85,7 +92,7 @@ class VIEW3D_OP_constraint_to_strip_camera_remove(bpy.types.Operator):
                 rot_to_seq_cam_items.remove(index)
 
         # Set avaliablity to false
-        rot_to_seq_cam = False
+        obj.rot_to_seq_cam = False
         self.report({"INFO"}, f"Removed {obj.name} from Rotate to Constraint Items")
         return {"FINISHED"}
 
