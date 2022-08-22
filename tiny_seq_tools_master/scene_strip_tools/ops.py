@@ -91,6 +91,18 @@ class SEQUENCER_check_viewport_sync_errors(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class SEQUENCER_refresh_viewport_camera(bpy.types.Operator):
+    bl_idname = "sequencer.refresh_viewport_camera"
+    bl_label = "Refresh Viewport Camera"
+    bl_description = "Refresh Viewport after changing the camera"
+
+    def execute(self, context):
+        context.scene.frame_set(context.scene.frame_current + 1)
+        context.scene.frame_set(context.scene.frame_current - 1)
+        self.report({"INFO"}, "Viewport Refreshed")
+        return {"FINISHED"}
+
+
 class THREEDPREVIEW_PT_add_scene_strip(bpy.types.Operator):
 
     bl_description = """Adds current camera as a scene strip to the Sequencer"""
@@ -128,6 +140,7 @@ classes = (
     SEQUENCER_setup_render,
     SEQUENCER_preview_render,
     SEQUENCER_check_viewport_sync_errors,
+    SEQUENCER_refresh_viewport_camera,
 )
 
 

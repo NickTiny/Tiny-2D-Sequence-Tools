@@ -39,10 +39,11 @@ class SEQUENCER_PT_scene_tools(bpy.types.Panel):
 
         strip = context.scene.sequence_editor.active_strip
         col = layout.box()
-        col = col.row(align=True)
-        col.label(text="", icon="SEQUENCE")
+        row = col.row(align=True)
+        row.label(text="", icon="SEQUENCE")
 
-        col.template_ID(strip, "scene_camera", text=f"{strip.name}")
+        row.template_ID(strip, "scene_camera", text=f"{strip.name}")
+        row.operator("sequencer.refresh_viewport_camera", icon="FILE_REFRESH", text="")
 
         col = layout.box()
         row = col.row(align=False)
