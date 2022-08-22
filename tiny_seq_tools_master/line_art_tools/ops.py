@@ -17,12 +17,17 @@ class SEQUENCER_OT_add_line_art_obj(bpy.types.Operator):
         return (
             context.active_object
             and context.active_object.type == "GPENCIL"
-            and not context.active_object.line_art_seq_cam
+            and not context.active_object.line_art_seq_obj
         )
 
     def execute(self, context):
         obj = context.active_object
-        line_art_items = context.scene.line_art_list
+        if obj.rot_to_seq_cam:
+            self.report(
+                {"ERROR"}, "Cannot set Line Art if 'Rotate to Strip Camera' enabled"
+            )
+            return {"CANCELLED"}
+        line_art_items = context.scene.line_art_seq_items
         for index, item in enumerate(line_art_items):
             if item.object == obj:
                 line_art_items.remove(index)
@@ -52,7 +57,7 @@ class SEQUENCER_OT_add_line_art_obj(bpy.types.Operator):
             for kf in fcurve.keyframe_points:
                 kf.interpolation = "CONSTANT"
 
-        obj.line_art_seq_cam = True
+        obj.line_art_seq_obj = True
         self.report({"INFO"}, f"Added '{obj.name}' to Sequence_Line Art Items")
         return {"FINISHED"}
 
@@ -67,21 +72,22 @@ class SEQUENCER_OT_remove_line_art_obj(bpy.types.Operator):
         return (
             context.active_object
             and context.active_object.type == "GPENCIL"
-            and context.active_object.line_art_seq_cam
+            and context.active_object.line_art_seq_obj
         )
 
     def execute(self, context):
         obj = context.active_object
         # Remove from list of line_art_items
-        for item in context.scene.line_art_list:
-            line_art_items = context.scene.line_art_list
-        for index, item in enumerate(context.scene.line_art_list):
+        for item in context.scene.line_art_seq_items:
+            line_art_items = context.scene.line_art_seq_items
+        for index, item in enumerate(context.scene.line_art_seq_items):
             if item.object == obj:
                 line_art_items.remove(index)
         for mod in obj.grease_pencil_modifiers:
             if mod.type == "GP_LINEART":
                 obj.grease_pencil_modifiers.remove(mod)
         self.report({"INFO"}, f"Removed '{obj.name}' from Sequence_Line Art Items")
+        obj.line_art_seq_obj = False
         return {"FINISHED"}
 
 
@@ -96,10 +102,10 @@ class SEQUENCER_OT_refresh_line_art_obj(bpy.types.Operator):
             self.report({"ERROR"}, "There is no active scene strip")
             return {"CANCELLED"}
 
-        line_art_items = context.scene.line_art_list
+        line_art_items = context.scene.line_art_seq_items
         line_art_items.clear()
         for obj in strip.scene.objects:
-            if obj.line_art_seq_cam:
+            if obj.line_art_seq_obj:
                 add_line_art_item = line_art_items.add()
                 add_line_art_item.object = obj
                 add_line_art_item.mod_name = obj.grease_pencil_modifiers[0].name
@@ -122,7 +128,7 @@ class SEQUENCER_OT_update_similar_strip_line_art(bpy.types.Operator):
         thickness_values = []
         cam_name = active_strip.scene_camera.name
 
-        for item in scene.line_art_list:
+        for item in scene.line_art_seq_items:
             thickness_values.append(item.thickness)
 
         strips = [
@@ -141,7 +147,7 @@ class SEQUENCER_OT_update_similar_strip_line_art(bpy.types.Operator):
         for strip in strips:
             scene.frame_set(strip.frame_final_start)
             scene.sequence_editor.active_strip = strip
-            for index, item in enumerate(scene.line_art_list):
+            for index, item in enumerate(scene.line_art_seq_items):
                 item.thickness = thickness_values[index]
                 success_msg = (
                     f"Thickness set to '{item.thickness}' on '{strip.name}' \n"
@@ -158,7 +164,7 @@ class SEQUENCER_OT_check_line_art_obj(bpy.types.Operator):
 
     def execute(self, context):
         error_msg = ""
-        for item in context.scene.line_art_list:
+        for item in context.scene.line_art_seq_items:
             obj = item.object
             constant_anim = get_object_animation_is_constant(obj)
             if constant_anim:

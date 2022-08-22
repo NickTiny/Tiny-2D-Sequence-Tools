@@ -49,7 +49,7 @@ class SEQUENCER_PT_line_art(bpy.types.Panel):
 
         if context.active_sequence_strip is None:
             return
-        for item in context.scene.line_art_list:
+        for item in context.scene.line_art_seq_items:
             box = col.box()
             row = box.row(align=True)
             if item.status == False:

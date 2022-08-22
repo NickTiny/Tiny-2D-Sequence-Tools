@@ -22,7 +22,7 @@ class SEQUENCER_OT_update_line_art_cam(bpy.types.Operator):
             return {"CANCELLED"}
         line_art_cam = get_line_art_override_cam_from_strip(strip)
         for obj in context.scene.objects:
-            if obj.line_art_seq_cam:
+            if obj.line_art_seq_obj:
                 obj.grease_pencil_modifiers[0].source_camera = line_art_cam
         self.report(
             {"INFO"}, f"Line Art Override Camera:'{line_art_cam.name}' is up to date."

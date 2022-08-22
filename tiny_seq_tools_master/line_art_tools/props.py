@@ -57,44 +57,22 @@ class lr_seq_items(bpy.types.PropertyGroup):
     )
 
 
-def get_line_art_seq_cam_state(self):
-    obj = self
-    if obj.grease_pencil_modifiers is None:
-        return False
-    for mod in obj.grease_pencil_modifiers:
-        if mod.type == "GP_LINEART":
-            return True
-    return False
-
-
-def set_line_art_seq_cam_state(self, value: bool):
-    obj = self
-    for mod in obj.grease_pencil_modifiers:
-        if mod.type == "GP_LINEART":
-            return True
-    return False
-
-
 classes = (lr_seq_items,)
 
 
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
-    bpy.types.Scene.line_art_list = bpy.props.CollectionProperty(type=lr_seq_items)
-    bpy.types.Scene.line_art_cam_override = (
-        bpy.types.Object.line_art_seq_cam
-    ) = bpy.props.BoolProperty(
+    bpy.types.Scene.line_art_seq_items = bpy.props.CollectionProperty(type=lr_seq_items)
+    bpy.types.Scene.line_art_cam_override = bpy.props.BoolProperty(
         name="Override Camera",
         description="Render Line Art from the Tiny Line Art camera (which needs to be refreshed)",
         default=False,
     )
-    bpy.types.Object.line_art_seq_cam = bpy.props.BoolProperty(
+    bpy.types.Object.line_art_seq_obj = bpy.props.BoolProperty(
         name="Enable Seq Line Art Control",
+        description="Control Line Art Object from Sequence",
         default=False,
-        get=get_line_art_seq_cam_state,
-        set=set_line_art_seq_cam_state,
-        options=set(),
     )
 
 
