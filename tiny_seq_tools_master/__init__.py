@@ -7,14 +7,14 @@ from tiny_seq_tools_master import (
 )
 
 bl_info = {
-    "name": "constraint_to_strip_camera",
+    "name": "Tiny Sequencer Tools",
     "author": "Nick Alberelli ",
-    "description": "",
-    "blender": (2, 80, 0),
-    "version": (0, 0, 2),
-    "location": "",
+    "description": "Tools for creating cut-out animation with Tiny's BLOWN APART Characters and Backgrounds",
+    "blender": (3, 2, 0),
+    "version": (0, 0, 1),
+    "location": "Sequencer > Sidebar > Tiny Sequencer Tools",
     "warning": "",
-    "category": "Generic",
+    "category": "Sequencer",
 }
 
 
