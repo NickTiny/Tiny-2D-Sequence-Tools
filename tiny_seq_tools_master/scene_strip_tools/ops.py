@@ -59,7 +59,7 @@ class SEQUENCER_add_camera_from_view(bpy.types.Operator):
     bl_label = "Add Camera from Current View"
     bl_description = "Add Camera to active sequence strip based on viewport camera"
     bl_context = "VIEW_3D"
-    bl_options  = {'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
         camera_name = "NEW CAMERA"
@@ -96,7 +96,7 @@ class SEQUENCER_refresh_viewport_camera(bpy.types.Operator):
     bl_idname = "sequencer.refresh_viewport_camera"
     bl_label = "Refresh Viewport Camera"
     bl_description = "Refresh Viewport after changing the camera"
-    bl_options  = {'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
         context.scene.frame_set(context.scene.frame_current + 1)

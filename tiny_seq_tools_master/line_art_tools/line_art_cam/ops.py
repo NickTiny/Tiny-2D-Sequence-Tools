@@ -13,7 +13,7 @@ import bpy
 class SEQUENCER_OT_update_line_art_cam(bpy.types.Operator):
     bl_idname = "view3d.update_line_art_cam"
     bl_label = "Refresh Line Art Camera"
-    bl_options  = {'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
         strip = context.active_sequence_strip

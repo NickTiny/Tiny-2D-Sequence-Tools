@@ -7,7 +7,7 @@ class VIEW3D_OP_constraint_to_strip_camera(bpy.types.Operator):
     bl_idname = "object.rotate_to_strip_camera"
     bl_label = "Enable Rotate to Strip Cameras to Active"
     bl_description = "Enable Rotate to Strip Cameras to Active"
-    bl_options  = {'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
     @classmethod
     def poll(cls, context: bpy.types.Context):
@@ -68,7 +68,7 @@ class VIEW3D_OP_constraint_to_strip_camera_remove(bpy.types.Operator):
     bl_idname = "object.remove_object_from_list"
     bl_label = "Disable Rotate to Strip Cameras from Active"
     bl_description = "Disable Rotate to Strip Cameras from Active"
-    bl_options  = {'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
     @classmethod
     def poll(cls, context: bpy.types.Context):
@@ -105,7 +105,7 @@ class VIEW3D_OP_refresh_copy_rot_items(bpy.types.Operator):
     bl_idname = "object.refresh_copy_rot_items"
     bl_label = "Refresh Rotate to Strip Cameras List"
     bl_description = "Refresh list of Rotate to Strip Cameras Items"
-    bl_options  = {'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
         strip = context.active_sequence_strip
