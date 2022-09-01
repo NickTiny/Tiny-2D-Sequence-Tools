@@ -11,6 +11,7 @@ class SEQUENCER_OT_add_line_art_obj(bpy.types.Operator):
     bl_idname = "view3d.add_line_art_obj"
     bl_label = "Enable Sequence Line Art on Active Object"
     bl_description = "Add Active Grese Pencil Object to Sequence Line Art Items"
+    bl_options  = {'UNDO'}
 
     @classmethod
     def poll(cls, context: bpy.types.Context):
@@ -66,6 +67,7 @@ class SEQUENCER_OT_remove_line_art_obj(bpy.types.Operator):
     bl_idname = "view3d.remove_line_art_obj"
     bl_label = "Disable Sequence Line Art for Active Object"
     bl_description = "Remove Active Grese Pencil Object from Sequence Line Art Items"
+    bl_options  = {'UNDO'}
 
     @classmethod
     def poll(cls, context: bpy.types.Context):
@@ -95,6 +97,7 @@ class SEQUENCER_OT_refresh_line_art_obj(bpy.types.Operator):
     bl_idname = "view3d.refresh_line_art_obj"
     bl_label = "Refresh Sequence Line Art Items"
     bl_description = "Check active strip's scene for avaliable Line Art Objects, and add them to Sequence Line Art Items"
+    bl_options  = {'UNDO'}
 
     def execute(self, context):
         strip = context.active_sequence_strip
@@ -119,6 +122,7 @@ class SEQUENCER_OT_update_similar_strip_line_art(bpy.types.Operator):
     bl_description = (
         "If strip in Sequence Editor uses to active strip; copy all line art values"
     )
+    bl_options  = {'UNDO'}
 
     def execute(self, context):
         success_msg = ""
@@ -161,6 +165,7 @@ class SEQUENCER_OT_check_line_art_obj(bpy.types.Operator):
     bl_idname = "view3d.check_line_art_obj"
     bl_label = "Check Line Art Items for Errors"
     bl_description = "Check Sequence Line Art Items are in sync with sequence strips, report any errors if found"
+    bl_options  = {'UNDO'}
 
     def execute(self, context):
         error_msg = ""
