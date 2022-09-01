@@ -1,4 +1,5 @@
 """The Line Art Cam folder is made to cover a bug in line art, some of the code is not ideal but servicable until the bug is patched"""
+#https://developer.blender.org/T100596
 
 from tiny_seq_tools_master.line_art_tools import line_art_cam
 from tiny_seq_tools_master.line_art_tools.line_art_cam.core import (
@@ -12,6 +13,7 @@ import bpy
 class SEQUENCER_OT_update_line_art_cam(bpy.types.Operator):
     bl_idname = "view3d.update_line_art_cam"
     bl_label = "Refresh Line Art Camera"
+    bl_options  = {'UNDO'}
 
     def execute(self, context):
         strip = context.active_sequence_strip
