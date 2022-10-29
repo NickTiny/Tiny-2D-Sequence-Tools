@@ -62,11 +62,18 @@ class SEQUENCER_add_camera_from_view(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
+        for area in context.window.screen.areas:
+            if area.type == 'VIEW_3D':
+                for space in area.spaces:
+                    if space.region_3d.view_perspective == 'CAMERA':
+                        self.report({"ERROR"}, f"Exit camera view to add a new camera.")
+                        return {"CANCELLED"}
+
         camera_name = "NEW CAMERA"
         camera_data = bpy.data.cameras.new(camera_name)
         camera_obj = bpy.data.objects.new(f"{camera_name}", camera_data)
         context.scene.collection.objects.link(camera_obj)
-        context.scene.camera = bpy.data.objects[camera_name]
+        context.scene.camera = camera_obj
         bpy.ops.view3d.camera_to_view("INVOKE_DEFAULT")
         return {"FINISHED"}
 
