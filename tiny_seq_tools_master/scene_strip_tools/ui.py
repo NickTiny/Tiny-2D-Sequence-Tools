@@ -41,8 +41,10 @@ class SEQUENCER_PT_scene_tools(bpy.types.Panel):
         col = layout.box()
         row = col.row(align=True)
         row.label(text="", icon="SEQUENCE")
-
-        row.template_ID(strip, "scene_camera", text=f"{strip.name}")
+        if strip:
+            row.template_ID(strip, "scene_camera", text=f"{strip.name}")
+        else:
+            row.label(text="No Scene Strip Active!")
         row.operator("sequencer.refresh_viewport_camera", icon="FILE_REFRESH", text="")
 
         col = layout.box()
