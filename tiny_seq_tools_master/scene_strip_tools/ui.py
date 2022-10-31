@@ -42,7 +42,7 @@ class SEQUENCER_PT_scene_tools(bpy.types.Panel):
         row = col.row(align=True)
         row.label(text="", icon="SEQUENCE")
 
-        row.template_ID(strip, "scene_camera", text=f"{strip.name}")
+            row.template_ID(strip, "scene_camera", text=f"{strip.name}")
         row.operator("sequencer.refresh_viewport_camera", icon="FILE_REFRESH", text="")
 
         col = layout.box()
@@ -54,6 +54,11 @@ class SEQUENCER_PT_scene_tools(bpy.types.Panel):
             "filepath",
             text="Output",
         )
+        col.prop(context.window_manager.render_settings, "render_preview_range")
+        if context.window_manager.render_settings.render_preview_range:
+            row = col.row(align=True)
+            row.prop(context.window_manager.render_settings, "render_start")
+            row.prop(context.window_manager.render_settings, "render_end")
         col.operator("sequencer.preview_render", icon="FILE_MOVIE")
         set_row = col.row(align=True)
         set_row.operator("sequencer.batch_render", icon="RENDER_ANIMATION")

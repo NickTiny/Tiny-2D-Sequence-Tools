@@ -12,6 +12,8 @@ class SEQUENCER_preview_render(bpy.types.Operator):
     first_mouse_x = bpy.props.IntProperty()
     first_value = bpy.props.FloatProperty()
 
+    
+
     def execute(self, context):
         make_render_scene(context)
         wm = context.window_manager
@@ -21,6 +23,9 @@ class SEQUENCER_preview_render(bpy.types.Operator):
         render_scene.render.ffmpeg.audio_codec = "AAC"
         render_scene = bpy.data.scenes["RENDER"]
         context.window.scene = render_scene
+        if wm.render_settings.render_preview_range:
+            render_scene.frame_start = wm.render_settings.render_start
+            render_scene.frame_end = wm.render_settings.render_end
         bpy.ops.render.opengl("INVOKE_DEFAULT", animation=True, sequencer=True)
         self.report({"INFO"}, f"Preview Render Complete")
         return {"FINISHED"}
