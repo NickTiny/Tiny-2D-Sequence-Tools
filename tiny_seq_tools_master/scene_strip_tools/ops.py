@@ -57,6 +57,7 @@ class SEQUENCER_full_render(bpy.types.Operator):
         if context.scene.name != "RENDER":
             self.report({"ERROR"}, "Render scene must be active")
             return {"CANCELLED"}
+        context.scene.render.use_sequencer = True
         bpy.ops.render.render("INVOKE_DEFAULT", animation=True)
         self.report({"INFO"}, f"Full Render Complete")
         return {"FINISHED"}
