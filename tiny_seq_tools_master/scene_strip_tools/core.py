@@ -19,13 +19,10 @@ def sync_strip_camera_to_viewport(strip: bpy.types.Sequence) -> bool:
     if not scene.link_seq_to_3d_view:
         updated_viewport = False
         return updated_viewport
-    for area in bpy.context.screen.areas:
-        if area.type == "VIEW_3D":
-            bpy.context.scene.camera = bpy.data.objects[
-                strip.scene_camera.name
-            ]  # Select camera as view
-            area.spaces.active.region_3d.view_perspective = "CAMERA"  # Use camera view
-            updated_viewport = True
+    bpy.context.scene.camera = bpy.data.objects[
+        strip.scene_camera.name
+    ]  # Select camera as view
+    updated_viewport = True
     return updated_viewport
 
 

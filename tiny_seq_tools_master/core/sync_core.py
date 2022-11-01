@@ -9,8 +9,8 @@ from tiny_seq_tools_master.scene_strip_tools.core import (
 import bpy
 from operator import attrgetter
 
-OldStrip = ""
 
+OldStrip = ""
 
 def update_constraint_camera(scene):
     global OldStrip
@@ -32,7 +32,7 @@ def update_constraint_camera(scene):
 
                         sync_strip_camera_to_viewport(i)
                         set_active_sequence_strip(i)
-                        oldStrip = i.name
+                        OldStrip = i.name
                         break
         except AttributeError:
             pass
