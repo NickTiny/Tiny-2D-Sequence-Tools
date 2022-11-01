@@ -29,7 +29,7 @@ class VIEW3D_OP_constraint_to_strip_camera(bpy.types.Operator):
             return {"CANCELLED"}
 
         # remove if already on list
-        rot_to_seq_cam_items = context.scene.rot_to_seq_cam_items
+        rot_to_seq_cam_items = context.window_manager.rot_to_seq_cam_items
         for index, item in enumerate(rot_to_seq_cam_items):
             if item.object == obj:
                 rot_to_seq_cam_items.remove(index)
@@ -90,7 +90,7 @@ class VIEW3D_OP_constraint_to_strip_camera_remove(bpy.types.Operator):
                 obj.constraints.remove(constraint)
 
         # Remove from list of copy_rot_items
-        rot_to_seq_cam_items = context.scene.rot_to_seq_cam_items
+        rot_to_seq_cam_items = context.window_manager.rot_to_seq_cam_items
         for index, item in enumerate(rot_to_seq_cam_items):
             if item.object == obj:
                 rot_to_seq_cam_items.remove(index)
@@ -109,7 +109,7 @@ class VIEW3D_OP_refresh_copy_rot_items(bpy.types.Operator):
 
     def execute(self, context):
         strip = context.active_sequence_strip
-        rot_to_seq_cam_items = context.scene.rot_to_seq_cam_items
+        rot_to_seq_cam_items = context.window_manager.rot_to_seq_cam_items
 
         # Clear line art list
         rot_to_seq_cam_items.clear()
