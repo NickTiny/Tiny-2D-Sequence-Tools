@@ -15,6 +15,9 @@ class SEQUENCER_preview_render(bpy.types.Operator):
     
 
     def execute(self, context):
+        if context.scene.name == "RENDER":
+            self.report({"ERROR"}, "Render scene cannot be active")
+            return {"CANCELLED"}
         make_render_scene(context)
         wm = context.window_manager
         render_scene = bpy.data.scenes["RENDER"]
