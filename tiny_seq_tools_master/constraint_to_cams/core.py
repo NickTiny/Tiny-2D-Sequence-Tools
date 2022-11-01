@@ -7,7 +7,7 @@ def constraints_to_active_camera(
     """Set Constraint target to active trip's camera"""
 
     rot_to_seq_cam_status = False
-    for item in strip.id_data.rot_to_seq_cam_items:
+    for item in bpy.context.window_manager.rot_to_seq_cam_items:
         obj = item.object
         for constraint in obj.constraints:
             if constraint.type == "COPY_ROTATION":
