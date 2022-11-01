@@ -24,7 +24,8 @@ class lr_seq_items(bpy.types.PropertyGroup):
     def get_status(self):
         scene = self.id_data
         strip = scene.sequence_editor.active_strip
-        return sync_line_art_obj_to_strip(self.object, strip)
+        if strip:
+            return sync_line_art_obj_to_strip(self.object, strip)
 
     def get_viewport(self):
         for modifier in self.object.grease_pencil_modifiers:
