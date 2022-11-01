@@ -16,7 +16,7 @@ class SEQUENCER_PT_constraint_to_strip_camera(bpy.types.Panel):
         row.label(text="Rotate to Strip Cameras:", icon="OBJECT_DATA")
         row.operator("object.refresh_copy_rot_items", icon="FILE_REFRESH", text="")
 
-        for item in context.scene.rot_to_seq_cam_items:
+        for item in context.window_manager.rot_to_seq_cam_items:
             obj = item.object
             box = col.box()
             box.label(text=f"{obj.name}")
