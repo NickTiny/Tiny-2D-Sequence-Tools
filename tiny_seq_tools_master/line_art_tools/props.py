@@ -12,7 +12,11 @@ class lr_seq_items(bpy.types.PropertyGroup):
     def get_thickness(self):
         obj = self.object
         if obj.type == "GPENCIL":
-            return obj.grease_pencil_modifiers[self.mod_name].thickness
+            if len(obj.users_scene) != 0:
+                mods = [mod for mod in obj.grease_pencil_modifiers if mod.type =="GP_LINEART"]
+                for mod in mods:
+                    if mod.thickness and mod.name == f"{self.mod_name}": 
+                        return int(mod.thickness)
         return 0
 
     def set_thickness(self, thickness: int):
@@ -75,6 +79,12 @@ def register():
         description="Control Line Art Object from Sequence",
         default=False,
     )
+    bpy.types.WindowManager.use_seq_line_art = bpy.props.BoolProperty(
+        name="Enable Seq Line Art",
+        description="Control Line Art Object from Sequence",
+        default=False,
+    )
+
 
 
 def unregister():

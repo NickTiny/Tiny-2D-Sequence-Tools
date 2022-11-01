@@ -19,6 +19,9 @@ class SEQUENCER_PT_line_art(bpy.types.Panel):
         layout = self.layout
         col = layout.column(align=False)
         row = col.row(align=True)
+        row.prop(context.window_manager, "use_seq_line_art", text="Use Sequence Line Art")
+        if not context.window_manager.use_seq_line_art:
+            return
         row.prop(context.scene, "line_art_cam_override", text="")
         row.label(text="Override Line Art Camera", icon="CAMERA_DATA")
         if context.scene.line_art_cam_override:
@@ -50,21 +53,22 @@ class SEQUENCER_PT_line_art(bpy.types.Panel):
         if context.active_sequence_strip is None:
             return
         for item in context.scene.line_art_seq_items:
-            box = col.box()
-            row = box.row(align=True)
-            if item.status == False:
-                row.alert = True
-            row.prop(
-                item, "thickness", slider=False, expand=False, text=item.object.name
-            )
-            row.prop(
-                item,
-                "viewport",
-                slider=False,
-                expand=False,
-                text="",
-                icon="RESTRICT_VIEW_OFF",
-            )
+            if len(item.object.users_scene) != 0:
+                box = col.box()
+                row = box.row(align=True)
+                if item.status == False:
+                    row.alert = True
+                row.prop(
+                    item, "thickness", slider=False, expand=False, text=item.object.name
+                )
+                row.prop(
+                    item,
+                    "viewport",
+                    slider=False,
+                    expand=False,
+                    text="",
+                    icon="RESTRICT_VIEW_OFF",
+                )
 
 
 class VIEW3D_sequence_line_art_panel(bpy.types.Panel):
