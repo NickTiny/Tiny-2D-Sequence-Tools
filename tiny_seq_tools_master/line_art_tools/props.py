@@ -68,8 +68,8 @@ classes = (lr_seq_items,)
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
-    bpy.types.Scene.line_art_seq_items = bpy.props.CollectionProperty(type=lr_seq_items)
-    bpy.types.Scene.line_art_cam_override = bpy.props.BoolProperty(
+    bpy.types.WindowManager.line_art_seq_items = bpy.props.CollectionProperty(type=lr_seq_items)
+    bpy.types.WindowManager.line_art_cam_override = bpy.props.BoolProperty(
         name="Override Camera",
         description="Render Line Art from the Tiny Line Art camera (which needs to be refreshed)",
         default=False,
@@ -90,3 +90,7 @@ def register():
 def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
+    del bpy.types.WindowManager.use_seq_line_art
+    del bpy.types.Object.line_art_seq_obj 
+    del bpy.types.WindowManager.line_art_cam_override 
+    del bpy.types.WindowManager.line_art_seq_items

@@ -22,9 +22,9 @@ class SEQUENCER_PT_line_art(bpy.types.Panel):
         row.prop(context.window_manager, "use_seq_line_art", text="Use Sequence Line Art")
         if not context.window_manager.use_seq_line_art:
             return
-        row.prop(context.scene, "line_art_cam_override", text="")
+        row.prop(context.window_manager, "line_art_cam_override", text="")
         row.label(text="Override Line Art Camera", icon="CAMERA_DATA")
-        if context.scene.line_art_cam_override:
+        if context.window_manager.line_art_cam_override:
             row = col.row(align=True)
             row.prop(
                 context.scene,
@@ -52,7 +52,7 @@ class SEQUENCER_PT_line_art(bpy.types.Panel):
 
         if context.active_sequence_strip is None:
             return
-        for item in context.scene.line_art_seq_items:
+        for item in context.window_manager.line_art_seq_items:
             if len(item.object.users_scene) != 0:
                 box = col.box()
                 row = box.row(align=True)

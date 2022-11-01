@@ -4,8 +4,9 @@ import bpy
 def sync_strip_camera_to_seq_line_art(strip: bpy.types.Sequence) -> bool:
     """Set Sequence Line Art Object's Camera to Strip Camera"""
     scene = strip.scene
-    if not scene.line_art_cam_override and bpy.context.window_manager.use_seq_line_art:
-        for item in strip.id_data.line_art_seq_items:
+    wm = bpy.context.window_manager
+    if not wm.line_art_cam_override and wm.use_seq_line_art:
+        for item in wm.line_art_seq_items:
             if len(item.object.users_scene) >= 1:
                 obj = item.object
                 for mod in obj.grease_pencil_modifiers:

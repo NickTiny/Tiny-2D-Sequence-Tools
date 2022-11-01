@@ -28,7 +28,7 @@ class SEQUENCER_OT_add_line_art_obj(bpy.types.Operator):
                 {"ERROR"}, "Cannot set Line Art if 'Rotate to Strip Camera' enabled"
             )
             return {"CANCELLED"}
-        line_art_items = context.scene.line_art_seq_items
+        line_art_items = context.window_manager.line_art_seq_items
         for index, item in enumerate(line_art_items):
             if item.object == obj:
                 line_art_items.remove(index)
@@ -80,9 +80,9 @@ class SEQUENCER_OT_remove_line_art_obj(bpy.types.Operator):
     def execute(self, context):
         obj = context.active_object
         # Remove from list of line_art_items
-        for item in context.scene.line_art_seq_items:
-            line_art_items = context.scene.line_art_seq_items
-        for index, item in enumerate(context.scene.line_art_seq_items):
+        for item in context.window_manager.line_art_seq_items:
+            line_art_items = context.window_manager.line_art_seq_items
+        for index, item in enumerate(context.window_manager.line_art_seq_items):
             if item.object == obj:
                 line_art_items.remove(index)
         for mod in obj.grease_pencil_modifiers:
@@ -105,7 +105,7 @@ class SEQUENCER_OT_refresh_line_art_obj(bpy.types.Operator):
             self.report({"ERROR"}, "There is no active scene strip")
             return {"CANCELLED"}
 
-        line_art_items = context.scene.line_art_seq_items
+        line_art_items = context.window_manager.line_art_seq_items
         line_art_items.clear()
         for obj in strip.scene.objects:
             if obj.line_art_seq_obj:
@@ -132,7 +132,7 @@ class SEQUENCER_OT_update_similar_strip_line_art(bpy.types.Operator):
         thickness_values = []
         cam_name = active_strip.scene_camera.name
 
-        for item in scene.line_art_seq_items:
+        for item in context.window_manager.line_art_seq_items:
             thickness_values.append(item.thickness)
 
         strips = [
@@ -151,7 +151,7 @@ class SEQUENCER_OT_update_similar_strip_line_art(bpy.types.Operator):
         for strip in strips:
             scene.frame_set(strip.frame_final_start)
             scene.sequence_editor.active_strip = strip
-            for index, item in enumerate(scene.line_art_seq_items):
+            for index, item in enumerate(context.window_manager.line_art_seq_items):
                 item.thickness = thickness_values[index]
                 success_msg = (
                     f"Thickness set to '{item.thickness}' on '{strip.name}' \n"
@@ -169,7 +169,7 @@ class SEQUENCER_OT_check_line_art_obj(bpy.types.Operator):
 
     def execute(self, context):
         error_msg = ""
-        for item in context.scene.line_art_seq_items:
+        for item in context.window_manager.line_art_seq_items:
             obj = item.object
             constant_anim = get_object_animation_is_constant(obj)
             if constant_anim:

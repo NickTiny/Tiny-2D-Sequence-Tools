@@ -120,7 +120,7 @@ def refresh_line_art_on_save() -> bool:
     line_art_updated = False
     avl_scenes = [scene for scene in scenes if scene.name != "RENDER"]
     for scene in avl_scenes:
-        if scene.update_line_art_on_save and scene.line_art_cam_override:
+        if scene.update_line_art_on_save and bpy.context.window_manager.line_art_cam_override:
             cur_frame = scene.frame_current
             print(f"CUR FRAME{cur_frame}")
             update_line_art_override_cam_from_sequence(scene)
