@@ -21,10 +21,13 @@ class VIEW3D_OP_constraint_to_strip_camera(bpy.types.Operator):
             self.report({"ERROR"}, "There is no active object")
             return {"CANCELLED"}
 
+        if obj.type == "CAMERA":
+            self.report({"ERROR"}, "Cannot set 'Rotate to Strip Camera' on a Camera")
+            return {"CANCELLED"}
         if obj.line_art_seq_obj:
             self.report(
                 {"ERROR"},
-                "Cannot set Rotate to Strip Camera if 'Sequence Line Art' enabled",
+                "Cannot set 'Rotate to Strip Camera' if 'Sequence Line Art' enabled",
             )
             return {"CANCELLED"}
 
