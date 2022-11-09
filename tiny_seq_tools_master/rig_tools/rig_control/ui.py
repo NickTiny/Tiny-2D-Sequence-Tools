@@ -26,6 +26,8 @@ class SEQUENCER_PT_rig_control(bpy.types.Panel):
 
     def draw(self, context):
         obj = context.active_object
+        if obj is None:
+            return
         layout = self.layout
         if not check_tiny_rig(obj):
             layout.label(text="Rig not Found", icon="ERROR")

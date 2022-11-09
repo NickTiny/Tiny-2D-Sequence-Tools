@@ -13,11 +13,14 @@ class SEQUENCER_PT_rig_editor(bpy.types.Panel):
         layout = self.layout
         action_row = layout.row(align=True)
 
-        if obj.type != "ARMATURE":
+        if not (obj and obj.type == "ARMATURE"):
             return
 
-        if context.object.offset_action is not None:
+        if obj.offset_action is not None:
             action_row.prop(context.object, "offset_action")
+            if obj.library or obj.override_library:
+                action_row.enabled = False
+
         action_row.operator("rigools.load_action", icon="FILE_REFRESH", text="")
         offset_row = layout.row(align=True)
         offset_row.operator("rigools.enable_offset_action")
@@ -25,6 +28,12 @@ class SEQUENCER_PT_rig_editor(bpy.types.Panel):
             offset_row.operator(
                 "rigools.disable_offset_action", icon="LOOP_BACK", text=""
             )
+        if (
+            context.window_manager.offset_editor_active
+            and context.active_object.mode != "POSE"
+        ):
+            offset_row.alert = True
+            offset_row.label(text="Must be in POSE Mode")
         layout.operator("rigools.add_action_const_to_bone_head", icon="CONSTRAINT_BONE")
         layout.operator("rigools.add_action_const_to_bone", icon="CONSTRAINT_BONE")
         layout.operator("rigtools.add_ik_fk_toggle")
