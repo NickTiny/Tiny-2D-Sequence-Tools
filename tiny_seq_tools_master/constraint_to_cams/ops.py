@@ -1,6 +1,11 @@
 import enum
 import bpy
 from bpy.utils import register_class, unregister_class
+from tiny_seq_tools_master.constraint_to_cams.core import (
+    set_rot_to_seq_cam,
+    check_rot_to_cam_status,
+    refresh_rot_to_cam_list,
+)
 
 
 class VIEW3D_OP_constraint_to_strip_camera(bpy.types.Operator):
@@ -11,7 +16,7 @@ class VIEW3D_OP_constraint_to_strip_camera(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context: bpy.types.Context):
-        return context.active_object and not context.active_object.rot_to_seq_cam
+        return not check_rot_to_cam_status(context.active_object)
 
     def execute(self, context):
         obj = context.active_object
@@ -43,18 +48,7 @@ class VIEW3D_OP_constraint_to_strip_camera(bpy.types.Operator):
                 if constraint.type == "COPY_ROTATION":
                     obj.constraints.remove(constraint)
 
-        # add new rotation constraint
-        window = context.window_manager.windows[0]
-        with context.temp_override(window=window):
-            bpy.ops.object.constraint_add(type="COPY_ROTATION")
-
-        # loop through constraints incase user has other constraints
-        for constraint in obj.constraints:
-            if constraint.type == "COPY_ROTATION":
-                constraint.use_x = False
-                constraint.use_y = False
-                constraint.use_z = True
-                obj.rot_to_seq_cam = True
+        set_rot_to_seq_cam(obj)
 
         # Add to list items
         add_rot_to_cam_item = rot_to_seq_cam_items.add()
@@ -75,21 +69,15 @@ class VIEW3D_OP_constraint_to_strip_camera_remove(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context: bpy.types.Context):
-        return context.active_object and context.active_object.rot_to_seq_cam
+        return check_rot_to_cam_status(context.active_object)
 
     def execute(self, context):
         # Check for active object
         obj = context.active_object
 
-        # Check for active strip
-        rot_to_seq_cam = context.active_object.rot_to_seq_cam
-        if rot_to_seq_cam is None:
-            self.report({"ERROR"}, "Active Object is Not Rotated to Camera")
-            return {"CANCELLED"}
-
         # Remove constraint
         for constraint in obj.constraints:
-            if constraint.type == "COPY_ROTATION":
+            if constraint.name == "ROT_TO_SEQ_CAM":
                 obj.constraints.remove(constraint)
 
         # Remove from list of copy_rot_items
@@ -98,8 +86,6 @@ class VIEW3D_OP_constraint_to_strip_camera_remove(bpy.types.Operator):
             if item.object == obj:
                 rot_to_seq_cam_items.remove(index)
 
-        # Set avaliablity to false
-        obj.rot_to_seq_cam = False
         self.report({"INFO"}, f"Removed {obj.name} from Rotate to Constraint Items")
         return {"FINISHED"}
 
@@ -112,23 +98,10 @@ class VIEW3D_OP_refresh_copy_rot_items(bpy.types.Operator):
 
     def execute(self, context):
         strip = context.active_sequence_strip
-        rot_to_seq_cam_items = context.window_manager.rot_to_seq_cam_items
-
-        # Clear line art list
-        rot_to_seq_cam_items.clear()
-
-        # Check for active strip type
-        if not strip and strip.type != "SCENE":
-            self.report({"ERROR"}, "There is no active scene strip")
+        refreshed = refresh_rot_to_cam_list(context, strip)
+        if not refreshed:
+            self.report({"ERROR"}, "There may be no active scene strip")
             return {"CANCELLED"}
-
-        # Build line art list
-        for obj in strip.scene.objects:
-            if obj.rot_to_seq_cam:
-                for constraint in obj.constraints:
-                    if constraint.type == "COPY_ROTATION":
-                        add_rot_to_cam_item = rot_to_seq_cam_items.add()
-                        add_rot_to_cam_item.object = obj
         self.report({"INFO"}, "Strip Cameras List Updated")
         return {"FINISHED"}
 
