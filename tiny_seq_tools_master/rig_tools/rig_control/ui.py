@@ -1,47 +1,82 @@
 import bpy
 
 
-class SEQUENCER_PT_rig_editor(bpy.types.Panel):
+def boneprop_msg(prop):
+    if prop == 1:
+        return "ON"
+    else:
+        return "OFF"
+
+
+class SEQUENCER_PT_rig_control(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_idname = "SEQUENCER_PT_rig_edit"
-    bl_label = "Tiny Rig Editor"
-    bl_category = "Tiny Rig Edit"
+    bl_idname = "SEQUENCER_PT_rig_control"
+    bl_label = "Tiny Rig Controller"
+    bl_category = "Tiny Rig Control"
 
     def draw(self, context):
         obj = context.active_object
         layout = self.layout
-        action_row = layout.row(align=True)
-
         if obj.type != "ARMATURE":
             return
+        if not (obj.pose.bones["PoseData"]):
+            return
+        bone = obj.pose.bones["PoseData"]
 
-        if context.object.offset_action is not None:
-            action_row.prop(context.object, "offset_action")
-        action_row.operator("rigools.load_action", icon="FILE_REFRESH", text="")
-        offset_row = layout.row(align=True)
-        offset_row.operator("rigools.enable_offset_action")
-        if obj.animation_data.action == obj.offset_action:
-            offset_row.operator(
-                "rigools.disable_offset_action", icon="LOOP_BACK", text=""
-            )
-        layout.operator("rigools.add_action_const_to_bone_head", icon="CONSTRAINT_BONE")
-        layout.operator("rigools.add_action_const_to_bone", icon="CONSTRAINT_BONE")
-        layout.operator("rigtools.add_ik_fk_toggle")
+        layout.prop(bone, '["Pose"]')
+        layout.prop(bone, '["Pose Head"]')
+        col = layout.column()
+        row = col.row()
+        split = row.split(factor=0.5)
+        left_col = split.column(align=True)
+        left_col.label(text="L Arm")
+        l_nudge_row = left_col.row(align=True)
+        l_nudge_row.operator("rigcontrol.l_arm_nudge_back", icon="REMOVE", text="L")
+        l_nudge_row.operator("rigcontrol.l_arm_nudge_forward", icon="ADD", text="L")
+        l_arm_state = bone["L_Arm_IK"]
+        left_col.operator(
+            "rigcontrol.toggle_ik_l", text=f"IK is {boneprop_msg(l_arm_state)}"
+        )
+        left_col.prop(bone, '["L_Hand_Flip"]', text="Flip L Hand")
+
+        left_col.label(text="L Hand")
+        l_nudge_row = left_col.row(align=True)
+        l_nudge_row.operator("rigcontrol.l_leg_nudge_back", icon="REMOVE", text="L")
+        l_nudge_row.operator("rigcontrol.l_leg_nudge_forward", icon="ADD", text="L")
+        l_arm_state = bone["L_Leg_IK"]
+        left_col.operator(
+            "rigcontrol.toggle_ik_l_leg", text=f"IK is {boneprop_msg(l_arm_state)}"
+        )
+        left_col.prop(bone, '["L_Foot_Flip"]', text="Flip L Foot")
+
+        right_col = split.split()
+        right_col = right_col.column(align=True)
+        right_col.label(text="R Arm")
+        r_nudge_row = right_col.row(align=True)
+        r_nudge_row.operator("rigcontrol.r_arm_nudge_back", icon="REMOVE", text="R")
+        r_nudge_row.operator("rigcontrol.r_arm_nudge_forward", icon="ADD", text="R")
+        r_arm_state = bone["R_Arm_IK"]
+        right_col.operator(
+            "rigcontrol.toggle_ik_r", text=f"IK is {boneprop_msg(r_arm_state)}"
+        )
+        right_col.prop(bone, '["R_Hand_Flip"]', text="Flip R Hand")
+        right_col.label(text="R Hand")
+        r_nudge_row = right_col.row(align=True)
+        r_nudge_row.operator("rigcontrol.r_leg_nudge_back", icon="REMOVE", text="R")
+        r_nudge_row.operator("rigcontrol.r_leg_nudge_forward", icon="ADD", text="R")
+        r_leg_state = bone["R_Leg_IK"]
+        right_col.operator(
+            "rigcontrol.toggle_ik_r_leg", text=f"IK is {boneprop_msg(r_leg_state)}"
+        )
+        right_col.prop(bone, '["R_Foot_Flip"]', text="Flip R Foot")
+
+        layout.prop(bone, '["A. Mouth"]')
+        # layout.operator("rigcontrol.nudge_forward")
+        # layout.operator("rigcontrol.nudge_backwards")
 
 
-class SEQUENCER_PT_rig_legacy(bpy.types.Panel):
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_idname = "SEQUENCER_PT_rig_legacy"
-    bl_label = "Update Legacy Rigs"
-    bl_category = "Tiny Rig Edit"
-
-    def draw(self, context):
-        self.layout.operator("rigtools.apply_legacy_transforms")
-
-
-classes = (SEQUENCER_PT_rig_editor, SEQUENCER_PT_rig_legacy)
+classes = (SEQUENCER_PT_rig_control,)
 
 
 def register():
