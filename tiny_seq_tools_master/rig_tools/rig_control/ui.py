@@ -8,6 +8,15 @@ def boneprop_msg(prop):
         return "OFF"
 
 
+def check_tiny_rig(obj):
+    if obj.type != "ARMATURE":
+        return
+    try:
+        return obj.pose.bones["PoseData"] or obj.pose.bones["PoseData"]["L_Arm_IK"]
+    except KeyError:
+        return
+
+
 class SEQUENCER_PT_rig_control(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -18,9 +27,8 @@ class SEQUENCER_PT_rig_control(bpy.types.Panel):
     def draw(self, context):
         obj = context.active_object
         layout = self.layout
-        if obj.type != "ARMATURE":
-            return
-        if not (obj.pose.bones["PoseData"]):
+        if not check_tiny_rig(obj):
+            layout.label(text="Rig not Found", icon="ERROR")
             return
         bone = obj.pose.bones["PoseData"]
 
