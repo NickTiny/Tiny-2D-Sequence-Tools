@@ -48,9 +48,24 @@ class SEQUENCER_PT_rig_legacy(bpy.types.Panel):
 
     def draw(self, context):
         self.layout.operator("rigtools.apply_legacy_transforms")
+        self.layout.operator("rigools.initialize_rig")
 
 
-classes = (SEQUENCER_PT_rig_editor, SEQUENCER_PT_rig_legacy)
+class SEQUENCER_PT_rig_settings(bpy.types.Panel):
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_idname = "SEQUENCER_PT_rig_settings"
+    bl_label = "Rig Settings"
+    bl_category = "Tiny Rig Edit"
+
+    def draw(self, context):
+        layout = self.layout
+        obj = context.active_object
+        layout.label(text=f"Turnaround Length: {obj.tiny_rig.pose_length}")
+        layout.operator("rigools.set_pose_length")
+
+
+classes = (SEQUENCER_PT_rig_editor, SEQUENCER_PT_rig_legacy, SEQUENCER_PT_rig_settings)
 
 
 def register():

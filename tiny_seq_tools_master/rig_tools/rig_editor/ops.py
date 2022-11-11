@@ -33,6 +33,50 @@ class RIGTOOLS_rig_edit_base_class(bpy.types.Operator):
 old_action = None
 
 
+class RIGTOOLS_initialize_rig(bpy.types.Operator):
+    bl_idname = "rigools.initialize_rig"
+    bl_label = "Initialize Rig"
+    bl_description = "Load all of the rig settings"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        return {"FINISHED"}
+
+
+class RIGTOOLS_set_turnaround_length(bpy.types.Operator):
+    bl_idname = "rigools.set_pose_length"
+    bl_label = "Set Turnaround Length"
+    bl_description = "Set how many turnaround poses make up the character"
+    bl_options = {"REGISTER", "UNDO"}
+
+    pose_length_set: bpy.props.IntProperty(name="Turnaround Length")
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    def draw(self, context):
+        col = self.layout.column(align=True)
+        lines = [
+            "Turnaround Length effects how the turnaround pose ",
+            "is interperted. Changing this will break compatibility",
+            "with previous animations tracks.",
+        ]
+        for line in lines:
+            col.alert = True
+            col.label(text=line)
+        col.label(text="Proceed with Caution!", icon="ERROR")
+        col = self.layout.column()
+        col.label(text="Use 'ESC' to cancel")
+        if context.active_object.tiny_rig.pose_length:
+            self.pose_length_set = context.active_object.tiny_rig.pose_length
+        col.prop(self, "pose_length_set")
+
+    def execute(self, context):
+        context.active_object.tiny_rig.pose_length = self.pose_length_set
+        return {"FINISHED"}
+
+
 class RIGTOOLS_toggle_enable_action(RIGTOOLS_rig_edit_base_class):
     bl_idname = "rigools.enable_offset_action"
     bl_label = "Enable Offset Action"
@@ -244,6 +288,8 @@ classes = (
     RIGTOOLS_toggle_enable_action,
     RIGTOOLS_toggle_disable_action,
     RIGTOOLS_load_action,
+    RIGTOOLS_set_turnaround_length,
+    RIGTOOLS_initialize_rig,
 )
 
 
