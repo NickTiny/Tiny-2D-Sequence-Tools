@@ -1,7 +1,43 @@
 import bpy
 
 
-from tiny_seq_tools_master.rig_tools.rig_control.core import nudge_bone, toggle_ik
+from tiny_seq_tools_master.rig_tools.rig_control.core import (
+    nudge_bone,
+    toggle_ik,
+    change_pose,
+)
+
+
+class RIGCONTROL_next_body_pose(bpy.types.Operator):
+    bl_idname = "rigcontrol.next_body_pose"
+    bl_label = "Next Pose"
+
+    def execute(self, context):
+        return change_pose(self, context, 1, 1)
+
+
+class RIGCONTROL_prev_body_pose(bpy.types.Operator):
+    bl_idname = "rigcontrol.prev_body_pose"
+    bl_label = "Prev Pose"
+
+    def execute(self, context):
+        return change_pose(self, context, -1, -1)
+
+
+class RIGCONTROL_next_head_pose(bpy.types.Operator):
+    bl_idname = "rigcontrol.next_head_pose"
+    bl_label = "Next Head"
+
+    def execute(self, context):
+        return change_pose(self, context, 0, 1)
+
+
+class RIGCONTROL_prev_head_pose(bpy.types.Operator):
+    bl_idname = "rigcontrol.prev_head_pose"
+    bl_label = "Prev Head"
+
+    def execute(self, context):
+        return change_pose(self, context, 0, -1)
 
 
 class RIGCONTROL_r_arm_nudge_forward(bpy.types.Operator):
@@ -133,6 +169,10 @@ classes = (
     RIGCONTROL_r_leg_nudge_back,
     RIGCONTROL_l_leg_nudge_forward,
     RIGCONTROL_l_leg_nudge_back,
+    RIGCONTROL_next_body_pose,
+    RIGCONTROL_prev_body_pose,
+    RIGCONTROL_next_head_pose,
+    RIGCONTROL_prev_head_pose,
 )
 
 

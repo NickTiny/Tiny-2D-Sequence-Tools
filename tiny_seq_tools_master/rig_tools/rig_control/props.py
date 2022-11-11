@@ -47,7 +47,7 @@ class RIGCONTROL_settings(bpy.types.PropertyGroup):
 
         return
 
-    iu_body_pose: bpy.props.IntProperty(
+    ui_body_pose: bpy.props.IntProperty(
         name="Body Pose",
         get=get_body_pose,
         set=set_body_pose,
