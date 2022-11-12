@@ -46,7 +46,7 @@ def draw_leg(col, side, limb):
         bpy.context.window_manager.tiny_rig_ui,
         f"{side}_{sub_limb}_Mirror",
         icon="MOD_MIRROR",
-        text=f"{side} {limb}",
+        text=f"Mirror {side} {sub_limb}",
     )
 
 
@@ -56,12 +56,12 @@ def draw_nudge_row(col, side, limb):
     nudge_row.operator(
         f"rigcontrol.{side.lower()}_{limb.lower()}_nudge_back",
         icon="REMOVE",
-        text=f"{side}",
+        text=f"{side} Back",
     )
     nudge_row.operator(
         f"rigcontrol.{side.lower()}_{limb.lower()}_nudge_forward",
         icon="ADD",
-        text=f"{side}",
+        text=f"{side} Forward",
     )
 
 
@@ -76,7 +76,7 @@ def draw_ik_row(col, side, limb):
     ik_row.prop(
         bpy.context.window_manager.tiny_rig_ui,
         f"{side}_{limb}_Flip_IK",
-        icon="MOD_MIRROR",
+        icon="CON_ROTLIKE",
         text="",
     )
 
@@ -112,8 +112,8 @@ class SEQUENCER_PT_rig_control(bpy.types.Panel):
         obj = context.active_object
         if obj is None:
             return
-        # if not obj.tiny_rig_is_rig:
-        #     return
+        if not obj.tiny_rig.is_rig:
+            return
         layout = self.layout
         if not check_tiny_rig(obj):
             layout.label(text="Rig not Found", icon="ERROR")
