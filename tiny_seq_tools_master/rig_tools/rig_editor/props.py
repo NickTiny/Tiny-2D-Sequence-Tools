@@ -9,6 +9,9 @@ def register():
     bpy.types.WindowManager.offset_editor_active = bpy.props.BoolProperty(
         name="Offset Editor is Active", default=False
     )
+    bpy.types.WindowManager.gpencil_editor_active = bpy.props.PointerProperty(
+        type=bpy.types.GreasePencil
+    )
 
 
 def unregister():
