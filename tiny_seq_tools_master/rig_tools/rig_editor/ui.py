@@ -37,6 +37,9 @@ class SEQUENCER_PT_rig_editor(bpy.types.Panel):
         layout.operator("rigools.add_action_const_to_bone_head", icon="CONSTRAINT_BONE")
         layout.operator("rigools.add_action_const_to_bone", icon="CONSTRAINT_BONE")
         layout.operator("rigtools.add_ik_fk_toggle")
+        layout.operator("rigools.add_ik_mirror_to_pole")
+        layout.operator("rigools.add_hand_nudge")
+        layout.operator("rigools.add_mirror_to_hand_foot_bone")
 
 
 class SEQUENCER_PT_rig_legacy(bpy.types.Panel):

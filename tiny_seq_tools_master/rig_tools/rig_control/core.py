@@ -91,22 +91,40 @@ def insert_keyframe_with_refresh(
 
 def save_prev_frame(scene, posebone: bpy.types.PoseBone, datapath: str):
     offset_current_frame(scene, -1)
-    posebone.keyframe_insert(f'["{datapath}"]')
+    posebone.keyframe_insert(f'["{datapath}"]', group=posebone.name)
     offset_current_frame(scene, +1)
     return
 
 
-def toggle_ik(context, datapath, bone_names, ik_bone_names):
+def get_bone_names(suffix):
+    if "Arm" in suffix:
+        return (
+            f"{suffix}.Lw",
+            f"{suffix}.Up",
+            # f"{suffix}.Hand",
+        )
+    if "Leg" in suffix:
+        return (
+            f"{suffix}.Lw",
+            f"{suffix}.Up",
+            # f"{suffix}.Foot",
+        )
+
+
+def toggle_ik(
+    context,
+    datapath,
+):
+    bone_names = get_bone_names(datapath.split("_IK")[0])
     scene = context.scene
     index = int(scene.frame_current)
     obj = context.active_object
     posebone = obj.pose.bones[pbone_name]
 
     bones = [bone for bone in obj.pose.bones if bone.name in bone_names]
-    ik_bones = [bone for bone in obj.pose.bones if bone.name in ik_bone_names]
     if posebone[f"{datapath}"] == 1:
         save_prev_frame(scene, posebone, datapath)
-        bake_constraints(bones, ik_bones, index)
+        bake_constraints(bones, index)
         insert_keyframe_with_refresh(scene, posebone, datapath, 0)
         return {"FINISHED"}
     if posebone[f"{datapath}"] == 0:
@@ -114,13 +132,13 @@ def toggle_ik(context, datapath, bone_names, ik_bone_names):
         offset_current_frame(scene, -1)
         # keyframe previous bone state
         for bone in bones:
-            bone.keyframe_insert("rotation_euler")
-            bone.keyframe_insert("rotation_quaternion")
+            bone.keyframe_insert("rotation_euler", group=bone.name),
+            bone.keyframe_insert("rotation_quaternion", group=bone.name)
         offset_current_frame(scene, +1)
         reset_bones(bones)
         for bone in bones:
-            bone.keyframe_insert("rotation_euler")
-            bone.keyframe_insert("rotation_quaternion")
+            bone.keyframe_insert("rotation_euler", group=bone.name)
+            bone.keyframe_insert("rotation_quaternion", group=bone.name)
         insert_keyframe_with_refresh(scene, posebone, datapath, 1)
         return {"FINISHED"}
 

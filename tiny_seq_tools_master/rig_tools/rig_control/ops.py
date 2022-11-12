@@ -112,8 +112,6 @@ class RIGCONTROL_toggle_ik_r(bpy.types.Operator):
         return toggle_ik(
             context,
             "R_Arm_IK",
-            ("R_Arm.Lw", "R_Arm.Up", "R_Arm.Hand"),
-            ("R_Arm_IK", "R_Arm_Pole"),
         )
 
 
@@ -125,8 +123,6 @@ class RIGCONTROL_toggle_ik_l(bpy.types.Operator):
         return toggle_ik(
             context,
             "L_Arm_IK",
-            ("L_Arm.Lw", "L_Arm.Up", "L_Arm.Hand"),
-            ("L_Arm_IK", "L_Arm_Pole"),
         )
 
 
@@ -138,8 +134,6 @@ class RIGCONTROL_toggle_ik_l_leg(bpy.types.Operator):
         return toggle_ik(
             context,
             "L_Leg_IK",
-            ("L_Leg.Lw", "L_Leg.Up", "L_Leg.Foot"),
-            ("L_Leg_IK", "L_Leg_Pole"),
         )
 
 
@@ -151,8 +145,6 @@ class RIGCONTROL_toggle_ik_r_leg(bpy.types.Operator):
         return toggle_ik(
             context,
             "R_Leg_IK",
-            ("R_Leg.Lw", "R_Leg.Up", "R_Leg.Foot"),
-            ("R_Leg_IK", "R_Leg_Pole"),
         )
 
 

@@ -26,10 +26,10 @@ def bone_datapath_insert_keyframe(
     posebone: bpy.types.PoseBone,
     datapath: str,
     val: int,
-    index=-1,
     frame=None,
-    group="",
+    index=-1,
 ):
+    group = posebone.name
     if frame is None:
         frame = bpy.context.scene.frame_current
     posebone[f"{datapath}"] = val
@@ -82,10 +82,8 @@ def apply_transforms_on_frame(index, bones):
     set_cons_state(bones, "TRANSFORM", False)
 
 
-def bake_constraints(bones, ik_bones, index):
+def bake_constraints(bones, index):
     select_bones(bones)
-    for bone in ik_bones:
-        bone.bone.select = True
     bpy.ops.nla.bake(
         frame_start=index,
         frame_end=index,
@@ -95,7 +93,7 @@ def bake_constraints(bones, ik_bones, index):
         clear_constraints=False,
         clear_parents=False,
         use_current_action=True,
-        clean_curves=True,
+        clean_curves=False,
         bake_types={"POSE"},
     )
     return

@@ -77,7 +77,15 @@ class RIGTOOLS_set_turnaround_length(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class RIGTOOLS_toggle_enable_action(RIGTOOLS_rig_edit_base_class):
+class RIGTOOLS_toggle_enable_action(bpy.types.Operator):
+    @classmethod
+    def poll(cls, context):
+        return (
+            context.active_object.animation_data.action
+            != context.active_object.offset_action
+            and context.active_object.mode == "POSE"
+        )
+
     bl_idname = "rigools.enable_offset_action"
     bl_label = "Enable Offset Action"
     bl_description = "Enable Offset Action Editor"
@@ -214,6 +222,106 @@ class RIGTOOLS_add_action_const_to_bone_head(RIGTOOLS_rig_edit_base_class):
         return {"FINISHED"}
 
 
+class RIGTOOLS_add_ik_mirror_to_pole(RIGTOOLS_rig_edit_base_class):
+    bl_idname = "rigools.add_ik_mirror_to_pole"
+    bl_label = "Add Flip to Pole Bone"
+    bl_description = """Add Mirror Pole Transform Constraint to selected Bone"""
+    bl_options = {"UNDO"}
+
+    def execute(self, context):
+        bone = context.active_pose_bone
+        if "_Pole" not in bone.name:
+            self.report({"ERROR"}, f"Active Bone must be Pole Target")
+            return {"CANCELLED"}
+
+        suffix = bone.name.split("_Pole")[0]
+        if not get_consts_on_bone(bone, "TRANSFORM"):
+            new = bone.constraints.new("TRANSFORM")
+            new.target = context.active_object
+            new.subtarget = f"{suffix}_Nudge"
+            new.target_space = "LOCAL_WITH_PARENT"
+            new.owner_space = "LOCAL_WITH_PARENT"
+            new.to_min_y = -4.5
+            add_driver(
+                bone.id_data,
+                bone.id_data,
+                f"{suffix}_Flip_IK",
+                f'pose.bones["{bone.name}"].constraints["{new.name}"].influence',
+                f'pose.bones["PoseData"]["{suffix}_Flip_IK"]',
+            )
+        return {"FINISHED"}
+
+
+class RIGTOOLS_add_hand_nudge(RIGTOOLS_rig_edit_base_class):
+    bl_idname = "rigools.add_hand_nudge"
+    bl_label = "Add Nudge to Hand Bone"
+    bl_description = """Add Hand Nudge Constraint to selected Bone"""
+    bl_options = {"UNDO"}
+
+    def execute(self, context):
+
+        bone = context.active_pose_bone
+        if "_Arm.Hand" not in bone.name:
+            self.report({"ERROR"}, f"Active Bone must be Hand")
+            return {"CANCELLED"}
+        if "HAND_NUDGE" in [const.name for const in bone.constraints]:
+            self.report({"ERROR"}, f"Hand Nundge already exists on {bone.name}")
+            return {"CANCELLED"}
+
+        suffix = bone.name.split(".Hand")[0]
+        side = suffix.split("_Arm")[0]
+        new = bone.constraints.new("TRANSFORM")
+        new.target = context.active_object
+        new.subtarget = f"{suffix}_Nudge"
+        new.target_space = "LOCAL"
+        new.owner_space = "LOCAL"
+        new.to_min_z = -0.05
+        new.name = "HAND_NUDGE"
+        add_driver(
+            bone.id_data,
+            bone.id_data,
+            f"{side}_Hand_Nudge",
+            f'pose.bones["{bone.name}"].constraints["{new.name}"].influence',
+            f'pose.bones["PoseData"]["{side}_Hand_Nudge"]',
+        )
+        return {"FINISHED"}
+
+
+class RIGTOOLS_add_mirror_to_bone(RIGTOOLS_rig_edit_base_class):
+    bl_idname = "rigools.add_mirror_to_hand_foot_bone"
+    bl_label = "Add Flip to Hand/Foot Bone"
+    bl_description = """Add Hand Foot Mirror Constraint"""
+    bl_options = {"UNDO"}
+
+    def execute(self, context):
+        bone = context.active_pose_bone
+        if not (".Hand" in bone.name or ".Foot" in bone.name):
+            self.report({"ERROR"}, f"Active Bone must be Hand or Foot")
+            return {"CANCELLED"}
+        if "FLIP_BONE" in [const.name for const in bone.constraints]:
+            self.report({"ERROR"}, f"Hand Nundge already exists on {bone.name}")
+            return {"CANCELLED"}
+
+        prefix = bone.name[0]
+        suffix = bone.name.split(".")[1]
+        new = bone.constraints.new("TRANSFORM")
+        new.target = context.active_object
+        new.subtarget = f"{bone.name.split('.')[0]}_Nudge"
+        new.target_space = "LOCAL_WITH_PARENT"
+        new.owner_space = "LOCAL_WITH_PARENT"
+        new.map_to = "ROTATION"
+        new.to_min_y_rot = 3.1415927410125732
+        new.name = "FLIP_BONE"
+        add_driver(
+            bone.id_data,
+            bone.id_data,
+            f"{prefix}_{suffix}_Flip",
+            f'pose.bones["{bone.name}"].constraints["{new.name}"].influence',
+            f'pose.bones["PoseData"]["{prefix}_{suffix}_Flip"]',
+        )
+        return {"FINISHED"}
+
+
 class RIGTOOLS_apply_legacy_transforms(RIGTOOLS_rig_edit_base_class):
     bl_idname = "rigtools.apply_legacy_transforms"
     bl_label = "Apply Legacy Constraints on Current Frame"
@@ -290,6 +398,9 @@ classes = (
     RIGTOOLS_load_action,
     RIGTOOLS_set_turnaround_length,
     RIGTOOLS_initialize_rig,
+    RIGTOOLS_add_ik_mirror_to_pole,
+    RIGTOOLS_add_hand_nudge,
+    RIGTOOLS_add_mirror_to_bone,
 )
 
 
