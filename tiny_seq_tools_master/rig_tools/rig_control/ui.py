@@ -1,13 +1,6 @@
 import bpy
 
 
-def boneprop_msg(prop):
-    if prop == 1:
-        return "ON"
-    else:
-        return "OFF"
-
-
 def check_tiny_rig(obj):
     if obj.type != "ARMATURE":
         return
@@ -17,128 +10,74 @@ def check_tiny_rig(obj):
         return
 
 
-def draw_left_arm(bone, left_col):
-    left_col.label(text="L Arm")
-    l_nudge_row = left_col.row(align=True)
-    l_nudge_row.operator("rigcontrol.l_arm_nudge_back", icon="REMOVE", text="L")
-    l_nudge_row.operator("rigcontrol.l_arm_nudge_forward", icon="ADD", text="L")
-
-    ik_row_l = left_col.row(align=True)
-    ik_row_l.prop(
+def draw_arm(bone, col, side, limb):
+    draw_nudge_row(col, side, limb)
+    draw_ik_row(col, side, limb)
+    sub_limb = get_sub_limb(limb)
+    col.separator()
+    hand_row = col.row(align=True)
+    hand_row.prop(
         bpy.context.window_manager.tiny_rig_ui,
-        "L_Arm_IK",
-        icon="CON_KINEMATIC",
-        text="L Arm IK",
-    )
-    ik_row_l.prop(
-        bpy.context.window_manager.tiny_rig_ui,
-        "L_Arm_Flip_IK",
-        icon="MOD_MIRROR",
-        text="",
-    )
-    left_col.separator()
-    L_Handrow = left_col.row(align=True)
-    L_Handrow.prop(
-        bpy.context.window_manager.tiny_rig_ui,
-        "L_Hand_Nudge",
+        f"{side}_Hand_Nudge",
         icon="SORT_DESC",
         text="",
     )
-    L_Handrow.prop(bone, '["HAND 1"]', text="L Hand")
-    L_Handrow.prop(
+    hand_row.prop(bone, f'["{side}_Hand"]', text=f"{side} Hand")
+    hand_row.prop(
         bpy.context.window_manager.tiny_rig_ui,
-        "L_Hand_Mirror",
+        f"{side}_{sub_limb}_Mirror",
         icon="MOD_MIRROR",
         text="",
     )
 
 
-def draw_left_leg(bone, left_col):
-    left_col.label(text="L Leg")
-    l_nudge_row = left_col.row(align=True)
-    l_nudge_row.operator("rigcontrol.l_leg_nudge_back", icon="REMOVE", text="L")
-    l_nudge_row.operator("rigcontrol.l_leg_nudge_forward", icon="ADD", text="L")
-    ik_row_l = left_col.row(align=True)
-    ik_row_l.prop(
+def get_sub_limb(limb):
+    sub_limb = "Foot"
+    if limb == "Arm":
+        sub_limb = "Hand"
+    return sub_limb
+
+
+def draw_leg(col, side, limb):
+    draw_nudge_row(col, side, limb)
+    draw_ik_row(col, side, limb)
+    sub_limb = get_sub_limb(limb)
+    col.prop(
         bpy.context.window_manager.tiny_rig_ui,
-        "L_Leg_IK",
+        f"{side}_{sub_limb}_Mirror",
+        icon="MOD_MIRROR",
+        text=f"{side} {limb}",
+    )
+
+
+def draw_nudge_row(col, side, limb):
+    col.label(text=f"{side} {limb}")
+    nudge_row = col.row(align=True)
+    nudge_row.operator(
+        f"rigcontrol.{side.lower()}_{limb.lower()}_nudge_back",
+        icon="REMOVE",
+        text=f"{side}",
+    )
+    nudge_row.operator(
+        f"rigcontrol.{side.lower()}_{limb.lower()}_nudge_forward",
+        icon="ADD",
+        text=f"{side}",
+    )
+
+
+def draw_ik_row(col, side, limb):
+    ik_row = col.row(align=True)
+    ik_row.prop(
+        bpy.context.window_manager.tiny_rig_ui,
+        f"{side}_{limb}_IK",
         icon="CON_KINEMATIC",
-        text="L Leg IK",
+        text=f"{side} {limb} IK",
     )
-    ik_row_l.prop(
+    ik_row.prop(
         bpy.context.window_manager.tiny_rig_ui,
-        "L_Leg_Flip_IK",
+        f"{side}_{limb}_Flip_IK",
         icon="MOD_MIRROR",
         text="",
-    )
-
-    left_col.prop(
-        bpy.context.window_manager.tiny_rig_ui,
-        "L_Foot_Mirror",
-        icon="MOD_MIRROR",
-        text="L Foot",
-    )
-
-
-def draw_right_arm(bone, right_col):
-    right_col.label(text="R Arm")
-    R_nudge_row = right_col.row(align=True)
-    R_nudge_row.operator("rigcontrol.r_arm_nudge_back", icon="REMOVE", text="R")
-    R_nudge_row.operator("rigcontrol.r_arm_nudge_forward", icon="ADD", text="R")
-    ik_row_r = right_col.row(align=True)
-    ik_row_r.prop(
-        bpy.context.window_manager.tiny_rig_ui,
-        "R_Arm_IK",
-        icon="CON_KINEMATIC",
-        text="R Arm IK",
-    )
-    ik_row_r.prop(
-        bpy.context.window_manager.tiny_rig_ui,
-        "R_Arm_Flip_IK",
-        icon="MOD_MIRROR",
-        text="",
-    )
-    right_col.separator()
-    R_handrow = right_col.row(align=True)
-    R_handrow.prop(
-        bpy.context.window_manager.tiny_rig_ui,
-        "R_Hand_Nudge",
-        icon="SORT_DESC",
-        text="",
-    )
-    R_handrow.prop(bone, '["HAND 2"]', text="R Hand")
-    R_handrow.prop(
-        bpy.context.window_manager.tiny_rig_ui,
-        "R_Hand_Mirror",
-        icon="MOD_MIRROR",
-        text="",
-    )
-
-
-def draw_right_leg(bone, right_col):
-    right_col.label(text="R Leg")
-    R_nudge_row = right_col.row(align=True)
-    R_nudge_row.operator("rigcontrol.r_leg_nudge_back", icon="REMOVE", text="R")
-    R_nudge_row.operator("rigcontrol.r_leg_nudge_forward", icon="ADD", text="R")
-    ik_row_r = right_col.row(align=True)
-    ik_row_r.prop(
-        bpy.context.window_manager.tiny_rig_ui,
-        "R_Leg_IK",
-        icon="CON_KINEMATIC",
-        text="R Leg IK",
-    )
-    ik_row_r.prop(
-        bpy.context.window_manager.tiny_rig_ui,
-        "R_Leg_Flip_IK",
-        icon="MOD_MIRROR",
-        text="",
-    )
-
-    right_col.prop(
-        bpy.context.window_manager.tiny_rig_ui,
-        "R_Foot_Mirror",
-        icon="MOD_MIRROR",
-        text="R Foot",
     )
 
 
@@ -146,12 +85,19 @@ def draw_limb_control(bone, col):
     row = col.row()
     split = row.split(factor=0.5)
     left_col = split.column(align=True)
-    draw_left_arm(bone, left_col)
-    draw_left_leg(bone, left_col)
+    draw_arm(bone, left_col, "L", "Arm")
+    draw_leg(left_col, "L", "Leg")
     right_col = split.split()
     right_col = right_col.column(align=True)
-    draw_right_arm(bone, right_col)
-    draw_right_leg(bone, right_col)
+    draw_arm(bone, right_col, "R", "Arm")
+    draw_leg(right_col, "R", "Leg")
+
+
+def draw_pose_row(layout, bone, body):
+    pose_row = layout.row(align=True)
+    pose_row.operator(f"rigcontrol.prev_{body}_pose", icon="BACK", text="")
+    pose_row.prop(bone.id_data.tiny_rig, f"ui_{body}_pose")
+    pose_row.operator(f"rigcontrol.next_{body}_pose", icon="FORWARD", text="")
 
 
 class SEQUENCER_PT_rig_control(bpy.types.Panel):
@@ -174,15 +120,8 @@ class SEQUENCER_PT_rig_control(bpy.types.Panel):
             return
         bone = obj.pose.bones["PoseData"]
 
-        head_row = layout.row(align=True)
-        head_row.operator("rigcontrol.prev_head_pose", icon="BACK", text="")
-        head_row.prop(bone.id_data.tiny_rig, "ui_head_offset")
-        head_row.operator("rigcontrol.next_head_pose", icon="FORWARD", text="")
-
-        pose_row = layout.row(align=True)
-        pose_row.operator("rigcontrol.prev_body_pose", icon="BACK", text="")
-        pose_row.prop(bone.id_data.tiny_rig, "ui_body_pose")
-        pose_row.operator("rigcontrol.next_body_pose", icon="FORWARD", text="")
+        draw_pose_row(layout, bone, "head")
+        draw_pose_row(layout, bone, "body")
 
         layout.prop(bone, '["A. Mouth"]', text="Mouth")
         col = layout.column()

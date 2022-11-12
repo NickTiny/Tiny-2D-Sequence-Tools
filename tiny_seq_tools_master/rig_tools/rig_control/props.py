@@ -6,11 +6,11 @@ from tiny_seq_tools_master.rig_tools.rig_control.core import normalize_pose, tog
 
 class RIGCONTROL_settings(bpy.types.PropertyGroup):
     is_rig: bpy.props.BoolProperty(
-        name="Tiny Rig Status", description="Is this Rig a Tiny Rig.", default=False
+        name="Tiny Rig Status", description="Is this Rig a Tiny Rig", default=False
     )
     pose_length: bpy.props.IntProperty(
         name="Turnaround Length",
-        description="The number of turnaround poses in this character.",
+        description="The number of turnaround poses in this character",
         default=0,
     )
     pose_data_name: bpy.props.StringProperty(
@@ -32,7 +32,7 @@ class RIGCONTROL_settings(bpy.types.PropertyGroup):
         rig_set = obj.tiny_rig
         normalize_val = normalize_pose(val, rig_set.pose_length)
         normalize_head = normalize_pose(
-            normalize_val + rig_set.ui_head_offset, rig_set.pose_length
+            normalize_val + rig_set.ui_head_pose, rig_set.pose_length
         )
         bone_datapath_insert_keyframe(
             obj.pose.bones[rig_set.pose_data_name],
@@ -49,6 +49,7 @@ class RIGCONTROL_settings(bpy.types.PropertyGroup):
 
     ui_body_pose: bpy.props.IntProperty(
         name="Body Pose",
+        description="Character Turnaround Body Pose, includes head",
         get=get_body_pose,
         set=set_body_pose,
         options=set(),
@@ -94,8 +95,9 @@ class RIGCONTROL_settings(bpy.types.PropertyGroup):
         )
         return
 
-    ui_head_offset: bpy.props.IntProperty(
+    ui_head_pose: bpy.props.IntProperty(
         name="Head Offset",
+        description="Character Turnaround Head Pose Offset from Body",
         get=get_head_pose,
         set=set_head_pose,
         options=set(),
@@ -133,7 +135,7 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
 
     R_Foot_Mirror: bpy.props.BoolProperty(
         name="R_Foot Mirror",
-        description="Mirror Right Foot drawings.",
+        description="Mirror Right Foot drawings",
         get=get_R_Foot,
         set=set_R_Foot,
         options=set(),
@@ -148,7 +150,7 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
 
     L_Foot_Mirror: bpy.props.BoolProperty(
         name="L_Foot Mirror",
-        description="Mirror Left Foot drawings.",
+        description="Mirror Left Foot drawings",
         get=get_L_Foot,
         set=set_L_Foot,
         options=set(),
@@ -163,7 +165,7 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
 
     R_Hand_Mirror: bpy.props.BoolProperty(
         name="R_Hand Mirror",
-        description="Mirror Right Hand drawings.",
+        description="Mirror Right Hand drawings",
         get=get_R_Hand,
         set=set_R_Hand,
         options=set(),
@@ -178,7 +180,7 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
 
     L_Hand_Mirror: bpy.props.BoolProperty(
         name="L_Hand Mirror",
-        description="Mirror Left Hand drawings.",
+        description="Mirror Left Hand drawings",
         get=get_L_Hand,
         set=set_L_Hand,
         options=set(),
@@ -193,7 +195,7 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
 
     R_Arm_Flip_IK: bpy.props.BoolProperty(
         name="Flip Arm R IK",
-        description="",
+        description="Flip Right Arm IK Pole Position",
         get=get_R_Arm_IK_Flip,
         set=set_R_Arm_IK_Flip,
         options=set(),
@@ -207,8 +209,8 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
         return
 
     L_Arm_Flip_IK: bpy.props.BoolProperty(
-        name="Flip Arm L IK",
-        description="",
+        name="Flip Arm L IK Pole",
+        description="Flip Left Arm IK Pole Position",
         get=get_L_Arm_IK_Flip,
         set=set_L_Arm_IK_Flip,
         options=set(),
@@ -222,8 +224,8 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
         return
 
     R_Leg_Flip_IK: bpy.props.BoolProperty(
-        name="Flip Leg R IK",
-        description="",
+        name="Flip Leg R IK Pole",
+        description="Flip Right Leg IK Pole Position",
         get=get_R_Leg_IK_Flip,
         set=set_R_Leg_IK_Flip,
         options=set(),
@@ -237,8 +239,8 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
         return
 
     L_Leg_Flip_IK: bpy.props.BoolProperty(
-        name="Flip Leg L IK",
-        description="",
+        name="Flip Leg L IK Pole",
+        description="Flip Left Leg IK Pole Position",
         get=get_L_Leg_IK_Flip,
         set=set_L_Leg_IK_Flip,
         options=set(),
@@ -253,7 +255,7 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
 
     L_Arm_IK: bpy.props.BoolProperty(
         name="L Arm IK",
-        description="Enabled/Disable IK.",
+        description="Enabled/Disable Inverse Kinematics for Left Arm",
         get=get_L_Arm_IK,
         set=set_L_Arm_IK,
         options=set(),
@@ -268,7 +270,7 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
 
     R_Arm_IK: bpy.props.BoolProperty(
         name="L Arm IK",
-        description="Enabled/Disable IK.",
+        description="Enabled/Disable Inverse Kinematics for Left Arm",
         get=get_R_Arm_IK,
         set=set_R_Arm_IK,
         options=set(),
@@ -282,8 +284,8 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
         return
 
     L_Leg_IK: bpy.props.BoolProperty(
-        name="L Arm IK",
-        description="Enabled/Disable IK.",
+        name="L Leg IK",
+        description="Enabled/Disable Inverse Kinematics for Left Leg",
         get=get_L_Leg_IK,
         set=set_L_Leg_IK,
         options=set(),
@@ -297,8 +299,8 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
         return
 
     R_Leg_IK: bpy.props.BoolProperty(
-        name="L Arm IK",
-        description="Enabled/Disable IK.",
+        name="R Leg IK",
+        description="Enabled/Disable Inverse Kinematics for Right Leg",
         get=get_R_Leg_IK,
         set=set_R_Leg_IK,
         options=set(),
@@ -313,7 +315,7 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
 
     R_Hand_Nudge: bpy.props.BoolProperty(
         name="R_Hand_Nudge",
-        description="",
+        description="Move Right Hand infront of Arm",
         get=get_R_Hand_Nudge,
         set=set_R_Hand_Nudge,
         options=set(),
@@ -328,7 +330,7 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
 
     L_Hand_Nudge: bpy.props.BoolProperty(
         name="L_Hand_Nudge",
-        description="",
+        description="Move Left Hand infront of Arm",
         get=get_L_Hand_Nudge,
         set=set_L_Hand_Nudge,
         options=set(),

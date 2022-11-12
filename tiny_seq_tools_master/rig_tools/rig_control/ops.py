@@ -11,6 +11,7 @@ from tiny_seq_tools_master.rig_tools.rig_control.core import (
 class RIGCONTROL_next_body_pose(bpy.types.Operator):
     bl_idname = "rigcontrol.next_body_pose"
     bl_label = "Next Pose"
+    bl_description = "Next Body Pose"
 
     def execute(self, context):
         return change_pose(self, context, 1, 1)
@@ -19,6 +20,7 @@ class RIGCONTROL_next_body_pose(bpy.types.Operator):
 class RIGCONTROL_prev_body_pose(bpy.types.Operator):
     bl_idname = "rigcontrol.prev_body_pose"
     bl_label = "Prev Pose"
+    bl_description = "Previous Body Pose"
 
     def execute(self, context):
         return change_pose(self, context, -1, -1)
@@ -27,6 +29,7 @@ class RIGCONTROL_prev_body_pose(bpy.types.Operator):
 class RIGCONTROL_next_head_pose(bpy.types.Operator):
     bl_idname = "rigcontrol.next_head_pose"
     bl_label = "Next Head"
+    bl_description = "Next Head Pose"
 
     def execute(self, context):
         return change_pose(self, context, 0, 1)
@@ -35,6 +38,7 @@ class RIGCONTROL_next_head_pose(bpy.types.Operator):
 class RIGCONTROL_prev_head_pose(bpy.types.Operator):
     bl_idname = "rigcontrol.prev_head_pose"
     bl_label = "Prev Head"
+    bl_description = "Previous Head Pose"
 
     def execute(self, context):
         return change_pose(self, context, 0, -1)
@@ -43,6 +47,7 @@ class RIGCONTROL_prev_head_pose(bpy.types.Operator):
 class RIGCONTROL_r_arm_nudge_forward(bpy.types.Operator):
     bl_idname = "rigcontrol.r_arm_nudge_forward"
     bl_label = "r_arm_nudge_forward"
+    bl_description = "Nudge Right Arm Towards Camera"
 
     def execute(self, context):
         return nudge_bone(self, context.active_object.pose.bones["R_Arm_Nudge"], False)
@@ -51,6 +56,7 @@ class RIGCONTROL_r_arm_nudge_forward(bpy.types.Operator):
 class RIGCONTROL_r_arm_nudge_back(bpy.types.Operator):
     bl_idname = "rigcontrol.r_arm_nudge_back"
     bl_label = "r_arm_nudge_back"
+    bl_description = "Nudge Right Arm Away from Camera"
 
     def execute(self, context):
         return nudge_bone(self, context.active_object.pose.bones["R_Arm_Nudge"], True)
@@ -59,6 +65,7 @@ class RIGCONTROL_r_arm_nudge_back(bpy.types.Operator):
 class RIGCONTROL_l_arm_nudge_forward(bpy.types.Operator):
     bl_idname = "rigcontrol.l_arm_nudge_forward"
     bl_label = "l_arm_nudge_forward"
+    bl_description = "Nudge Left Arm Towards Camera"
 
     def execute(self, context):
         return nudge_bone(self, context.active_object.pose.bones["L_Arm_Nudge"], False)
@@ -67,6 +74,7 @@ class RIGCONTROL_l_arm_nudge_forward(bpy.types.Operator):
 class RIGCONTROL_l_arm_nudge_back(bpy.types.Operator):
     bl_idname = "rigcontrol.l_arm_nudge_back"
     bl_label = "l_arm_nudge_back"
+    bl_description = "Nudge Left Arm Away from Camera"
 
     def execute(self, context):
         return nudge_bone(self, context.active_object.pose.bones["L_Arm_Nudge"], True)
@@ -75,6 +83,7 @@ class RIGCONTROL_l_arm_nudge_back(bpy.types.Operator):
 class RIGCONTROL_l_leg_nudge_back(bpy.types.Operator):
     bl_idname = "rigcontrol.l_leg_nudge_back"
     bl_label = "l_leg_nudge_back"
+    bl_description = "Nudge Left Leg Away from Camera"
 
     def execute(self, context):
         return nudge_bone(self, context.active_object.pose.bones["L_Leg_Nudge"], True)
@@ -83,6 +92,7 @@ class RIGCONTROL_l_leg_nudge_back(bpy.types.Operator):
 class RIGCONTROL_l_leg_nudge_forward(bpy.types.Operator):
     bl_idname = "rigcontrol.l_leg_nudge_forward"
     bl_label = "l_leg_nudge_forward"
+    bl_description = "Nudge Left Leg Towards Camera"
 
     def execute(self, context):
         return nudge_bone(self, context.active_object.pose.bones["L_Leg_Nudge"], False)
@@ -91,6 +101,7 @@ class RIGCONTROL_l_leg_nudge_forward(bpy.types.Operator):
 class RIGCONTROL_r_leg_nudge_back(bpy.types.Operator):
     bl_idname = "rigcontrol.r_leg_nudge_back"
     bl_label = "r_leg_nudge_back"
+    bl_description = "Nudge Right Leg Away from Camera"
 
     def execute(self, context):
         return nudge_bone(self, context.active_object.pose.bones["R_Leg_Nudge"], True)
@@ -99,6 +110,7 @@ class RIGCONTROL_r_leg_nudge_back(bpy.types.Operator):
 class RIGCONTROL_r_leg_nudge_forward(bpy.types.Operator):
     bl_idname = "rigcontrol.r_leg_nudge_forward"
     bl_label = "r_leg_nudge_forward"
+    bl_description = "Nudge Right Leg Towards Camera"
 
     def execute(self, context):
         return nudge_bone(self, context.active_object.pose.bones["R_Leg_Nudge"], False)
