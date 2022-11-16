@@ -3,7 +3,6 @@ from tiny_seq_tools_master import (
     tiny_status_tools,
     constraint_to_cams,
     scene_strip_tools,
-    rig_tools,
     core,
 )
 

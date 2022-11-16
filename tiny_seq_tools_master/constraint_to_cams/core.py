@@ -12,7 +12,6 @@ def constraints_to_active_camera(
         for constraint in obj.constraints:
             if constraint.type == "COPY_ROTATION":
                 constraint.target = strip.scene_camera
-                constraint.name = "ROT_TO_SEQ_CAM"
                 rot_to_seq_cam_status |= True
     return rot_to_seq_cam_status
 
