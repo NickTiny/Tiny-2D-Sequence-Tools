@@ -5,13 +5,20 @@ from tiny_seq_tools_master.line_art_tools.core import (
 import bpy
 
 
+def check_gp_obj_modifiers(obj):
+    if obj.grease_pencil_modifiers:
+        return True
+    return False
+
+
 class lr_seq_items(bpy.types.PropertyGroup):
     object: bpy.props.PointerProperty(type=bpy.types.Object)
 
     def get_thickness(self):
         obj = self.object
-        if obj.type == "GPENCIL" and len(obj.users_scene) != 0:
-            return int(obj.grease_pencil_modifiers["SEQ_LINE_ART"].thickness)
+        if check_gp_obj_modifiers(obj):
+            if obj.type == "GPENCIL" and len(obj.users_scene) != 0:
+                return int(obj.grease_pencil_modifiers["SEQ_LINE_ART"].thickness)
         return 0
 
     def set_thickness(self, thickness: int):
@@ -24,16 +31,20 @@ class lr_seq_items(bpy.types.PropertyGroup):
 
     def get_status(self):
         scene = bpy.context.scene
-        if scene.sequence_editor and scene.sequence_editor.active_strip:
-            strip = scene.sequence_editor.active_strip
-            if strip:
-                return sync_line_art_obj_to_strip(self.object, strip)
+        obj = self.object
+        if check_gp_obj_modifiers(obj):
+            if scene.sequence_editor and scene.sequence_editor.active_strip:
+                strip = scene.sequence_editor.active_strip
+                if strip:
+                    return sync_line_art_obj_to_strip(self.object, strip)
         else:
             return 0
 
     def get_viewport(self):
-        if self.object.grease_pencil_modifiers["SEQ_LINE_ART"]:
-            return self.object.grease_pencil_modifiers["SEQ_LINE_ART"].show_viewport
+        obj = self.object
+        if check_gp_obj_modifiers(obj):
+            if self.object.grease_pencil_modifiers["SEQ_LINE_ART"]:
+                return self.object.grease_pencil_modifiers["SEQ_LINE_ART"].show_viewport
         return
 
     def set_viewport(self, val: bool):
