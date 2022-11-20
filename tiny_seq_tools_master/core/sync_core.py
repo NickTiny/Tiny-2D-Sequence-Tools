@@ -12,6 +12,7 @@ from operator import attrgetter
 
 OldStrip = ""
 
+
 def update_constraint_camera(scene):
     global OldStrip
     scn = scene
@@ -26,10 +27,7 @@ def update_constraint_camera(scene):
                 if i.frame_final_start <= cf and i.frame_final_end > cf and not i.mute:
                     constraints_to_active_camera(i)
                     sync_strip_camera_to_seq_line_art(i)
-                    if (
-                        i.scene.name == scene.name
-                    ):  # Only if current scene in scene-strip
-
+                    if scn.name != "RENDER":  # Only if current scene in scene-strip
                         sync_strip_camera_to_viewport(i)
                         set_active_sequence_strip(i)
                         OldStrip = i.name
