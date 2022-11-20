@@ -10,10 +10,8 @@ def constraints_to_active_camera(
     rot_to_seq_cam_status = False
     for item in bpy.context.window_manager.rot_to_seq_cam_items:
         obj = item.object
-        for constraint in obj.constraints:
-            if constraint.type == "COPY_ROTATION":
-                constraint.target = strip.scene_camera
-                rot_to_seq_cam_status |= True
+        if obj.constraints["ROT_TO_SEQ_CAM"]:
+            obj.constraints["ROT_TO_SEQ_CAM"].target = strip.scene_camera
     return rot_to_seq_cam_status
 
 
