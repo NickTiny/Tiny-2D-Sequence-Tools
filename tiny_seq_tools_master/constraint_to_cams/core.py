@@ -12,7 +12,6 @@ def constraints_to_active_camera(
         obj = item.object
         if obj.constraints["ROT_TO_SEQ_CAM"]:
             obj.constraints["ROT_TO_SEQ_CAM"].target = strip.scene_camera
-    return rot_to_seq_cam_status
 
 
 def check_rot_to_cam_status(obj):
