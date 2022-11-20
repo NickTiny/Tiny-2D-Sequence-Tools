@@ -125,12 +125,13 @@ def update_line_art_override_cam_from_sequence(
         refresh_rot_to_cam_list(bpy.context, strip)
         win_man.enable_rot_seq_cam = False
         for item in win_man.rot_to_seq_cam_items:
-            item.object.constraints[item.cost_name].target = line_art_cam
+            item.object.constraints["ROT_TO_STRIP_CAM"].target = line_art_cam
 
     # Set line art items
     win_man.line_art_cam_override = True
     for item in win_man.line_art_seq_items:
-        item.object.grease_pencil_modifiers[item.mod_name].source_camera = line_art_cam
+        item.object.grease_pencil_modifiers["SEQ_LINE_ART"].use_custom_camera = True
+        item.object.grease_pencil_modifiers["SEQ_LINE_ART"].source_camera = line_art_cam
 
     return True
 

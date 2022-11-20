@@ -9,10 +9,10 @@ def sync_strip_camera_to_seq_line_art(strip: bpy.types.Sequence) -> bool:
         for item in wm.line_art_seq_items:
             if len(item.object.users_scene) >= 1:
                 obj = item.object
-                for mod in obj.grease_pencil_modifiers:
-                    if mod.type == "GP_LINEART":
-                        mod.source_camera = strip.scene_camera
-                        return True
+                obj.grease_pencil_modifiers[
+                    "SEQ_LINE_ART"
+                ].source_camera = strip.scene_camera
+                return True
     return False
 
 
