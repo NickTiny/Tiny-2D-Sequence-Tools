@@ -23,38 +23,31 @@ class SEQUENCER_OT_add_line_art_obj(bpy.types.Operator):
 
     def execute(self, context):
         obj = context.active_object
-        if obj.rot_to_seq_cam:
+        if obj.constraints:
+            self.report({"ERROR"}, "Cannot set Line Art if any constraints are present")
+            return {"CANCELLED"}
+        if any(
+            [mod for mod in obj.grease_pencil_modifiers if mod.type == "GP_LINEART"]
+        ):
             self.report(
-                {"ERROR"}, "Cannot set Line Art if 'Rotate to Strip Camera' enabled"
+                {"ERROR"}, "Cannot set Line Art if object already has modifiers"
             )
             return {"CANCELLED"}
         line_art_items = context.window_manager.line_art_seq_items
-        for index, item in enumerate(line_art_items):
-            if item.object == obj:
-                line_art_items.remove(index)
-        new_mod = False
-        if not any(
-            [mod for mod in obj.grease_pencil_modifiers if mod.type == "GP_LINEART"]
-        ):
-            obj.grease_pencil_modifiers.new(name="Line Art", type="GP_LINEART")
-            new_mod = True
-        for modifier in obj.grease_pencil_modifiers:
-            if modifier.type == "GP_LINEART":
-                modifier.target_layer = obj.data.layers[0].info
-                modifier.target_material = obj.data.materials[0]
-                modifier.use_custom_camera = True
-                add_line_art_item = line_art_items.add()
-                add_line_art_item.object = obj
-                add_line_art_item.mod_name = modifier.name
-                if new_mod:
-                    modifier.source_type = "SCENE"
-
-        line_art_mod = obj.grease_pencil_modifiers["Line Art"]
+        line_art_mod = obj.grease_pencil_modifiers.new(
+            name="Line Art", type="GP_LINEART"
+        )
+        line_art_mod.name = "SEQ_LINE_ART"
+        line_art_mod.target_layer = obj.data.layers[0].info
+        line_art_mod.target_material = obj.data.materials[0]
+        line_art_mod.source_type = "SCENE"
+        add_line_art_item = line_art_items.add()
+        add_line_art_item.object = obj
 
         for strip in context.scene.sequence_editor.sequences_all:
             line_art_mod.keyframe_insert("thickness", frame=strip.frame_final_start)
 
-        for fcurve in line_art_mod.id_data.original.animation_data.action.fcurves:
+        for fcurve in obj.animation_data.action.fcurves:
             for kf in fcurve.keyframe_points:
                 kf.interpolation = "CONSTANT"
 
@@ -111,7 +104,13 @@ class SEQUENCER_OT_refresh_line_art_obj(bpy.types.Operator):
             if obj.line_art_seq_obj:
                 add_line_art_item = line_art_items.add()
                 add_line_art_item.object = obj
-                add_line_art_item.mod_name = obj.grease_pencil_modifiers[0].name
+                if context.window_manager.line_art_cam_override:
+                    obj.grease_pencil_modifiers[
+                        "SEQ_LINE_ART"
+                    ].source_camera = bpy.data.objects[
+                        f"{context.scene.line_art_cam_name}"
+                    ]
+
         self.report({"INFO"}, "'Sequences Line Art Items' Refreshed")
         return {"FINISHED"}
 

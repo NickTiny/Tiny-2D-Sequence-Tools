@@ -6,17 +6,23 @@ class SEQUENCER_PT_constraint_to_strip_camera(bpy.types.Panel):
     bl_space_type = "SEQUENCE_EDITOR"
     bl_region_type = "UI"
     bl_idname = "SEQUENCER_PT_constraint_to_strip_camera"
-    bl_label = "Constraint to Strip Cameras"
+    bl_label = "Rotate to Camera"
     bl_category = "Tiny Sequence Tools"
 
     def draw(self, context):
+        self.layout.prop(context.window_manager, "enable_rot_seq_cam")
         layout = self.layout
         col = layout.box()
         row = col.row()
         row.label(text="Rotate to Strip Cameras:", icon="OBJECT_DATA")
         row.operator("object.refresh_copy_rot_items", icon="FILE_REFRESH", text="")
+        rot_to_seq_cam_items = context.window_manager.rot_to_seq_cam_items
 
-        for item in context.window_manager.rot_to_seq_cam_items:
+        if len(rot_to_seq_cam_items) == 0:
+            col.alert = True
+            col.label(text="NO ITEMS", icon="ERROR")
+
+        for item in rot_to_seq_cam_items:
             obj = item.object
             box = col.box()
             box.label(text=f"{obj.name}")

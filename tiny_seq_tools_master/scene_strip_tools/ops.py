@@ -12,8 +12,6 @@ class SEQUENCER_preview_render(bpy.types.Operator):
     first_mouse_x = bpy.props.IntProperty()
     first_value = bpy.props.FloatProperty()
 
-    
-
     def execute(self, context):
         if context.scene.name == "RENDER":
             self.report({"ERROR"}, "Render scene cannot be active")
@@ -53,12 +51,24 @@ class SEQUENCER_full_render(bpy.types.Operator):
     bl_label = "Render Scene"
     bl_description = "Render a sequencer video using Blender's native render. Will always match scene render settings."
 
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    def draw(self, context):
+        self.layout.label(text="Full Renders can be slow.")
+        self.layout.label(text="Are you sure you want to proceed?")
+
     def execute(self, context):
-        if context.scene.name != "RENDER":
-            self.report({"ERROR"}, "Render scene must be active")
+        user_scene = context.scene
+        if context.scene.name == "RENDER":
+            self.report({"ERROR"}, "Render scene cannot be active")
             return {"CANCELLED"}
-        context.scene.render.use_sequencer = True
+        make_render_scene(context)
         bpy.ops.render.render("INVOKE_DEFAULT", animation=True)
+
+        # Restore Previous Scene
+        context.window.scene = user_scene
         self.report({"INFO"}, f"Full Render Complete")
         return {"FINISHED"}
 
