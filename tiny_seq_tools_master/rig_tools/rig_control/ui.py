@@ -101,7 +101,7 @@ def draw_pose_row(layout, bone, body):
 
 
 def draw_brow_row(layout, bone):
-    brow_row = layout.row(align=True)
+    brow_row = layout.row(align=False)
     brow_row.prop(bone, '["A. Brow L"]', text="Left Brow")
     brow_row.prop(bone, '["A. Brow R"]', text="Right Brow")
 
