@@ -3,6 +3,7 @@ from tiny_seq_tools_master import (
     tiny_status_tools,
     constraint_to_cams,
     scene_strip_tools,
+    rig_tools,
     core,
 )
 
@@ -24,6 +25,7 @@ def register():
     tiny_status_tools.register()
     scene_strip_tools.register()
     core.register()
+    rig_tools.register()
 
 
 def unregister():
@@ -32,3 +34,4 @@ def unregister():
     tiny_status_tools.unregister()
     scene_strip_tools.unregister()
     core.unregister()
+    rig_tools.unregister()
