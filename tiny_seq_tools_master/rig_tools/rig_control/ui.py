@@ -100,6 +100,12 @@ def draw_pose_row(layout, bone, body):
     pose_row.operator(f"rigcontrol.next_{body}_pose", icon="FORWARD", text="")
 
 
+def draw_brow_row(layout, bone):
+    brow_row = layout.row(align=True)
+    brow_row.prop(bone, '["A. Brow L"]', text="Left Brow")
+    brow_row.prop(bone, '["A. Brow R"]', text="Right Brow")
+
+
 class SEQUENCER_PT_rig_control(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -120,10 +126,15 @@ class SEQUENCER_PT_rig_control(bpy.types.Panel):
             return
         bone = obj.pose.bones["PoseData"]
 
+        draw_brow_row(layout, bone)
+        layout.prop(bone, '["A. Mouth"]', text="Mouth")
+        layout.separator()
+
         draw_pose_row(layout, bone, "head")
         draw_pose_row(layout, bone, "body")
 
-        layout.prop(bone, '["A. Mouth"]', text="Mouth")
+        layout.separator()
+
         col = layout.column()
         draw_limb_control(bone, col)
 
