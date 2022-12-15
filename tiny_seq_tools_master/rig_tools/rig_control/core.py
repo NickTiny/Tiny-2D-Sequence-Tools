@@ -120,7 +120,7 @@ def toggle_ik(
     index = int(scene.frame_current)
     obj = context.active_object
     posebone = obj.pose.bones[pbone_name]
-
+    ik_bone = obj.pose.bones[datapath]
     bones = [bone for bone in obj.pose.bones if bone.name in bone_names]
     if posebone[f"{datapath}"] == 1:
         save_prev_frame(scene, posebone, datapath)
@@ -134,12 +134,19 @@ def toggle_ik(
         for bone in bones:
             bone.keyframe_insert("rotation_euler", group=bone.name),
             bone.keyframe_insert("rotation_quaternion", group=bone.name)
+        bake_constraints((ik_bone,), index)
+        bone_matrix = ik_bone.matrix
+        ik_bone.keyframe_insert("location", group=ik_bone.name)
+        ik_bone.keyframe_insert("rotation_euler", group=ik_bone.name)
         offset_current_frame(scene, +1)
         reset_bones(bones)
         for bone in bones:
             bone.keyframe_insert("rotation_euler", group=bone.name)
             bone.keyframe_insert("rotation_quaternion", group=bone.name)
         insert_keyframe_with_refresh(scene, posebone, datapath, 1)
+        ik_bone.matrix = bone_matrix
+        ik_bone.keyframe_insert("location", group=ik_bone.name)
+        ik_bone.keyframe_insert("rotation_euler", group=ik_bone.name)
         return {"FINISHED"}
 
 
