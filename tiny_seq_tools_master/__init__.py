@@ -12,7 +12,7 @@ bl_info = {
     "author": "Nick Alberelli ",
     "description": "Tools for creating cut-out animation with Tiny's BLOWN APART Characters and Backgrounds",
     "blender": (3, 2, 0),
-    "version": (1, 0, 5),
+    "version": (1, 0, 6),
     "location": "Sequencer > Sidebar > Tiny Sequencer Tools",
     "warning": "",
     "category": "Sequencer",
