@@ -1,6 +1,6 @@
 import bpy
 from tiny_seq_tools_master.core_functions.bone import get_consts_on_bone
-from tiny_seq_tools_master.core_functions.drivers import get_driver_ob_obj
+from tiny_seq_tools_master.core_functions.drivers import get_driver_ob_obj, add_driver
 from tiny_seq_tools_master.core_functions.object import get_consts_on_obj
 
 # Action Constraints
@@ -110,3 +110,207 @@ def hide_grease_pencil_editor(obj, bool):
     armature_constraint = get_armature_constraint(obj)
     if armature_constraint:
         return enable_cont_rig_gpencil(obj, bool)
+
+
+def armature_bones_rename(armature:bpy.types.Armature, bone_legend:dict):
+    """bone_legend must be in {'old_name': 'new_name',} format"""
+    updated_bones = ""
+    for bone in armature.bones:
+        if bone.name in bone_legend:
+            updated_bones += (f"{bone.name},")
+            bone.name = bone_legend[bone.name]
+
+    return f"Bones Renamed: {updated_bones} \n"
+
+def bone_custom_prop_bools_add(bone:bpy.types.PoseBone, bools_to_add):
+    """bools_to_add should be a = ['str', 'str', 'str',]"""
+    for index, item in enumerate(bools_to_add):
+        custom_int_create(bone, bools_to_add[index], 1, 0, 1)
+        custom_int_create(bone, 'L_Hand', 1, 0, 60)
+        custom_int_create(bone, 'R_Hand', 1, 0, 60)
+    
+
+def custom_int_create(target, name, value, min, max):
+        target[name] = value
+        id_props = target.id_properties_ui(name)
+        id_props.update(min=min,
+                        max=max,
+                        default=1,
+                        )
+        return target[name]
+
+
+def bone_create_groups(obj: bpy.types.Object, bone_groups:dict):
+    """bone_groups must be in {'name': color_set',} format"""
+    status = False
+    for key, value in bone_groups.items():
+        try:
+            obj.pose.bone_groups[key]
+        except KeyError:
+            group = obj.pose.bone_groups.new(name=key)
+            group.color_set = value
+            status = True
+    return status
+
+def bone_assign_groups(obj: bpy.types.Object, bone_assignments:dict):
+    """bone_assignments must be in {'bone_name': group_name',} format"""
+    updated_bones = ""
+    for bone in obj.pose.bones:
+        if bone.name in bone_assignments:
+               bone.bone_group = obj.pose.bone_groups[bone_assignments[bone.name]]
+               updated_bones += (f"{bone.name},")
+    obj.data.show_group_colors = True
+    if updated_bones != "":
+        updated_bones = f"Changed Bone Group: {updated_bones}"
+    return updated_bones
+
+
+def bone_transform_mirror_add(bone, name = "FLIP_BONE"):
+    """bone must be hand or foot bone"""
+    prefix = bone.name[0]
+    suffix = bone.name.split(".")[1]
+    new = bone.constraints.new("TRANSFORM")
+    new.name = name
+    new.target = bone.id_data
+    new.subtarget = f"{bone.name.split('.')[0]}_Nudge"
+    new.target_space = "LOCAL_WITH_PARENT"
+    new.owner_space = "LOCAL_WITH_PARENT"
+    new.map_to = "ROTATION"
+    new.to_min_y_rot = 3.1415927410125732
+    add_driver(
+        bone.id_data,
+        bone.id_data,
+        f"{prefix}_{suffix}_Flip",
+        f'pose.bones["{bone.name}"].constraints["{new.name}"].influence',
+        f'pose.bones["PoseData"]["{prefix}_{suffix}_Flip"]',
+    )
+
+def bone_transform_nudge_add(bone, name = "HAND_NUDGE"):
+    """Bone must be a hand or Foot"""
+    suffix = bone.name.split(".Hand")[0]
+    side = suffix.split("_Arm")[0]
+    constraint = bone.constraints.new("TRANSFORM")
+    constraint.target = bone.id_data
+    constraint.subtarget = f"{suffix}_Nudge"
+    constraint.target_space = "LOCAL"
+    constraint.owner_space = "LOCAL"
+    constraint.to_min_z = -0.05
+    constraint.name = name
+    add_driver(
+        bone.id_data,
+        bone.id_data,
+        f"{side}_Hand_Nudge",
+        f'pose.bones["{bone.name}"].constraints["{constraint.name}"].influence',
+        f'pose.bones["PoseData"]["{side}_Hand_Nudge"]',
+    )
+    return constraint
+
+def bone_copy_location_limb(context, bone, name = "Copy Arm Location"):
+    """Copy location of Lw bone to IK Target bone"""
+    prefix = bone.name[0]
+    suffix = bone.name[2:5]
+    mod_type = 'COPY_LOCATION'
+    constraint = bone.constraints.new(mod_type)
+    constraint.name = name
+    constraint.target = bone.id_data
+    constraint.subtarget = f"{prefix}_{suffix}.Lw"
+    constraint.target_space = 'POSE'
+    constraint.owner_space = 'POSE'
+    constraint.head_tail = 1.0
+    constraint.use_bbone_shape = False
+    constraint.use_x = True
+    constraint.use_y = False
+    constraint.use_z = True
+    expression = f"{bone.name} == 0"
+    add_driver(
+    bone.id_data,
+    bone.id_data,
+    bone.name,
+    f'pose.bones["{bone.name}"].constraints["{constraint.name}"].influence',
+    f'pose.bones["{context.scene.bone_selection}"]["{bone.name}"]',
+    -1, expression
+)
+    return constraint
+
+def bone_copy_location_nudge( bone, name = "Copy Nudge Location") :
+    """Copy Location from Limb's 'Nudge' Bone"""
+    prefix = bone.name[0]
+    suffix = bone.name[2:5]
+    mod_type = 'COPY_LOCATION'
+    constraint = bone.constraints.new(mod_type)
+    constraint.name = name
+    constraint.target = bone.id_data
+    constraint.subtarget = f"{prefix}_{suffix}_Nudge"
+    constraint.target_space = 'POSE'
+    constraint.owner_space = 'POSE'
+    constraint.head_tail = 0.0
+    constraint.use_bbone_shape = False
+    constraint.use_x = False
+    constraint.use_y = True
+    constraint.use_z = False
+    return constraint
+
+def bone_ik_driver_add(bone, constraint, propbone, ik_prop_name):
+    """Add Driver to IK's Influence"""
+    custom_int_create(propbone, ik_prop_name, 1, 0, 1)
+    add_driver(
+        bone.id_data,
+        bone.id_data,
+        ik_prop_name,
+        f'pose.bones["{bone.name}"].constraints["{constraint.name}"].influence',
+        f'pose.bones["{propbone.name}"]["{ik_prop_name}"]',
+        -1,
+    )
+    return
+
+def bone_ik_constraint_add(bone, prefix, suffix):
+    """Add IK Constrain on Lw Bone, with Target + Pole"""
+    angle = (0 if bone.name(".").split[0] else 180)
+    constraint = bone.constraints.new("IK")
+    constraint.target = bone.id_data
+    constraint.subtarget = f"{prefix}_{suffix}_IK"    
+    constraint.pole_target = bone.id_data 
+    constraint.pole_subtarget = f"{prefix}_{suffix}_Pole" 
+    constraint.pole_angle = angle
+    constraint.chain_count = 2
+    constraint.use_tail = True
+    return constraint
+
+def bone_position_limits_add(bone, name="Nudge - Limit Location"):
+    """Position Limits on Limb's 'Nudge' Bone"""
+    suffix = bone.name.split(".Hand")[0]
+    side = suffix.split("_Arm")[0]
+    constraint = bone.constraints.new("LIMIT_LOCATION")
+    constraint.owner_space= "LOCAL"
+    constraint.use_min_z = True
+    constraint.use_max_z = True
+    constraint.min_z = -0.1
+    constraint.max_z = 0.1
+    constraint.name = name
+    return constraint
+
+def bone_check_constraint(bone, name):
+    constraint_names = [item.name for item in bone.constraints]
+    return (name in constraint_names)
+
+
+def bone_copy_transforms_add(bone, name):
+    """Only Add to Eyelid/Brow Bones"""
+    constraint = bone.constraints.new("COPY_TRANSFORMS")
+    constraint.name = name
+    constraint.target = bone.id_data
+    constraint.subtarget = f"{bone.name}.001"
+    constraint.head_tail = 0.0
+    constraint.use_bbone_shape = False
+    constraint.target_space = "LOCAL"
+    constraint.owner_space = "LOCAL"
+
+def bone_copy_location_add(bone, subtarget, offset, name):
+    """Only Add to Eye Bones"""
+    constraint = bone.constraints.new("COPY_LOCATION")
+    constraint.name = name
+    constraint.target = bone.id_data
+    constraint.subtarget = subtarget
+    constraint.use_offset = offset
+    constraint.target_space = "LOCAL"
+    constraint.owner_space = "LOCAL"
