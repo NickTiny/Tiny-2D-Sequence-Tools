@@ -137,6 +137,8 @@ def custom_int_create(target, name, value, min, max):
                         max=max,
                         default=1,
                         )
+        target.property_overridable_library_set(f'["{name}"]', True)
+        #target.id_data.property_override_library_set(f'pose.bones["PoseData"]["{name}"]', True)
         return target[name]
 
 
