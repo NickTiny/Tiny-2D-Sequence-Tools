@@ -148,6 +148,7 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     pose_length_set: bpy.props.IntProperty(name="Turnaround Length")
+    update_face_constraints : bpy.props.BoolProperty(name="Add Face Constraints", default=False)
 
     def invoke(self, context, event):
         wm = context.window_manager
@@ -169,6 +170,7 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
         if context.active_object.tiny_rig.pose_length:
             self.pose_length_set = context.active_object.tiny_rig.pose_length
         col.prop(self, "pose_length_set")
+        col.prop(self, "update_face_constraints")
 
     def execute(self, context):
         msg = ""
@@ -249,40 +251,38 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
         # Hide FK Bones when IK Enabled
         # TODO add this feature via driver
 
-        # Copy Face Rig Transforms
-        # Eyebrows
-        for bone in [bone for bone in obj.pose.bones if "Eyebrow" in bone.name]:
-            name = "COPY_FACE_RIG"
-            if ".001" not in bone.name:
-                if not bone_check_constraint(bone, name):
-                    bone_copy_transforms_add(bone, name)
-                    msg += (f"{name} added to '{bone.name}'\n")
+        if self.update_face_constraints:
+            # Copy Face Rig Transforms
+            # Eyebrows
+            for bone in [bone for bone in obj.pose.bones if "Eyebrow" in bone.name]:
+                name = "COPY_FACE_RIG"
+                if ".001" not in bone.name:
+                    if not bone_check_constraint(bone, name):
+                        bone_copy_transforms_add(bone, name)
+                        msg += (f"{name} added to '{bone.name}'\n")
 
-        # Eyelids
-        for bone in [bone for bone in obj.pose.bones if "Eyelid" in bone.name]:
-            name = "COPY_FACE_RIG"
-            if ".001" not in bone.name:
-                if not bone_check_constraint(bone, name):
-                    bone_copy_transforms_add(bone, name)
-                    msg += (f"{name} added to '{bone.name}'\n")
+        
+            # Eyelids
+            for bone in [bone for bone in obj.pose.bones if "Eyelid" in bone.name]:
+                name = "COPY_FACE_RIG"
+                if ".001" not in bone.name:
+                    if not bone_check_constraint(bone, name):
+                        bone_copy_transforms_add(bone, name)
+                        msg += (f"{name} added to '{bone.name}'\n")
 
-        # Eyes
-        for bone in [bone for bone in obj.pose.bones if bone.name == "Eye.R.M" or bone.name == "Eye.L.M"]:
-            name = "COPY_EYE_AIM"
-            if not bone_check_constraint(bone, name):
-                bone_copy_location_add(bone, f"Eye_Aim", False, name)
-                msg += (f"{name} added to '{bone.name}'\n")
-            name = "COPY_EYE_CTRL"
-            if not bone_check_constraint(bone, name):
-                bone_copy_location_add(bone, f"{bone.name.split('.M')[0]}.ctrl", True, name)
-                msg += (f"{name} added to '{bone.name}'\n")
+            # Eyes
+            for bone in [bone for bone in obj.pose.bones if bone.name == "Eye.R.M" or bone.name == "Eye.L.M"]:
+                name = "COPY_EYE_AIM"
+                if not bone_check_constraint(bone, name):
+                    bone_copy_location_add(bone, f"Eye_Aim", False, name)
+                    msg += (f"{name} added to '{bone.name}'\n")
+                name = "COPY_EYE_CTRL"
+                if not bone_check_constraint(bone, name):
+                    bone_copy_location_add(bone, f"{bone.name.split('.M')[0]}.ctrl", True, name)
+                    msg += (f"{name} added to '{bone.name}'\n")
             
 
         self.report({"INFO"}, f"Initilizaton Completed! \n {msg}" )
-
-
-        
-
         return {"FINISHED"}
 
 
