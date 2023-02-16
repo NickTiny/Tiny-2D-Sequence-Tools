@@ -38,6 +38,8 @@ class SEQUENCER_PT_turnaround_editor(bpy.types.Panel):
             offset_row.alert = True
             offset_row.label(text="Must be in POSE Mode")
         layout.operator("rigools.add_action_const_to_bone", icon="CONSTRAINT_BONE")
+        
+
 
 
 class SEQUENCER_PT_driver_editor(bpy.types.Panel):
@@ -52,6 +54,7 @@ class SEQUENCER_PT_driver_editor(bpy.types.Panel):
             self.layout.label(text="Rig not Found", icon="ARMATURE_DATA")
             return
         layout = self.layout
+        layout.operator("rigtools.apply_legacy_transforms")
         layout.operator(
             "rigtools.add_ik_fk_toggle",
             icon="CON_KINEMATIC",
@@ -59,11 +62,15 @@ class SEQUENCER_PT_driver_editor(bpy.types.Panel):
         )
         layout.operator("rigools.add_ik_mirror_to_pole", icon="CON_ROTLIKE")
         layout.operator("rigools.add_hand_nudge", icon="SORT_DESC")
+        layout.operator("rigools.add_copy_transforms_to_ik_ctrl")
+        layout.operator("rigools.add_nudge_position_limits")
+        
         layout.operator(
             "rigools.add_mirror_to_hand_foot_bone",
             text="Add Mirror to Hand/Foot",
             icon="MOD_MIRROR",
         )
+        layout.operator('')
 
 
 class SEQUENCER_PT_rig_grease_pencil(bpy.types.Panel):
@@ -101,21 +108,52 @@ class SEQUENCER_PT_rig_settings(bpy.types.Panel):
     bl_label = "Rig Settings"
     bl_category = "Tiny Rig Edit"
 
+    bpy.types.Scene.obj_selection = bpy.props.PointerProperty(type=bpy.types.Object)
+    bpy.types.Scene.bone_selection = bpy.props.StringProperty()
+
     def draw(self, context):
         layout = self.layout
         obj = context.active_object
+        self.layout.prop_search(
+                context.scene, "bone_selection", obj.id_data.pose, "bones", text="Property Bone"
+            )
+        self.layout.operator("rigools.initialize_rig")
         if not obj.tiny_rig.is_rig:
             self.layout.label(text="Rig not Found", icon="ARMATURE_DATA")
             return
-        layout.label(text=f"Turnaround Length: {obj.tiny_rig.pose_length}")
-        self.layout.operator("rigools.initialize_rig")
-        layout.operator("rigools.set_pose_length")
-        self.layout.operator("rigtools.apply_legacy_transforms")
+        layout.label(text=f"Turnaround Length: {obj.tiny_rig.pose_length}")        
+class SEQUENCER_PT_rig_properties(bpy.types.Panel):
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_idname = "SEQUENCER_PT_rig_properties"
+    bl_label = "Rig Properties"
+    bl_category = "Tiny Rig Edit"
+    bl_parent_id = "SEQUENCER_PT_rig_settings"
+
+    def draw(self, context):
+               
+        obj = context.active_object
+        prop_col = self.layout.box()
+        
+        try:
+            prop_bone = obj.pose.bones[context.scene.bone_selection]
+            if len(prop_bone.keys()) == 0:
+                prop_col.label(text = f"No Properties on '{prop_bone.name}'")
+            for x in prop_bone.keys():
+                prop_col.prop(prop_bone, f'["{x}"]') 
+        except KeyError:
+            prop_col.label(text = "No Property Bone Found")
+            return
+        
+
+        
+
 
 
 classes = (
     SEQUENCER_PT_turnaround_editor,
     SEQUENCER_PT_rig_settings,
+    SEQUENCER_PT_rig_properties,
     SEQUENCER_PT_driver_editor,
     SEQUENCER_PT_rig_grease_pencil,
 )
