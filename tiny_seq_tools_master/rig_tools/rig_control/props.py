@@ -53,6 +53,7 @@ class RIGCONTROL_settings(bpy.types.PropertyGroup):
         get=get_body_pose,
         set=set_body_pose,
         options=set(),
+        override={"LIBRARY_OVERRIDABLE"},
         min=1,
         max=20,
     )
@@ -101,6 +102,7 @@ class RIGCONTROL_settings(bpy.types.PropertyGroup):
         get=get_head_pose,
         set=set_head_pose,
         options=set(),
+        override={"LIBRARY_OVERRIDABLE"},
         min=-20,
         max=20,
     )
@@ -139,6 +141,7 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
         get=get_R_Foot,
         set=set_R_Foot,
         options=set(),
+        override={"LIBRARY_OVERRIDABLE"},
     )
 
     def get_L_Foot(self):
@@ -154,6 +157,7 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
         get=get_L_Foot,
         set=set_L_Foot,
         options=set(),
+        override={"LIBRARY_OVERRIDABLE"},
     )
 
     def get_R_Hand(self):
@@ -169,6 +173,7 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
         get=get_R_Hand,
         set=set_R_Hand,
         options=set(),
+        override={"LIBRARY_OVERRIDABLE"},
     )
 
     def get_L_Hand(self):
@@ -184,6 +189,7 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
         get=get_L_Hand,
         set=set_L_Hand,
         options=set(),
+        override={"LIBRARY_OVERRIDABLE"},
     )
 
     def get_R_Arm_IK_Flip(self):
@@ -199,6 +205,7 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
         get=get_R_Arm_IK_Flip,
         set=set_R_Arm_IK_Flip,
         options=set(),
+        override={"LIBRARY_OVERRIDABLE"},
     )
 
     def get_L_Arm_IK_Flip(self):
@@ -214,6 +221,7 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
         get=get_L_Arm_IK_Flip,
         set=set_L_Arm_IK_Flip,
         options=set(),
+        override={"LIBRARY_OVERRIDABLE"},
     )
 
     def get_R_Leg_IK_Flip(self):
@@ -229,6 +237,7 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
         get=get_R_Leg_IK_Flip,
         set=set_R_Leg_IK_Flip,
         options=set(),
+        override={"LIBRARY_OVERRIDABLE"},
     )
 
     def get_L_Leg_IK_Flip(self):
@@ -244,6 +253,7 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
         get=get_L_Leg_IK_Flip,
         set=set_L_Leg_IK_Flip,
         options=set(),
+        override={"LIBRARY_OVERRIDABLE"},
     )
 
     def get_L_Arm_IK(self):
@@ -259,6 +269,7 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
         get=get_L_Arm_IK,
         set=set_L_Arm_IK,
         options=set(),
+        override={"LIBRARY_OVERRIDABLE"},
     )
 
     def get_R_Arm_IK(self):
@@ -274,6 +285,7 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
         get=get_R_Arm_IK,
         set=set_R_Arm_IK,
         options=set(),
+        override={"LIBRARY_OVERRIDABLE"},
     )
 
     def get_L_Leg_IK(self):
@@ -289,6 +301,7 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
         get=get_L_Leg_IK,
         set=set_L_Leg_IK,
         options=set(),
+        override={"LIBRARY_OVERRIDABLE"},
     )
 
     def get_R_Leg_IK(self):
@@ -304,6 +317,7 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
         get=get_R_Leg_IK,
         set=set_R_Leg_IK,
         options=set(),
+        override={"LIBRARY_OVERRIDABLE"},
     )
 
     def get_R_Hand_Nudge(self):
@@ -319,6 +333,7 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
         get=get_R_Hand_Nudge,
         set=set_R_Hand_Nudge,
         options=set(),
+        override={"LIBRARY_OVERRIDABLE"},
     )
 
     def get_L_Hand_Nudge(self):
@@ -334,6 +349,7 @@ class RIGCONTROL_UI(bpy.types.PropertyGroup):
         get=get_L_Hand_Nudge,
         set=set_L_Hand_Nudge,
         options=set(),
+        override={"LIBRARY_OVERRIDABLE"},
     )
 
 
