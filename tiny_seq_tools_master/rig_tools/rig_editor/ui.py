@@ -3,10 +3,10 @@ import bpy
 from tiny_seq_tools_master.core_functions.drivers import get_driver_ob_obj
 
 
-class SEQUENCER_PT_rig_editor(bpy.types.Panel):
+class SEQUENCER_PT_turnaround_editor(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_idname = "SEQUENCER_PT_rig_edit"
+    bl_idname = "SEQUENCER_PT_turnaround_editor"
     bl_label = "Turnaround Editor"
     bl_category = "Tiny Rig Edit"
 
@@ -14,13 +14,13 @@ class SEQUENCER_PT_rig_editor(bpy.types.Panel):
         obj = context.active_object
         layout = self.layout
         action_row = layout.row(align=True)
-
         if not obj.tiny_rig.is_rig:
             self.layout.label(text="Rig not Found", icon="ARMATURE_DATA")
             return
 
+        action_row.prop(context.object, "offset_action")
         if obj.offset_action is not None:
-            action_row.prop(context.object, "offset_action")
+            
             if obj.library or obj.override_library:
                 action_row.enabled = False
 
@@ -114,7 +114,7 @@ class SEQUENCER_PT_rig_settings(bpy.types.Panel):
 
 
 classes = (
-    SEQUENCER_PT_rig_editor,
+    SEQUENCER_PT_turnaround_editor,
     SEQUENCER_PT_rig_settings,
     SEQUENCER_PT_driver_editor,
     SEQUENCER_PT_rig_grease_pencil,
