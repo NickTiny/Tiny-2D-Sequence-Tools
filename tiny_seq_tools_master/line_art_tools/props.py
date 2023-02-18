@@ -22,22 +22,22 @@ class lr_seq_items(bpy.types.PropertyGroup):
         return 0
 
     def set_thickness(self, thickness: int):
-        scene = bpy.context.scene
-        if scene.sequence_editor and scene.sequence_editor.active_strip:
-            strip = scene.sequence_editor.active_strip
+        try:
+            from spa_sequencer.sync.core import (get_sync_master_strip)
+            strip, _= get_sync_master_strip() 
             set_thick_done = set_seq_line_art_thickness(self.object, thickness, strip)
             if set_thick_done:
                 return
+        except ModuleNotFoundError:
+            return
+        
 
     def get_status(self):
-        scene = bpy.context.scene
-        obj = self.object
-        if check_gp_obj_modifiers(obj):
-            if scene.sequence_editor and scene.sequence_editor.active_strip:
-                strip = scene.sequence_editor.active_strip
-                if strip:
-                    return sync_line_art_obj_to_strip(self.object, strip)
-        else:
+        try:
+            from spa_sequencer.sync.core import (get_sync_master_strip)
+            strip, _= get_sync_master_strip() 
+            return sync_line_art_obj_to_strip(self.object, strip)
+        except ModuleNotFoundError:
             return 0
 
     def get_viewport(self):
