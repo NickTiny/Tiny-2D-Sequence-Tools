@@ -90,17 +90,11 @@ def register():
         description="Control Line Art Object from Sequence",
         default=False,
     )
-    bpy.types.WindowManager.use_seq_line_art = bpy.props.BoolProperty(
-        name="Enable Seq Line Art",
-        description="Control Line Art Object from Sequence",
-        default=False,
-    )
 
 
 def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
-    del bpy.types.WindowManager.use_seq_line_art
     del bpy.types.Object.line_art_seq_obj
     del bpy.types.WindowManager.line_art_cam_override
     del bpy.types.WindowManager.line_art_seq_items
