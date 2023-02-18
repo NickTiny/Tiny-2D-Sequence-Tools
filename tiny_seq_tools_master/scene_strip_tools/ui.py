@@ -10,43 +10,6 @@ class SEQUENCER_PT_scene_tools(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        col = layout.column(align=(False))
-        col = col.box()
-        manager = context.scene
-        row = col.row(align=True)
-        row.label(text="Sequencer Sync", icon="UV_SYNC_SELECT")
-        row.operator(
-            "sequencer.check_viewport_sync_errors",
-            icon="ERROR",
-            text="Check Sync Errors",
-        )
-        row = col.row(align=True)
-        row.prop(manager, "link_seq_to_3d_view", text="")
-        row.separator()
-        row.label(
-            text="Sync Strip Camera to 3D Viewport",
-            icon="LINKED",
-        )
-        row = col.row(align=True)
-        row.prop(manager, "selection_to_active", text="")
-        row.separator()
-        row.label(text="Sync Strip Selection to Viewport", icon="SEQ_STRIP_META")
-        col.operator(
-            "view3d.add_scene_strip",
-            text="Add Camera as Scene Strip",
-            icon="CAMERA_DATA",
-        )
-
-        strip = context.scene.sequence_editor.active_strip
-        col = layout.box()
-        row = col.row(align=True)
-        row.label(text="", icon="SEQUENCE")
-        if strip:
-            row.template_ID(strip, "scene_camera", text=f"{strip.name}")
-        else:
-            row.label(text="No Scene Strip Active!")
-        row.operator("sequencer.refresh_viewport_camera", icon="FILE_REFRESH", text="")
-
         col = layout.box()
         row = col.row(align=False)
         row.label(text="Render Strips")
