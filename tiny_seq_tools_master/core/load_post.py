@@ -9,14 +9,22 @@ from tiny_seq_tools_master.constraint_to_cams.core import (
 @persistent
 def load_handler(
     self,
-):
-    context = bpy.context
-    strips = [
-        strip
-        for strip in context.scene.sequence_editor.sequences_all
-        if strip.type == "SCENE"
-    ]
-    refresh_rot_to_cam_list(context, strips)
+):  
+    try:
+        from spa_sequencer.sync.core import (get_sync_settings)
+        if not get_sync_settings().master_scene:
+            return
+        master_scene = get_sync_settings().master_scene
+        context = bpy.context
+        scene = context.window_manager.timeline_sync_settings.master_scene
+        strips = [
+            strip
+            for strip in scene.sequence_editor.sequences_all
+            if strip.type == "SCENE"
+        ]
+        refresh_rot_to_cam_list(context, strips)
+    except ModuleNotFoundError:
+        return
 
 
 def register():
