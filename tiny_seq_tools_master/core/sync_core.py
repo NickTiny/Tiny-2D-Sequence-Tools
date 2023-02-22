@@ -10,8 +10,10 @@ def update_constraint_camera(scene):
     global OldStrip 
     try:
         from spa_sequencer.sync.core import (get_sync_settings)
+        if not get_sync_settings().master_scene:
+            return
         master_scene = get_sync_settings().master_scene
-        strip = master_scene.sequence_editor.sequences[get_sync_settings().last_master_strip]
+        strip = master_scene.sequence_editor.sequences.get(get_sync_settings().last_master_strip)
         if strip is None or strip.name == OldStrip:
             return
         constraints_to_active_camera(strip)
