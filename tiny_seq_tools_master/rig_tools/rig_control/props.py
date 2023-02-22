@@ -22,29 +22,21 @@ class RIGCONTROL_settings(bpy.types.PropertyGroup):
     def get_body_pose(self):
         obj = self.id_data
         rig_set = obj.tiny_rig
-        posedata_bone = obj.pose.bones[f"{rig_set.pose_data_name}"]
-        if posedata_bone[rig_set.body_pose_name] is not None:
-            return posedata_bone[rig_set.body_pose_name]
+        if obj.tiny_rig.is_rig:
+            posedata_bone = obj.pose.bones[f"{rig_set.pose_data_name}"]
+            if posedata_bone[rig_set.body_pose_name] is not None:
+                return posedata_bone[rig_set.body_pose_name]
         return 0
 
     def set_body_pose(self, val: int):
         obj = self.id_data
         rig_set = obj.tiny_rig
-        normalize_val = normalize_pose(val, rig_set.pose_length)
-        normalize_head = normalize_pose(
-            normalize_val + rig_set.ui_head_pose, rig_set.pose_length
-        )
-        bone_datapath_insert_keyframe(
-            obj.pose.bones[rig_set.pose_data_name],
-            rig_set.body_pose_name,
-            normalize_val,
-        )
-        bone_datapath_insert_keyframe(
-            obj.pose.bones[rig_set.pose_data_name],
-            rig_set.head_pose_name,
-            normalize_head,
-        )
-
+        if obj.tiny_rig.is_rig:
+            normalize_val = normalize_pose(val, rig_set.pose_length)
+            normalize_head = normalize_pose(
+                normalize_val + rig_set.ui_head_pose, rig_set.pose_length
+            )
+            obj.pose.bones[rig_set.pose_data_name][rig_set.body_pose_name]  =normalize_head
         return
 
     ui_body_pose: bpy.props.IntProperty(
@@ -61,39 +53,33 @@ class RIGCONTROL_settings(bpy.types.PropertyGroup):
     def get_head_pose(self):
         obj = self.id_data
         rig_set = obj.tiny_rig
-        posedata_bone = obj.pose.bones[f"{rig_set.pose_data_name}"]
-        if (
-            posedata_bone[rig_set.body_pose_name]
-            and posedata_bone[rig_set.head_pose_name]
-        ):
-            if posedata_bone[rig_set.head_pose_name] != 0:
-                return (
-                    posedata_bone[rig_set.head_pose_name]
-                    - posedata_bone[rig_set.body_pose_name]
-                )
+        if obj.tiny_rig.is_rig:
+            posedata_bone = obj.pose.bones[f"{rig_set.pose_data_name}"]
+            if (
+                posedata_bone.get(rig_set.body_pose_name)
+                and posedata_bone.get(rig_set.head_pose_name)
+            ):
+                if posedata_bone.get(rig_set.head_pose_name) != 0:
+                    return (
+                        posedata_bone.get(rig_set.head_pose_name)
+                        - posedata_bone.get(rig_set.body_pose_name)
+                    )
         return 0
 
     def set_head_pose(self, val: int):
         obj = self.id_data
         rig_set = obj.tiny_rig
-        posedata_bone = obj.pose.bones[f"{rig_set.pose_data_name}"]
-        if val == 0:  # if no offset set head pose to body pose
-            bone_datapath_insert_keyframe(
-                obj.pose.bones[rig_set.pose_data_name],
-                rig_set.head_pose_name,
-                posedata_bone[rig_set.body_pose_name],
-            )
-            return
-        normalize_val = (
-            val + posedata_bone[rig_set.body_pose_name]
-        ) % rig_set.pose_length
+        if obj.tiny_rig.is_rig:
+            posedata_bone = obj.pose.bones[f"{rig_set.pose_data_name}"]
+            if val == 0:  # if no offset set head pose to body pose
+                obj.pose.bones[rig_set.pose_data_name][rig_set.head_pose_name]  = posedata_bone.get(rig_set.body_pose_name)
+                return
+            normalize_val = (
+                val + posedata_bone.get(rig_set.body_pose_name)
+            ) % rig_set.pose_length
 
-        normalize_val = normalize_pose(normalize_val, rig_set.pose_length)
-        bone_datapath_insert_keyframe(
-            obj.pose.bones[rig_set.pose_data_name],
-            rig_set.head_pose_name,
-            normalize_val,
-        )
+            normalize_val = normalize_pose(normalize_val, rig_set.pose_length)
+            obj.pose.bones[rig_set.pose_data_name]= normalize_val
         return
 
     ui_head_pose: bpy.props.IntProperty(
@@ -111,19 +97,20 @@ class RIGCONTROL_settings(bpy.types.PropertyGroup):
 def get_prop_as_bool(prop_name):
     obj = bpy.context.active_object
     rig_set = obj.tiny_rig
-    return bool(obj.pose.bones[f"{rig_set.pose_data_name}"][f"{prop_name}"])
+    return bool(obj.pose.bones[f"{rig_set.pose_data_name}"].get(f"{prop_name}"))
 
 
 def set_prop_as_bool(prop_name, bool):
     obj = bpy.context.active_object
     rig_set = obj.tiny_rig
-    obj.pose.bones[f"{rig_set.pose_data_name}"][f"{prop_name}"] = int(bool)
-    bone_datapath_insert_keyframe(
-        obj.pose.bones[f"{rig_set.pose_data_name}"],
-        prop_name,
-        int(bool),
-    )
-    refresh_current_frame(bpy.context.scene)
+    if obj.tiny_rig.is_rig:
+        obj.pose.bones[f"{rig_set.pose_data_name}"][f"{prop_name}"] = int(bool)
+        bone_datapath_insert_keyframe(
+            obj.pose.bones[f"{rig_set.pose_data_name}"],
+            prop_name,
+            int(bool),
+        )
+        refresh_current_frame(bpy.context.scene)
     return
 
 
