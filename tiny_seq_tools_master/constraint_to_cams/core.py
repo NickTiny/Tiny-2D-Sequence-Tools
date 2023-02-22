@@ -5,9 +5,9 @@ def constraints_to_active_camera(
     strip: bpy.types.Sequence,
 ) -> bool:
     """Set Constraint target to active trip's camera"""
-    for item in bpy.context.window_manager.rot_to_seq_cam_items:
+    for item in [item for item in bpy.context.window_manager.rot_to_seq_cam_items]:
         obj = item.object
-        if obj.constraints["ROT_TO_SEQ_CAM"]:
+        if strip.scene in obj.users_scene and obj.constraints["ROT_TO_SEQ_CAM"]:
             obj.constraints["ROT_TO_SEQ_CAM"].target = strip.scene_camera
 
 
