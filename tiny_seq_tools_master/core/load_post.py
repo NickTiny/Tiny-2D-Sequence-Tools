@@ -11,12 +11,12 @@ def load_handler(
     self,
 ):
     context = bpy.context
-    for strip in [
+    strips = [
         strip
         for strip in context.scene.sequence_editor.sequences_all
         if strip.type == "SCENE"
-    ]:
-        refresh_rot_to_cam_list(context, strip)
+    ]
+    refresh_rot_to_cam_list(context, strips)
 
 
 def register():

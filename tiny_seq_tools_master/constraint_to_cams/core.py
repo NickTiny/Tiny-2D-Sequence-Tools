@@ -28,21 +28,18 @@ def set_rot_to_seq_cam(obj):
     return const
 
 
-def refresh_rot_to_cam_list(context, strip):
+def refresh_rot_to_cam_list(context, scene_strips):
     rot_to_seq_cam_items = context.window_manager.rot_to_seq_cam_items
 
     # Clear seq cam list
     rot_to_seq_cam_items.clear()
 
-    # Check for active strip type
-    if not strip or strip.type != "SCENE":
-        return
-
-    # Build seq cam list
-    for obj in strip.scene.objects:
-        if obj not in [x.object for x in rot_to_seq_cam_items]:
-            status = check_rot_to_cam_status(obj)
-            if status is True:
-                add_rot_to_cam_item = rot_to_seq_cam_items.add()
-                add_rot_to_cam_item.object = obj
+    for strip in scene_strips:
+        # Build seq cam list
+        for obj in strip.scene.objects:
+            if obj not in [x.object for x in rot_to_seq_cam_items]:
+                status = check_rot_to_cam_status(obj)
+                if status is True:
+                    add_rot_to_cam_item = rot_to_seq_cam_items.add()
+                    add_rot_to_cam_item.object = obj
     return True
