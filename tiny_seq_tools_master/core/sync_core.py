@@ -14,10 +14,9 @@ def update_constraint_camera(scene):
         strip = master_scene.sequence_editor.sequences[get_sync_settings().last_master_strip]
         if strip is None or strip.name == OldStrip:
             return
-        
         constraints_to_active_camera(strip)
         sync_strip_camera_to_seq_line_art(strip)
-        OldStrip == strip.name
+        OldStrip = strip.name
     except ModuleNotFoundError:
         return
 
