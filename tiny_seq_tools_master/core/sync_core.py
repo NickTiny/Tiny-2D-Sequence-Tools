@@ -3,7 +3,6 @@ import bpy
 from tiny_seq_tools_master.constraint_to_cams.core import constraints_to_active_camera
 from tiny_seq_tools_master.line_art_tools.core import sync_strip_camera_to_seq_line_art
 
-from operator import attrgetter
 
 OldStrip = ""
 
