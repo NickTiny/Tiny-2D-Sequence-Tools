@@ -7,18 +7,6 @@ from operator import attrgetter
 
 OldStrip = ""
 
-
-
-def find_scene_strip(edit_scene):
-    seq = [strip for strip in edit_scene.sequence_editor.sequences if strip.type == "SCENE"]
-    seq = sorted(seq, key=attrgetter("channel", "frame_final_start"))
-    for strip in seq:
-        current_keyframe = edit_scene.frame_current
-        #current_keyframe = int(edit_scene.frame_current - strip.frame_start + strip.scene.frame_start)
-        if strip.frame_final_start <= current_keyframe and strip.frame_final_end > current_keyframe:
-            #OldStrip = strip.name
-            return strip
-
 def update_constraint_camera(scene):
     global OldStrip 
     try:
