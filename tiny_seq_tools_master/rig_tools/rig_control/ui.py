@@ -126,9 +126,14 @@ class SEQUENCER_PT_rig_control(bpy.types.Panel):
             return
         bone = obj.pose.bones["PoseData"]
 
+        
+
         draw_brow_row(layout, bone)
         layout.prop(bone, '["A. Mouth"]', text="Mouth")
         layout.separator()
+
+        if bone.get('A. Hat') is not None:
+            layout.prop(bone, '["A. Hat"]', text="Hat")
 
         draw_pose_row(layout, bone, "head")
         draw_pose_row(layout, bone, "body")
