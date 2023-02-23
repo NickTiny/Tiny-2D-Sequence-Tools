@@ -3,6 +3,6 @@ def offset_current_frame(scene, int):
 
 
 def refresh_current_frame(scene):
-    offset_current_frame(scene, -1)
     offset_current_frame(scene, +1)
+    offset_current_frame(scene, -1)
     return
