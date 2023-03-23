@@ -14,9 +14,13 @@ def register():
     bpy.types.WindowManager.rot_to_seq_cam_items = bpy.props.CollectionProperty(
         type=rot_to_seq_cam_items
     )
+    bpy.types.WindowManager.enable_rot_seq_cam = bpy.props.BoolProperty(
+        name="Enable 'Rotate to Strips'"
+    )
 
 
 def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
     del bpy.types.WindowManager.rot_to_seq_cam_items
+    del bpy.types.WindowManager.enable_rot_seq_cam
