@@ -1,4 +1,6 @@
 import bpy
+from bpy.utils import register_class, unregister_class
+
 
 class SEQUENCER_PT_constraint_to_strip_camera(bpy.types.Panel):
     bl_space_type = "SEQUENCE_EDITOR"
@@ -8,6 +10,7 @@ class SEQUENCER_PT_constraint_to_strip_camera(bpy.types.Panel):
     bl_category = "Tiny Sequence Tools"
 
     def draw(self, context):
+        self.layout.prop(context.window_manager, "enable_rot_seq_cam")
         layout = self.layout
         col = layout.box()
         row = col.row()

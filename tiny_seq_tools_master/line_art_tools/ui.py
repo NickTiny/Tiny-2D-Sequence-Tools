@@ -19,6 +19,9 @@ class SEQUENCER_PT_line_art(bpy.types.Panel):
         layout = self.layout
         col = layout.column(align=False)
         row = col.row(align=True)
+        row.prop(context.window_manager, "use_seq_line_art", text="Use Sequence Line Art")
+        if not context.window_manager.use_seq_line_art:
+            return
         row.prop(context.window_manager, "line_art_cam_override", text="")
         row.label(text="Override Line Art Camera", icon="CAMERA_DATA")
         if context.window_manager.line_art_cam_override:

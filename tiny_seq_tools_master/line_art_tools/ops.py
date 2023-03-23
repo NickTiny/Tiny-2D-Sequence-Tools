@@ -22,49 +22,38 @@ class SEQUENCER_OT_add_line_art_obj(bpy.types.Operator):
         )
 
     def execute(self, context):
-        try:
-            from spa_sequencer.sync.core import (get_sync_master_strip)
-            strip, _= get_sync_master_strip() 
-        
-            obj = context.active_object
-            if obj.constraints:
-                self.report({"ERROR"}, "Cannot set Line Art if any constraints are present")
-                return {"CANCELLED"}
-            if any(
-                [mod for mod in obj.grease_pencil_modifiers if mod.type == "GP_LINEART"]
-            ):
-                self.report(
-                    {"ERROR"}, "Cannot set Line Art if object already has modifiers"
-                )
-                return {"CANCELLED"}
-            line_art_items = context.window_manager.line_art_seq_items
-            line_art_mod = obj.grease_pencil_modifiers.new(
-                name="Line Art", type="GP_LINEART"
-            )
-            line_art_mod.name = "SEQ_LINE_ART"
-            line_art_mod.target_layer = obj.data.layers[0].info
-            line_art_mod.target_material = obj.data.materials[0]
-            line_art_mod.source_type = "SCENE"
-            add_line_art_item = line_art_items.add()
-            add_line_art_item.object = obj
-            
-            
-            
-            for strip in strip.id_data.sequence_editor.sequences_all:
-                line_art_mod.keyframe_insert("thickness", frame=strip.frame_final_start)
-
-            for fcurve in obj.animation_data.action.fcurves:
-                for kf in fcurve.keyframe_points:
-                    kf.interpolation = "CONSTANT"
-
-            obj.line_art_seq_obj = True
-            self.report({"INFO"}, f"Added '{obj.name}' to Sequence_Line Art Items")
-            return {"FINISHED"}
-        except ModuleNotFoundError:
-            self.report(
-                    {"ERROR"}, "Cannot find sync strips"
-                )
+        obj = context.active_object
+        if obj.constraints:
+            self.report({"ERROR"}, "Cannot set Line Art if any constraints are present")
             return {"CANCELLED"}
+        if any(
+            [mod for mod in obj.grease_pencil_modifiers if mod.type == "GP_LINEART"]
+        ):
+            self.report(
+                {"ERROR"}, "Cannot set Line Art if object already has modifiers"
+            )
+            return {"CANCELLED"}
+        line_art_items = context.window_manager.line_art_seq_items
+        line_art_mod = obj.grease_pencil_modifiers.new(
+            name="Line Art", type="GP_LINEART"
+        )
+        line_art_mod.name = "SEQ_LINE_ART"
+        line_art_mod.target_layer = obj.data.layers[0].info
+        line_art_mod.target_material = obj.data.materials[0]
+        line_art_mod.source_type = "SCENE"
+        add_line_art_item = line_art_items.add()
+        add_line_art_item.object = obj
+
+        for strip in context.scene.sequence_editor.sequences_all:
+            line_art_mod.keyframe_insert("thickness", frame=strip.frame_final_start)
+
+        for fcurve in obj.animation_data.action.fcurves:
+            for kf in fcurve.keyframe_points:
+                kf.interpolation = "CONSTANT"
+
+        obj.line_art_seq_obj = True
+        self.report({"INFO"}, f"Added '{obj.name}' to Sequence_Line Art Items")
+        return {"FINISHED"}
 
 
 class SEQUENCER_OT_remove_line_art_obj(bpy.types.Operator):
