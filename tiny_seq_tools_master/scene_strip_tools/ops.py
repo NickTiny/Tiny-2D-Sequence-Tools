@@ -16,19 +16,20 @@ class SEQUENCER_preview_render(bpy.types.Operator):
         if context.scene.name == "RENDER":
             self.report({"ERROR"}, "Render scene cannot be active")
             return {"CANCELLED"}
-        make_render_scene(context)
+        
+        render_scene = make_render_scene(context)
+        render_scene.render.engine = 'BLENDER_WORKBENCH'
         wm = context.window_manager
         render_scene = bpy.data.scenes["RENDER"]
         render_scene.render.image_settings.file_format = "FFMPEG"
         render_scene.render.ffmpeg.codec = "H264"
         render_scene.render.ffmpeg.audio_codec = "AAC"
         render_scene = bpy.data.scenes["RENDER"]
-        context.window.scene = render_scene
         if wm.render_settings.render_preview_range:
             render_scene.frame_start = wm.render_settings.render_start
             render_scene.frame_end = wm.render_settings.render_end
-        bpy.ops.render.opengl("INVOKE_DEFAULT", animation=True, sequencer=True)
-        self.report({"INFO"}, f"Preview Render Complete")
+        bpy.ops.render.render("INVOKE_DEFAULT", scene=render_scene.name)
+        self.report({"INFO"}, f"Full Render Complete")
         return {"FINISHED"}
 
 
@@ -60,15 +61,11 @@ class SEQUENCER_full_render(bpy.types.Operator):
         self.layout.label(text="Are you sure you want to proceed?")
 
     def execute(self, context):
-        user_scene = context.scene
         if context.scene.name == "RENDER":
             self.report({"ERROR"}, "Render scene cannot be active")
             return {"CANCELLED"}
-        make_render_scene(context)
-        bpy.ops.render.render("INVOKE_DEFAULT", animation=True)
-
-        # Restore Previous Scene
-        context.window.scene = user_scene
+        render_scene = make_render_scene(context)
+        bpy.ops.render.render("INVOKE_DEFAULT", scene=render_scene.name)
         self.report({"INFO"}, f"Full Render Complete")
         return {"FINISHED"}
 
