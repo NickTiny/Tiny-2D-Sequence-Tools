@@ -1,4 +1,29 @@
+import string
 import bpy
+
+
+def set_active_sequence_strip(strip: bpy.types.Sequence) -> bool:
+    """Set active strip to given strip"""
+    scene = strip.id_data
+    if scene.selection_to_active:
+        scene.sequence_editor.active_strip = strip
+        return True
+    return False
+
+
+## TODO Build context better here
+def sync_strip_camera_to_viewport(strip: bpy.types.Sequence) -> bool:
+    """Set avaliable viewports to strip's camera"""
+    updated_viewport = False
+    scene = strip.id_data
+    if not scene.link_seq_to_3d_view:
+        updated_viewport = False
+        return updated_viewport
+    bpy.context.scene.camera = bpy.data.objects[
+        strip.scene_camera.name
+    ]  # Select camera as view
+    updated_viewport = True
+    return updated_viewport
 
 
 def make_render_scene(context: bpy.types.Context) -> (bpy.types.Scene):

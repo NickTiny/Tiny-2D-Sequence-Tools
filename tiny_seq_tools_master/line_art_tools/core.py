@@ -5,11 +5,10 @@ def sync_strip_camera_to_seq_line_art(strip: bpy.types.Sequence) -> bool:
     """Set Sequence Line Art Object's Camera to Strip Camera"""
     scene = strip.scene
     wm = bpy.context.window_manager
-    if not wm.line_art_cam_override:
+    if not wm.line_art_cam_override and wm.use_seq_line_art:
         for item in wm.line_art_seq_items:
             if len(item.object.users_scene) >= 1:
                 obj = item.object
-                obj.grease_pencil_modifiers["SEQ_LINE_ART"].use_custom_camera = True
                 obj.grease_pencil_modifiers[
                     "SEQ_LINE_ART"
                 ].source_camera = strip.scene_camera

@@ -97,11 +97,11 @@ class VIEW3D_OP_refresh_copy_rot_items(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        if not context.scene.sequence_editor:
-            self.report({"ERROR"}, "There may be no edit in current scene")
+        strip = context.active_sequence_strip
+        refreshed = refresh_rot_to_cam_list(context, strip)
+        if not refreshed:
+            self.report({"ERROR"}, "There may be no active scene strip")
             return {"CANCELLED"}
-        scene_strips = [strip for strip in context.scene.sequence_editor.sequences_all if strip.type =="SCENE"]
-        refresh_rot_to_cam_list(context, scene_strips)
         self.report({"INFO"}, "Strip Cameras List Updated")
         return {"FINISHED"}
 
