@@ -60,15 +60,11 @@ class SEQUENCER_full_render(bpy.types.Operator):
         self.layout.label(text="Are you sure you want to proceed?")
 
     def execute(self, context):
-        user_scene = context.scene
         if context.scene.name == "RENDER":
             self.report({"ERROR"}, "Render scene cannot be active")
             return {"CANCELLED"}
-        make_render_scene(context)
-        bpy.ops.render.render("INVOKE_DEFAULT", animation=True)
-
-        # Restore Previous Scene
-        context.window.scene = user_scene
+        render_scene = make_render_scene(context)
+        bpy.ops.render.render("INVOKE_DEFAULT", scene=render_scene.name)
         self.report({"INFO"}, f"Full Render Complete")
         return {"FINISHED"}
 
