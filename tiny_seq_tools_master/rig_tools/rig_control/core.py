@@ -12,8 +12,6 @@ from tiny_seq_tools_master.core_functions.scene import (
     offset_current_frame,
 )
 
-pbone_name = "PoseData"
-
 
 def normalize_pose(pose, posemax):
     if pose in range(1, posemax + 1):
@@ -38,8 +36,9 @@ def normalize_pose_vals(datapath, offset, posemax):
 
 def change_pose(self, context, body_offset=0, head_offset=0):
     obj = context.active_object
-    bone = obj.pose.bones[pbone_name]
-    body_val = normalize_pose_vals(bone["Pose"], body_offset, obj.tiny_rig.pose_length)
+    bone = obj.pose.bones[obj.tiny_rig.pose_data_name]
+    body_val = normalize_pose_vals(
+        bone["Pose"], body_offset, obj.tiny_rig.pose_length)
     head_val = normalize_pose_vals(
         bone["Pose Head"], head_offset, obj.tiny_rig.pose_length
     )
@@ -73,7 +72,8 @@ def nudge_bone(self, bone, negative):
         if (bone.location[2] <= limit and not negative) or (
             bone.location[2] >= limit and negative
         ):
-            self.report({"ERROR"}, f"'{bone.name}' at Z limit of {round(limit,2)}")
+            self.report(
+                {"ERROR"}, f"'{bone.name}' at Z limit of {round(limit,2)}")
             return {"CANCELLED"}
 
     bone.location[2] += -val
@@ -119,7 +119,7 @@ def toggle_ik(
     scene = context.scene
     index = int(scene.frame_current)
     obj = context.active_object
-    posebone = obj.pose.bones[pbone_name]
+    posebone = obj.pose.bones[obj.tiny_rig.pose_data_name]
     ik_bone = obj.pose.bones[datapath]
     bones = [bone for bone in obj.pose.bones if bone.name in bone_names]
     if posebone[f"{datapath}"] == 1:

@@ -52,9 +52,6 @@ from tiny_seq_tools_master.core_functions.bone import (
 import bpy
 
 
-pbone_name = "PoseData"
-
-
 # Imports data that should be read from a JSON file or other imported text format.
 
 class RIGTOOLS_OT_create_armatue(bpy.types.Operator):
@@ -62,13 +59,13 @@ class RIGTOOLS_OT_create_armatue(bpy.types.Operator):
     bl_label = "Create Armature2"
     bl_description = "add better description."
     bl_options = {"REGISTER", "UNDO"}
-    
+
     def execute(self, context):
         bpy.ops.object.armature_add(enter_editmode=True)
         make_nudge = True
         # must be in edit mode to add bones
         arm_obj = context.active_object
-        
+
         edit_bones = arm_obj.data.edit_bones
 
         # Clear Existing Bone
@@ -76,28 +73,33 @@ class RIGTOOLS_OT_create_armatue(bpy.types.Operator):
             edit_bones.remove(bone)
 
         # Create root bones
-        master_bone = bone_new(edit_bones, 'Global.Location', (-.3, -.5) ,(.3, -.5))
-        master_bone = bone_new(edit_bones, 'PoseData', (-.5, -.5) ,(.5, -.5))
-
+        master_bone = bone_new(
+            edit_bones, 'Global.Location', (-.3, -.5), (.3, -.5))
         # Create Spine Bones
-        spine_root = (0,.8)
-        spine_root = child_bone_new(master_bone, 'Location', spine_root, calculate_bone_vector(.3, spine_root))
+        spine_root = (0, .8)
+        spine_root = child_bone_new(
+            master_bone, 'Location', spine_root, calculate_bone_vector(.3, spine_root))
         lower_offset = (spine_root.tail.xz[0], (spine_root.tail.xz[1]+.1))
-        lower = child_bone_new(spine_root, 'Lower', lower_offset, calculate_bone_vector(.7, lower_offset))
-        upper = child_bone_connected_new(lower, 'Upper', calculate_bone_vector(.7, lower.tail.xz))
-        neck = child_bone_new(upper, 'Neck', upper.tail.xz,  calculate_bone_vector(.2, upper.tail.xz))
+        lower = child_bone_new(
+            spine_root, 'Lower', lower_offset, calculate_bone_vector(.7, lower_offset))
+        upper = child_bone_connected_new(
+            lower, 'Upper', calculate_bone_vector(.7, lower.tail.xz))
+        neck = child_bone_new(upper, 'Neck', upper.tail.xz,
+                              calculate_bone_vector(.2, upper.tail.xz))
 
         make_limb_set(upper, 'Arm', (0.5, 2.5), 130, 130, make_nudge)
-        make_limb_set(lower, 'Leg', (.2, 1.4), 180,180-45, make_nudge)
+        make_limb_set(lower, 'Leg', (.2, 1.4), 180, 180-45, make_nudge)
 
         # Select all bones to recalculate roll
         for bone in edit_bones:
             bone.select = True
-        bpy.ops.armature.calculate_roll(type='GLOBAL_POS_Y', axis_flip=False, axis_only=False)
-
+        bpy.ops.armature.calculate_roll(
+            type='GLOBAL_POS_Y', axis_flip=False, axis_only=False)
 
         self.report({"INFO"}, "Created Armature")
         return {"FINISHED"}
+
+
 class RIGTOOLS_rig_edit_base_class(bpy.types.Operator):
     """Base Class for all Rig Edit Operations"""
 
@@ -237,6 +239,9 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
         # Set as Rig
         obj.tiny_rig.is_rig = True
 
+        # Set bone for poperties
+        obj.tiny_rig.pose_data_name = context.scene.bone_selection
+
         # Set Turnaround Length
         if self.set_turnaround:
             obj.tiny_rig.pose_length = self.pose_length_set
@@ -338,7 +343,6 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
             if not bone_check_constraint(bone, "Copy Nudge Location"):
                 bone_copy_location_nudge(bone)
                 msg += (f"Copy Nudge Loc Added on '{bone.name}'\n")
-
 
         # if self.update_face_constraints:
         #     # Copy Face Rig Transforms
@@ -530,7 +534,7 @@ class RIGTOOLS_add_ik_mirror_to_pole(RIGTOOLS_rig_edit_base_class):
                 bone.id_data,
                 f"{suffix}_Flip_IK",
                 f'pose.bones["{bone.name}"].constraints["{new.name}"].influence',
-                f'pose.bones["PoseData"]["{suffix}_Flip_IK"]',
+                f'pose.bones["{bone.id_data.tiny_rig.pose_data_name}"]["{suffix}_Flip_IK"]',
             )
 
         return {"FINISHED"}

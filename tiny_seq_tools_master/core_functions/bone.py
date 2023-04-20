@@ -112,7 +112,7 @@ def add_action_const_to_body(context):
                 bone.id_data,
                 "Pose",
                 f'pose.bones["{bone.name}"].constraints["{new.name}"].eval_time',
-                'pose.bones["PoseData"]["Pose"]',
+                f'pose.bones["{bone.id_data.tiny_rig.pose_data_name}"]["Pose"]',
                 -1,
                 f"Pose/{action_length}",
             )
@@ -132,7 +132,7 @@ def add_action_const_to_head(context):
                 bone.id_data,
                 "Pose_Head",
                 f'pose.bones["{bone.name}"].constraints["{new.name}"].eval_time',
-                'pose.bones["PoseData"]["Pose Head"]',
+                f'pose.bones["{bone.id_data.tiny_rig.pose_data_name}"]["Pose Head"]',
                 -1,
                 f"Pose_Head/{action_length}",
             )
@@ -221,8 +221,10 @@ def make_limb_chain(parent_bone:bpy.types.EditBone, prefix:str, limb:str, origin
         root_bone = parent_bone.id_data.edit_bones[0]
         ik_offset= calculate_bone_vector(.2, (limbs[2].tail.xz[0], limbs[2].tail.xz[1]), appendage_angle)
         ik_bone =child_bone_new(root_bone, f"{prefix}_{limb}_IK", ik_offset, calculate_bone_vector(.2, ik_offset, appendage_angle))
-        pole_offset = calculate_bone_vector(1, (limbs[2].tail.xz[0], limbs[2].tail.xz[1]), (angle))
-        pole_bone =child_bone_new(parent_bone, f"{prefix}_{limb}_Pole", pole_offset, calculate_bone_vector(.2, pole_offset, (angle)))
+        pole_offset = calculate_bone_vector(
+            1, (limbs[1].head.xz[0], limbs[1].head.xz[1]), (angle*.98))
+        pole_bone = child_bone_new(
+            parent_bone, f"{prefix}_{limb}_Pole", pole_offset, calculate_bone_vector(.2, pole_offset, (angle*.98)))
     return limbs
 
 

@@ -5,7 +5,7 @@ def check_tiny_rig(obj):
     if obj.type != "ARMATURE":
         return
     try:
-        return obj.pose.bones["PoseData"] or obj.pose.bones["PoseData"]["L_Arm_IK"]
+        return obj.pose.bones[obj.tiny_rig.pose_data_name] or obj.pose.bones[obj.tiny_rig.pose_data_name]["L_Arm_IK"]
     except KeyError:
         return
 
@@ -124,7 +124,7 @@ class SEQUENCER_PT_rig_control(bpy.types.Panel):
         if not check_tiny_rig(obj):
             layout.label(text="Rig not Found", icon="ERROR")
             return
-        bone = obj.pose.bones["PoseData"]
+        bone = obj.pose.bones[obj.tiny_rig.pose_data_name]
 
         
 

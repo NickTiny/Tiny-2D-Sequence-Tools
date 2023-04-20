@@ -141,7 +141,6 @@ def custom_int_create(target, name, value, min, max):
         default=1,
     )
     target.property_overridable_library_set(f'["{name}"]', True)
-    # target.id_data.property_override_library_set(f'pose.bones["PoseData"]["{name}"]', True)
     return target[name]
 
 
@@ -188,7 +187,7 @@ def bone_transform_mirror_add(bone, name="FLIP_BONE"):
         bone.id_data,
         f"{prefix}_{suffix}_Flip",
         f'pose.bones["{bone.name}"].constraints["{new.name}"].influence',
-        f'pose.bones["PoseData"]["{prefix}_{suffix}_Flip"]',
+        f'pose.bones["{bone.id_data.tiny_rig.pose_data_name}"]["{prefix}_{suffix}_Flip"]',
     )
 
 
@@ -208,7 +207,7 @@ def bone_transform_nudge_add(bone, name="HAND_NUDGE"):
         bone.id_data,
         f"{side}_Hand_Nudge",
         f'pose.bones["{bone.name}"].constraints["{constraint.name}"].influence',
-        f'pose.bones["PoseData"]["{side}_Hand_Nudge"]',
+        f'pose.bones["{bone.id_data.tiny_rig.pose_data_name}"]["{side}_Hand_Nudge"]',
     )
     return constraint
 
