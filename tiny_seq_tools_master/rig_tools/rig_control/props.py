@@ -22,7 +22,7 @@ class RIGCONTROL_settings(bpy.types.PropertyGroup):
     def get_body_pose(self):
         obj = self.id_data
         rig_set = obj.tiny_rig
-        if obj.tiny_rig.is_rig:
+        if obj.tiny_rig.is_rig and obj.mode == 'POSE':
             posedata_bone = obj.pose.bones[f"{rig_set.pose_data_name}"]
             if posedata_bone[rig_set.body_pose_name] is not None:
                 return posedata_bone[rig_set.body_pose_name]

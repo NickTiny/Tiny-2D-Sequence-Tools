@@ -14,9 +14,9 @@ class SEQUENCER_PT_turnaround_editor(bpy.types.Panel):
         obj = context.active_object
         layout = self.layout
         action_row = layout.row(align=True)
-        if not obj.tiny_rig.is_rig:
-            self.layout.label(text="Rig not Found", icon="ARMATURE_DATA")
-            return
+        # if not obj.tiny_rig.is_rig:
+        #     self.layout.label(text="Rig not Found", icon="ARMATURE_DATA")
+        #     return
 
         action_row.prop(context.object, "offset_action")
         if obj.offset_action is not None:
@@ -38,6 +38,8 @@ class SEQUENCER_PT_turnaround_editor(bpy.types.Panel):
             offset_row.alert = True
             offset_row.label(text="Must be in POSE Mode")
         layout.operator("rigools.add_action_const_to_bone", icon="CONSTRAINT_BONE")
+        layout.operator("rigools.create_2d_armature")
+        
         
 
 
@@ -70,7 +72,6 @@ class SEQUENCER_PT_driver_editor(bpy.types.Panel):
             text="Add Mirror to Hand/Foot",
             icon="MOD_MIRROR",
         )
-        layout.operator('')
 
 
 class SEQUENCER_PT_rig_grease_pencil(bpy.types.Panel):

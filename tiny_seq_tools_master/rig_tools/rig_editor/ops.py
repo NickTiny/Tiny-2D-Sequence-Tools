@@ -1,17 +1,16 @@
-import bpy
-
-
-pbone_name = "PoseData"
-
-from tiny_seq_tools_master.core_functions.bone import (
-    apply_transforms_on_frame,
-    get_consts_on_bone,
-    reset_bones,
-    show_hide_constraints,
-    add_action_const_to_head,
-    add_action_const_to_body,
+from tiny_seq_tools_master.rig_tools.rig_editor.tiny_media_data import (
+    bools_to_add,
+    tiny_media_bones_legend,
+    bone_groups,
+    tiny_media_bone_groups,
+    tiny_lw_bones,
+    tiny_hand_foot_bones,
 )
-
+from tiny_seq_tools_master.core_functions.object import (
+    check_object_type,
+    get_consts_on_obj,
+)
+from tiny_seq_tools_master.core_functions.drivers import add_driver, get_driver_ob_obj
 from tiny_seq_tools_master.rig_tools.rig_editor.core import (
     get_action_offset_bones,
     get_action_from_constraints,
@@ -31,26 +30,74 @@ from tiny_seq_tools_master.rig_tools.rig_editor.core import (
     bone_check_constraint,
     bone_copy_transforms_add,
     bone_copy_location_add,
-)   
-
-from tiny_seq_tools_master.core_functions.drivers import add_driver, get_driver_ob_obj
-
-from tiny_seq_tools_master.core_functions.object import (
-    check_object_type,
-    get_consts_on_obj,
+    add_ik_flip_to_pole,
+    get_nudge_bone_name,
+    copy_ik_rotation,
 )
+from tiny_seq_tools_master.core_functions.bone import (
+    apply_transforms_on_frame,
+    get_consts_on_bone,
+    reset_bones,
+    show_hide_constraints,
+    add_action_const_to_head,
+    add_action_const_to_body,
+    bone_new,
+    child_bone_new,
+    child_bone_connected_new,
+    calculate_bone_vector,
+    make_limb_chain,
+    make_nudge_bone,
+    make_limb_set,
+)
+import bpy
+
+
+pbone_name = "PoseData"
+
 
 # Imports data that should be read from a JSON file or other imported text format.
-from tiny_seq_tools_master.rig_tools.rig_editor.tiny_media_data import (
-    bools_to_add,
-    tiny_media_bones_legend,
-    bone_groups,
-    tiny_media_bone_groups,
-    tiny_lw_bones,
-    tiny_hand_foot_bones,
-)
+
+class RIGTOOLS_OT_create_armatue(bpy.types.Operator):
+    bl_idname = "rigools.create_2d_armature"
+    bl_label = "Create Armature2"
+    bl_description = "add better description."
+    bl_options = {"REGISTER", "UNDO"}
+    
+    def execute(self, context):
+        bpy.ops.object.armature_add(enter_editmode=True)
+        make_nudge = True
+        # must be in edit mode to add bones
+        arm_obj = context.active_object
+        
+        edit_bones = arm_obj.data.edit_bones
+
+        # Clear Existing Bone
+        for bone in edit_bones:
+            edit_bones.remove(bone)
+
+        # Create root bones
+        master_bone = bone_new(edit_bones, 'Global.Location', (-.3, -.5) ,(.3, -.5))
+        master_bone = bone_new(edit_bones, 'PoseData', (-.5, -.5) ,(.5, -.5))
+
+        # Create Spine Bones
+        spine_root = (0,.8)
+        spine_root = child_bone_new(master_bone, 'Location', spine_root, calculate_bone_vector(.3, spine_root))
+        lower_offset = (spine_root.tail.xz[0], (spine_root.tail.xz[1]+.1))
+        lower = child_bone_new(spine_root, 'Lower', lower_offset, calculate_bone_vector(.7, lower_offset))
+        upper = child_bone_connected_new(lower, 'Upper', calculate_bone_vector(.7, lower.tail.xz))
+        neck = child_bone_new(upper, 'Neck', upper.tail.xz,  calculate_bone_vector(.2, upper.tail.xz))
+
+        make_limb_set(upper, 'Arm', (0.5, 2.5), 130, 130, make_nudge)
+        make_limb_set(lower, 'Leg', (.2, 1.4), 180,180-45, make_nudge)
+
+        # Select all bones to recalculate roll
+        for bone in edit_bones:
+            bone.select = True
+        bpy.ops.armature.calculate_roll(type='GLOBAL_POS_Y', axis_flip=False, axis_only=False)
 
 
+        self.report({"INFO"}, "Created Armature")
+        return {"FINISHED"}
 class RIGTOOLS_rig_edit_base_class(bpy.types.Operator):
     """Base Class for all Rig Edit Operations"""
 
@@ -148,7 +195,10 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     pose_length_set: bpy.props.IntProperty(name="Turnaround Length")
-    update_face_constraints : bpy.props.BoolProperty(name="Add Face Constraints", default=False)
+    update_face_constraints: bpy.props.BoolProperty(
+        name="Add Face Constraints", default=False)
+    set_turnaround: bpy.props.BoolProperty(
+        name="Turnaround", default=False)
 
     def invoke(self, context, event):
         wm = context.window_manager
@@ -156,21 +206,25 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
 
     def draw(self, context):
         col = self.layout.column(align=True)
-        lines = [
-            "Turnaround Length effects how the turnaround pose ",
-            "is interperted. Changing this will break compatibility",
-            "with previous animations tracks.",
-        ]
-        for line in lines:
-            col.alert = True
-            col.label(text=line)
-        col.label(text="Proceed with Caution!", icon="ERROR")
-        col = self.layout.column()
-        col.label(text="Use 'ESC' to cancel")
-        if context.active_object.tiny_rig.pose_length:
-            self.pose_length_set = context.active_object.tiny_rig.pose_length
-        col.prop(self, "pose_length_set")
+
         col.prop(self, "update_face_constraints")
+        col.prop(self, "is_turnaround")
+        if self.set_turnaround:
+            col = self.layout.column()
+            col.label(text="Proceed with Caution!", icon="ERROR")
+
+            lines = [
+                "Turnaround Length effects how the turnaround pose ",
+                "is interperted. Changing this will break compatibility",
+                "with previous animations tracks.",
+            ]
+            for line in lines:
+                col.alert = True
+                col.label(text=line)
+            col.label(text="Use 'ESC' to cancel")
+            if context.active_object.tiny_rig.pose_length:
+                self.pose_length_set = context.active_object.tiny_rig.pose_length
+            col.prop(self, "pose_length_set")
 
     def execute(self, context):
         msg = ""
@@ -181,51 +235,88 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
         propbone = obj.pose.bones[context.scene.bone_selection]
 
         # Set as Rig
-        if not obj.tiny_rig.is_rig:
-            obj.tiny_rig.is_rig = True
-            msg += ("Is Rig set to True \n")
+        obj.tiny_rig.is_rig = True
 
         # Set Turnaround Length
-        if not obj.tiny_rig.pose_length == self.pose_length_set:
+        if self.set_turnaround:
             obj.tiny_rig.pose_length = self.pose_length_set
             msg += (f"Pose Length set to {obj.tiny_rig.pose_length} \n")
-
-        # Rename bones if they are legacy 
-        updated_bones = armature_bones_rename(obj.data, tiny_media_bones_legend)
-        msg += (f"{updated_bones} \n")
 
         bone_groups_created = bone_create_groups(obj, bone_groups)
         if bone_groups_created:
             msg += (f"Bones Group Created \n")
-        
+
         updated_bones = bone_assign_groups(obj, tiny_media_bone_groups)
         msg += (f"{updated_bones} \n")
 
         # Add Driver Properties
+        # TODO only add relavant bools
         bone_custom_prop_bools_add(propbone, bools_to_add)
 
+        # TODO only clear constraitns for needed bones
+        for bone in [bone for bone in obj.pose.bones if bone.constraints]:
+            for constraint in bone.constraints:
+                bone.constraints.remove(constraint)
+
+        # TODO LOCK ALL BONES TO SINGLE AXIS
+        for bone in obj.pose.bones:
+            bone.rotation_mode = 'XYZ'
+            bone.lock_rotation[0] = True
+            bone.lock_rotation[1] = True
+            bone.lock_rotation[2] = False
+            bone.rotation_mode = 'XYZ'
+            bone.lock_rotation[0] = False
+            bone.lock_rotation[1] = False
+            bone.lock_location[2] = True
+
         # Add IK Constraints
-        ik_bones = [bone for bone in obj.pose.bones if bone.name in tiny_lw_bones]
+        ik_bones = [
+            bone for bone in obj.pose.bones if bone.name in tiny_lw_bones]
         for bone in ik_bones:
             if not get_consts_on_bone(bone, "IK"):
                 prefix = bone.name[0]
                 suffix = bone.name[2:5]
-                bone_ik_constraint_add(bone, prefix, suffix) 
+                bone_ik_constraint_add(bone, prefix, suffix)
                 msg += (f"IK Added on '{bone.name}'/n")
             constraint = get_consts_on_bone(bone, "IK")[0]
             # Must be exactly on IK modifier
             if len(get_consts_on_bone(bone, "IK")) != 1:
                 self.report({"ERROR"}, f"Too many IKs on {bone.name}")
                 return {"CANCELLED"}
-            # Add IK Drivers     
-            bone_ik_driver_add(bone, constraint, propbone, f"{bone.name.split('.')[0]}_IK")
-            
+            # Add IK Drivers
+            bone_ik_driver_add(bone, constraint, propbone,
+                               f"{bone.name.split('.')[0]}_IK")
+
+        # Add IK_Flip to Poles
+        for bone in [bone for bone in obj.pose.bones if "Pole" in bone.name]:
+            # If nudge pass the corrisponding nudge bone, else pass master bone
+            nudge_bone_name = get_nudge_bone_name(bone)
+            prefix = bone.name[0]
+            suffix = bone.name[2:5]
+            ik_prop_name = f"{prefix}_{suffix}_Flip_IK"
+
+            constraint = add_ik_flip_to_pole(bone, nudge_bone_name)
+            add_driver(
+                bone.id_data,
+                bone.id_data,
+                ik_prop_name,
+                f'pose.bones["{bone.name}"].constraints["{constraint.name}"].influence',
+                f'pose.bones["{propbone.name}"]["{ik_prop_name}"]',
+                -1,
+            )
+            # Nudge with special conditions
+
+            bone_copy_location_nudge(bone, 'LOCAL', True)
 
         # Add Mirror to Hand/Foot Bones
         for bone in [bone for bone in obj.pose.bones if bone.name in tiny_hand_foot_bones]:
-            if not bone_check_constraint(bone, "FLIP_BONE"):
-                bone_transform_mirror_add(bone)
-                msg += (f"Mirror Const Added on '{bone.name}'\n")
+            bone_copy_location_nudge(bone, 'POSE', True)
+            bone_copy_location_limb(context, bone, False)
+            prefix = bone.name[0]
+            suffix = bone.name[2:5]
+            target_name = f"{prefix}_{suffix}_IK"
+            copy_ik_rotation(bone, target_name)
+            bone_transform_mirror_add(bone)
 
         # Add Hand Nudge
         for bone in [bone for bone in obj.pose.bones if "Hand" in bone.name]:
@@ -235,7 +326,7 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
 
         # Add Position Limits
         for bone in [bone for bone in obj.pose.bones if "Nudge" in bone.name]:
-            if not bone_check_constraint(bone, "Nudge - Limit Location"): 
+            if not bone_check_constraint(bone, "Nudge - Limit Location"):
                 bone_position_limits_add(bone)
                 msg += (f"Position Limits Added on '{bone.name}'\n")
 
@@ -248,41 +339,37 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
                 bone_copy_location_nudge(bone)
                 msg += (f"Copy Nudge Loc Added on '{bone.name}'\n")
 
-        # Hide FK Bones when IK Enabled
-        # TODO add this feature via driver
 
-        if self.update_face_constraints:
-            # Copy Face Rig Transforms
-            # Eyebrows
-            for bone in [bone for bone in obj.pose.bones if "Eyebrow" in bone.name]:
-                name = "COPY_FACE_RIG"
-                if ".001" not in bone.name:
-                    if not bone_check_constraint(bone, name):
-                        bone_copy_transforms_add(bone, name)
-                        msg += (f"{name} added to '{bone.name}'\n")
+        # if self.update_face_constraints:
+        #     # Copy Face Rig Transforms
+        #     # Eyebrows
+        #     for bone in [bone for bone in obj.pose.bones if "Eyebrow" in bone.name]:
+        #         name = "COPY_FACE_RIG"
+        #         if ".001" not in bone.name:
+        #             if not bone_check_constraint(bone, name):
+        #                 bone_copy_transforms_add(bone, name)
+        #                 msg += (f"{name} added to '{bone.name}'\n")
 
-        
-            # Eyelids
-            for bone in [bone for bone in obj.pose.bones if "Eyelid" in bone.name]:
-                name = "COPY_FACE_RIG"
-                if ".001" not in bone.name:
-                    if not bone_check_constraint(bone, name):
-                        bone_copy_transforms_add(bone, name)
-                        msg += (f"{name} added to '{bone.name}'\n")
+        #     # Eyelids
+        #     for bone in [bone for bone in obj.pose.bones if "Eyelid" in bone.name]:
+        #         name = "COPY_FACE_RIG"
+        #         if ".001" not in bone.name:
+        #             if not bone_check_constraint(bone, name):
+        #                 bone_copy_transforms_add(bone, name)
+        #                 msg += (f"{name} added to '{bone.name}'\n")
 
-            # Eyes
-            for bone in [bone for bone in obj.pose.bones if bone.name == "Eye.R.M" or bone.name == "Eye.L.M"]:
-                name = "COPY_EYE_AIM"
-                if not bone_check_constraint(bone, name):
-                    bone_copy_location_add(bone, f"Eye_Aim", False, name)
-                    msg += (f"{name} added to '{bone.name}'\n")
-                name = "COPY_EYE_CTRL"
-                if not bone_check_constraint(bone, name):
-                    bone_copy_location_add(bone, f"{bone.name.split('.M')[0]}.ctrl", True, name)
-                    msg += (f"{name} added to '{bone.name}'\n")
-            
+        #     # Eyes
+        #     for bone in [bone for bone in obj.pose.bones if bone.name == "Eye.R.M" or bone.name == "Eye.L.M"]:
+        #         name = "COPY_EYE_AIM"
+        #         if not bone_check_constraint(bone, name):
+        #             bone_copy_location_add(bone, f"Eye_Aim", False, name)
+        #             msg += (f"{name} added to '{bone.name}'\n")
+        #         name = "COPY_EYE_CTRL"
+        #         if not bone_check_constraint(bone, name):
+        #             bone_copy_location_add(bone, f"{bone.name.split('.M')[0]}.ctrl", True, name)
+        #             msg += (f"{name} added to '{bone.name}'\n")
 
-        self.report({"INFO"}, f"Initilizaton Completed! \n {msg}" )
+        self.report({"INFO"}, f"Initilizaton Completed! \n {msg}")
         return {"FINISHED"}
 
 
@@ -372,7 +459,8 @@ class RIGTOOLS_load_action(RIGTOOLS_rig_edit_base_class):
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        offset_action = get_action_from_constraints(context.active_object.pose.bones)
+        offset_action = get_action_from_constraints(
+            context.active_object.pose.bones)
         context.active_object.offset_action = offset_action
         return {"FINISHED"}
 
@@ -398,7 +486,8 @@ class RIGTOOLS_add_action_const_to_bone(bpy.types.Operator):
             or obj.animation_data.action == obj.offset_action
         )
         if not res:
-            cls.poll_message_set("Cannot Edit while Offsetting Turnaround Action")
+            cls.poll_message_set(
+                "Cannot Edit while Offsetting Turnaround Action")
         return res
 
     def invoke(self, context, event):
@@ -443,8 +532,6 @@ class RIGTOOLS_add_ik_mirror_to_pole(RIGTOOLS_rig_edit_base_class):
                 f'pose.bones["{bone.name}"].constraints["{new.name}"].influence',
                 f'pose.bones["PoseData"]["{suffix}_Flip_IK"]',
             )
-        
-       
 
         return {"FINISHED"}
 
@@ -462,11 +549,13 @@ class RIGTOOLS_add_hand_nudge(RIGTOOLS_rig_edit_base_class):
             self.report({"ERROR"}, f"Active Bone must be Hand")
             return {"CANCELLED"}
         if "HAND_NUDGE" in [const.name for const in bone.constraints]:
-            self.report({"ERROR"}, f"Hand Nundge already exists on {bone.name}")
+            self.report(
+                {"ERROR"}, f"Hand Nundge already exists on {bone.name}")
             return {"CANCELLED"}
-        
+
         bone_transform_nudge_add(bone)
         return {"FINISHED"}
+
 
 class RIGTOOLS_add_nudge_position_limits(RIGTOOLS_rig_edit_base_class):
     bl_idname = "rigools.add_nudge_position_limits"
@@ -481,13 +570,14 @@ class RIGTOOLS_add_nudge_position_limits(RIGTOOLS_rig_edit_base_class):
             self.report({"ERROR"}, f"Active Bone must be Nudge")
             return {"CANCELLED"}
         if mod_name in [const.name for const in bone.constraints]:
-            self.report({"ERROR"}, f"Hand Nundge already exists on {bone.name}")
+            self.report(
+                {"ERROR"}, f"Hand Nundge already exists on {bone.name}")
             return {"CANCELLED"}
 
         suffix = bone.name.split(".Hand")[0]
         side = suffix.split("_Arm")[0]
         new = bone.constraints.new("LIMIT_LOCATION")
-        new.owner_space= "LOCAL"
+        new.owner_space = "LOCAL"
         new.use_min_z = True
         new.use_max_z = True
         new.min_z = -0.1
@@ -508,23 +598,25 @@ class RIGTOOLS_add_mirror_to_bone(RIGTOOLS_rig_edit_base_class):
             self.report({"ERROR"}, f"Active Bone must be Hand or Foot")
             return {"CANCELLED"}
         if "FLIP_BONE" in [const.name for const in bone.constraints]:
-            self.report({"ERROR"}, f"Hand Nundge already exists on {bone.name}")
+            self.report(
+                {"ERROR"}, f"Hand Nundge already exists on {bone.name}")
             return {"CANCELLED"}
 
         bone_transform_mirror_add(bone)
         return {"FINISHED"}
+
+
 class RIGTOOLS_add_copy_transforms_to_ik_ctrl(RIGTOOLS_rig_edit_base_class):
     bl_idname = "rigools.add_copy_transforms_to_ik_ctrl"
     bl_label = "Add Copy Transforms to Hand/Foot Bone"
     bl_description = """Add Hand Foot Mirror+CopyTra"""
     bl_options = {"UNDO"}
+
     def execute(self, context):
         bone = context.active_pose_bone
         bone_copy_location_limb(context, bone)
-        bone_copy_location_nudge( bone)
-        
-        
-        
+        bone_copy_location_nudge(bone)
+
         return {"FINISHED"}
 
 
@@ -561,13 +653,12 @@ class RIGTOOLS_add_ik_fk_toggle(RIGTOOLS_rig_edit_base_class):
         if constraint is None:
             self.report({"ERROR"}, f"Active Bone must have IK")
             return {"CANCELLED"}
-        
-        bone_ik_driver_add(bone, constraint, propbone, f"{bone.name.split('.')[0]}_IK")
+
+        bone_ik_driver_add(bone, constraint, propbone,
+                           f"{bone.name.split('.')[0]}_IK")
         return {"FINISHED"}
 
-        
-    
-   
+
 class RIGTOOLS_add_custom_prop(RIGTOOLS_rig_edit_base_class):
     bl_idname = "rigools.add_custom_prop"
     bl_label = "Add Custom Props"
@@ -579,13 +670,13 @@ class RIGTOOLS_add_custom_prop(RIGTOOLS_rig_edit_base_class):
         prop_bone = obj.pose.bones[context.scene.bone_selection]
         for bone in obj.pose.bones:
             bone.bone.select = False
-        prop_bone.bone.select= True  
+        prop_bone.bone.select = True
         bpy.ops.wm.properties_add(data_path="active_pose_bone")
         return {"FINISHED"}
 
 
-
 classes = (
+    RIGTOOLS_OT_create_armatue,
     RIGTOOLS_add_ik_fk_toggle,
     RIGTOOLS_apply_legacy_transforms,
     RIGTOOLS_add_action_const_to_bone,
