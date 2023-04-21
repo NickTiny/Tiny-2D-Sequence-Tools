@@ -709,6 +709,23 @@ class RIGTOOLS_add_custom_prop(RIGTOOLS_rig_edit_base_class):
         return {"FINISHED"}
 
 
+class RIGTOOLS_gp_constraint_armature(bpy.types.Operator):
+    bl_idname = "rigools.gp_constraint_armature"
+    bl_label = "Add Armature Contraint"
+    bl_description = """"""  # TODO
+    bl_options = {"UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return (context.active_object.type == "GPENCIL")
+
+    def execute(self, context):
+        obj = context.active_object
+        obj.constraints.new("ARMATURE")
+
+        return {"FINISHED"}
+
+
 classes = (
     RIGTOOLS_OT_create_armatue,
     RIGTOOLS_add_ik_fk_toggle,
@@ -728,6 +745,7 @@ classes = (
     RIGTOOLS_enable_all_gp_mod_const,
     RIGTOOLS_add_custom_prop,
     RIGTOOLS_add_copy_transforms_to_ik_ctrl,
+    RIGTOOLS_gp_constraint_armature,
 )
 
 

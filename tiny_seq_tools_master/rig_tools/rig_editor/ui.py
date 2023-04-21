@@ -41,44 +41,23 @@ class SEQUENCER_PT_turnaround_editor(bpy.types.Panel):
         layout.operator("rigools.create_2d_armature")
         
         
-
-
-
-class SEQUENCER_PT_driver_editor(bpy.types.Panel):
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_idname = "SEQUENCER_PT_driver_editor"
-    bl_label = "Edit Bone Drivers"
-    bl_category = "Tiny Rig Edit"
-
-    def draw(self, context):
-        if not context.active_object.tiny_rig.is_rig:
-            self.layout.label(text="Rig not Found", icon="ARMATURE_DATA")
-            return
-        layout = self.layout
-        layout.operator("rigtools.apply_legacy_transforms")
-        layout.operator(
-            "rigtools.add_ik_fk_toggle",
-            icon="CON_KINEMATIC",
-            text="Add Driver to Existing IK",
-        )
-        layout.operator("rigools.add_ik_mirror_to_pole", icon="CON_ROTLIKE")
-        layout.operator("rigools.add_hand_nudge", icon="SORT_DESC")
-        layout.operator("rigools.add_copy_transforms_to_ik_ctrl")
-        layout.operator("rigools.add_nudge_position_limits")
-        
-        layout.operator(
-            "rigools.add_mirror_to_hand_foot_bone",
-            text="Add Mirror to Hand/Foot",
-            icon="MOD_MIRROR",
-        )
-
-
 class SEQUENCER_PT_rig_grease_pencil(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_idname = "SEQUENCER_PT_rig_grease_pencil"
-    bl_label = "Rigged Grease Pencil Editor"
+    bl_label = "Rig Grease Pencil"
+    bl_category = "Tiny Rig Edit"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator("rigools.gp_constraint_armature")
+
+
+class SEQUENCER_PT_edit_grease_pencil(bpy.types.Panel):
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_idname = "SEQUENCER_PT_edit_grease_pencil"
+    bl_label = "Rigged Grease Pencil Draw Helper"
     bl_category = "Tiny Rig Edit"
 
     def draw(self, context):
@@ -155,7 +134,7 @@ classes = (
     SEQUENCER_PT_turnaround_editor,
     SEQUENCER_PT_rig_settings,
     SEQUENCER_PT_rig_properties,
-    SEQUENCER_PT_driver_editor,
+    SEQUENCER_PT_edit_grease_pencil,
     SEQUENCER_PT_rig_grease_pencil,
 )
 
