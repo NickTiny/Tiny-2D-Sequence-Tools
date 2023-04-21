@@ -721,7 +721,11 @@ class RIGTOOLS_gp_constraint_armature(bpy.types.Operator):
 
     def execute(self, context):
         obj = context.active_object
-        obj.constraints.new("ARMATURE")
+        obj.constraints.new("TRANSFORMATION")
+        const = obj.constraints.new("COPY_ROTATION")
+        const.name = "TRANSFORMATION_CONST"
+        # target armature (via prop)
+        # sub target select bone from menu
 
         return {"FINISHED"}
 
