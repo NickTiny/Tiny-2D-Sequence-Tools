@@ -45,9 +45,8 @@ from tiny_seq_tools_master.core_functions.bone import (
     child_bone_new,
     child_bone_connected_new,
     calculate_bone_vector,
-    make_limb_chain,
-    make_nudge_bone,
     make_limb_set,
+    make_ik_bones
 )
 import bpy
 
@@ -62,7 +61,6 @@ class RIGTOOLS_OT_create_armatue(bpy.types.Operator):
 
     def execute(self, context):
         bpy.ops.object.armature_add(enter_editmode=True)
-        make_nudge = True
         # must be in edit mode to add bones
         arm_obj = context.active_object
 
@@ -87,8 +85,9 @@ class RIGTOOLS_OT_create_armatue(bpy.types.Operator):
         neck = child_bone_new(upper, 'Neck', upper.tail.xz,
                               calculate_bone_vector(.2, upper.tail.xz))
 
-        make_limb_set(upper, 'Arm', (0.5, 2.5), 130, 130, make_nudge)
-        make_limb_set(lower, 'Leg', (.2, 1.4), 180, 180-45, make_nudge)
+        make_limb_set(parent=upper, limb='Arm', origin=(0.5, 2.5), angle=130,
+                      appendage_angle=130, use_make_nudge=True, make_ik_bones=True)
+        make_limb_set(lower, 'Leg', (.2, 1.4), 180, 180-45, True, True)
 
         # Select all bones to recalculate roll
         for bone in edit_bones:
@@ -202,6 +201,11 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
     set_turnaround: bpy.props.BoolProperty(
         name="Turnaround", default=False)
 
+    @classmethod
+    def poll(cls, context):
+        return (context.active_object.mode == "POSE"
+                )
+
     def invoke(self, context, event):
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
@@ -229,12 +233,25 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
             col.prop(self, "pose_length_set")
 
     def execute(self, context):
+        # TODO Make safe to re-run (collect related bones clear and reset)
         msg = ""
         obj = context.active_object
         if context.scene.bone_selection is None:
             self.report({"ERROR"}, f"Set Property Bone")
             return {"CANCELLED"}
         propbone = obj.pose.bones[context.scene.bone_selection]
+
+        bpy.ops.object.mode_set(mode='EDIT')
+        for hand_bone in [bone for bone in obj.data.edit_bones if bone.name in tiny_hand_foot_bones]:
+            hand_bone.parent = None
+            hand_bone.select = True
+
+        for bone in [bone for bone in obj.data.edit_bones if bone.name in tiny_lw_bones]:
+            prefix = bone.name[0]
+            limb = bone.name[2:5]
+            make_ik_bones(obj.data.edit_bones[f"{prefix}_{limb}_Nudge"], bone)
+
+        bpy.ops.object.mode_set(mode='POSE')
 
         # Set as Rig
         obj.tiny_rig.is_rig = True
@@ -344,6 +361,11 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
                 bone_copy_location_nudge(bone)
                 msg += (f"Copy Nudge Loc Added on '{bone.name}'\n")
 
+        # add turnaround action
+        if obj.offset_action is None:
+            action = bpy.data.actions.new(f'{obj.name}_TURNAROUND')
+            obj.offset_action = action
+
         # if self.update_face_constraints:
         #     # Copy Face Rig Transforms
         #     # Eyebrows
@@ -372,6 +394,14 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
         #         if not bone_check_constraint(bone, name):
         #             bone_copy_location_add(bone, f"{bone.name.split('.M')[0]}.ctrl", True, name)
         #             msg += (f"{name} added to '{bone.name}'\n")
+        # Select all bones to recalculate roll
+
+        bpy.ops.object.mode_set(mode='EDIT')
+        for bone in obj.data.edit_bones:
+            bone.select = True
+        bpy.ops.armature.calculate_roll(
+            type='GLOBAL_POS_Y', axis_flip=False, axis_only=False)
+        bpy.ops.object.mode_set(mode='POSE')
 
         self.report({"INFO"}, f"Initilizaton Completed! \n {msg}")
         return {"FINISHED"}
