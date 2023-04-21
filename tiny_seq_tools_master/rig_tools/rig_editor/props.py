@@ -6,6 +6,7 @@ classes = ()
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
+    bpy.types.WindowManager.target_armature = bpy.types.PointerProperty(bpy.types.Armature)
     bpy.types.WindowManager.offset_editor_active = bpy.props.BoolProperty(
         name="Offset Editor is Active", default=False
     )
