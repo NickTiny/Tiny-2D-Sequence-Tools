@@ -11,6 +11,7 @@ class SEQUENCER_PT_turnaround_editor(bpy.types.Panel):
     bl_category = "Tiny Rig Edit"
 
     def draw(self, context):
+        self.layout(context.window_manager, "offset_editor_active")
         obj = context.active_object
         layout = self.layout
         action_row = layout.row(align=True)
