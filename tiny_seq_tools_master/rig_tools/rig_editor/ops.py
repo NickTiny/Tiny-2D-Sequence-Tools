@@ -55,9 +55,13 @@ import bpy
 
 class RIGTOOLS_OT_create_armatue(bpy.types.Operator):
     bl_idname = "rigools.create_2d_armature"
-    bl_label = "Create Armature2"
+    bl_label = "Create Armature"
     bl_description = "add better description."
     bl_options = {"REGISTER", "UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return (not context.scene.target_armature)
 
     def execute(self, context):
         bpy.ops.object.armature_add(enter_editmode=True)
@@ -94,7 +98,10 @@ class RIGTOOLS_OT_create_armatue(bpy.types.Operator):
             bone.select = True
         bpy.ops.armature.calculate_roll(
             type='GLOBAL_POS_Y', axis_flip=False, axis_only=False)
-
+        bpy.ops.object.mode_set(mode='POSE')
+        #bpy.context.view_layer.update()
+        context.scene.target_armature = arm_obj
+        
         self.report({"INFO"}, "Created Armature")
         return {"FINISHED"}
 
@@ -123,7 +130,7 @@ class RIGTOOLS_enter_grease_pencil_editor(bpy.types.Operator):
         res = not (
             obj.library
             or obj.override_library
-            or context.window_manager.gpencil_editor_active
+           # or context.window_manager.gpencil_editor_active
         )
         if not res:
             cls.poll_message_set("Cannot Edit Reference Objects")
@@ -203,8 +210,9 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return (context.active_object.mode == "POSE"
-                )
+        return     context.scene.bone_selection
+
+
 
     def invoke(self, context, event):
         wm = context.window_manager
@@ -410,6 +418,8 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
 class RIGTOOLS_toggle_enable_action(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
+        if not context.active_object.animation_data:
+            return False
         return (
             context.active_object.animation_data.action
             != context.active_object.offset_action
@@ -513,7 +523,7 @@ class RIGTOOLS_add_action_const_to_bone(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        obj = context.active_object
+        obj = context.scene.target_armature
         res = not (
             obj.library
             or obj.override_library
@@ -715,19 +725,26 @@ class RIGTOOLS_gp_constraint_armature(bpy.types.Operator):
     bl_description = """"""  # TODO
     bl_options = {"UNDO"}
 
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    def draw(self, context):
+        self.layout.prop(context.scene, "target_bone")
+        
+
     @classmethod
     def poll(cls, context):
         return (context.active_object.type == "GPENCIL")
 
     def execute(self, context):
         obj = context.active_object
-        obj.constraints.new("TRANSFORMATION")
-        const = obj.constraints.new("COPY_ROTATION")
-        const.name = "TRANSFORMATION_CONST"
-        # target armature (via prop)
-        # sub target select bone from men
-        # target_armature = context.window_manager.offset_editor
-
+        const = obj.constraints.new("ARMATURE")
+        const.name = "ARMATURE_CONST"
+        const.targets.new()
+        target_entry = const.targets[-1]
+        target_entry.target= context.scene.target_armature
+        target_entry.subtarget = context.scene.target_bone
         return {"FINISHED"}
 
 
