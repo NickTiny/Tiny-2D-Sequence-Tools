@@ -747,6 +747,61 @@ class RIGTOOLS_gp_constraint_armature(bpy.types.Operator):
         target_entry.subtarget = context.scene.target_bone
         return {"FINISHED"}
 
+class RIGTOOLS_gp_vertex_by_layer(bpy.types.Operator):
+    bl_idname = "rigools.gp_vertex_by_layer"
+    bl_label = "Vertex Parent Active Layer"
+    bl_description = """"""  # TODO
+    bl_options = {"UNDO"}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    def draw(self, context):
+        self.layout.prop(context.scene, "target_bone")
+    
+    def get_frames(self, context, gp_layer):
+        return [frame.frame_number for frame in gp_layer.frames]  
+    
+    def get_vertex_group(self, object, name):
+        # try:
+        group = object.vertex_groups.get(f'{name}')
+        if not group:
+            object.vertex_groups.new(name=f'{name}')
+            group = object.vertex_groups.get(f'{name}')
+        return group.index
+    def get_modifier(self, context):
+        obj = context.active_object
+        mod = obj.grease_pencil_modifiers.get("ARMATURE_MOD")
+        if mod is None:
+            mod = obj.grease_pencil_modifiers.new(name= "ARMATURE_MOD", type="GP_ARMATURE")
+        return mod
+
+    @classmethod
+    def poll(cls, context):
+        return (context.active_object.type == "GPENCIL" and context.scene.target_armature)
+
+    def execute(self, context):
+        obj = context.active_object
+        layer = obj.data.layers.active
+        mod = self.get_modifier(context)
+        mod.object = context.scene.target_armature
+        bpy.ops.object.mode_set(mode='EDIT_GPENCIL')
+        bone = context.scene.target_armature.pose.bones[context.scene.target_bone]
+        if bone is False:
+            self.report({"ERROR"}, f"Bone not found")
+            return {"CANCELLED"}
+        for frame in self.get_frames(context, layer):
+            context.scene.frame_set(frame)
+            context.scene.tool_settings.gpencil_selectmode_edit = 'POINT'
+            obj.vertex_groups.active_index = self.get_vertex_group(obj, bone.name)
+            for other_layer in [pther_layer for pther_layer in obj.data.layers if pther_layer.info != layer.info]:
+                other_layer.lock = True
+            layer.lock = False
+            bpy.ops.gpencil.select_all(action='SELECT')
+            bpy.ops.gpencil.vertex_group_assign()
+            bpy.ops.gpencil.select_all(action='DESELECT')
+        return {"FINISHED"}
 
 classes = (
     RIGTOOLS_OT_create_armatue,
@@ -768,6 +823,7 @@ classes = (
     RIGTOOLS_add_custom_prop,
     RIGTOOLS_add_copy_transforms_to_ik_ctrl,
     RIGTOOLS_gp_constraint_armature,
+    RIGTOOLS_gp_vertex_by_layer,
 )
 
 

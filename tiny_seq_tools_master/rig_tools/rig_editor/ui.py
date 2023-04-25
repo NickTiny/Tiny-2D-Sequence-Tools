@@ -74,6 +74,7 @@ class SEQUENCER_PT_rig_grease_pencil(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.operator("rigools.gp_constraint_armature")
+        layout.operator("rigools.gp_vertex_by_layer")
 
 
 class SEQUENCER_PT_edit_grease_pencil(bpy.types.Panel):
