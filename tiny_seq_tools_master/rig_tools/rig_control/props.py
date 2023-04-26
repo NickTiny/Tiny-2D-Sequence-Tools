@@ -8,6 +8,9 @@ class RIGCONTROL_settings(bpy.types.PropertyGroup):
     is_rig: bpy.props.BoolProperty(
         name="Tiny Rig Status", description="Is this Rig a Tiny Rig", default=False
     )
+    is_turnaround : bpy.props.BoolProperty(
+        name="Rig Has Turnraround",  default=False
+    )
     pose_length: bpy.props.IntProperty(
         name="Turnaround Length",
         description="The number of turnaround poses in this character",

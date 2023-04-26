@@ -6,6 +6,11 @@ def bone_items(self, context):
     arma = context.scene.target_armature
     return [(bone.name, bone.name, "") for bone in arma.data.bones]
 
+def bone_groups(self, context):
+    bone_groups = context.scene.target_armature.pose.bone_groups
+    items =  [(bone_group.name, bone_group.name, "") for bone_group in bone_groups]
+    items.append(("All_Bones", "All Bones", ""))
+    return items
 
 def find_bones(self,context):
     return context.scene.target_armature.pose.bones
@@ -21,7 +26,8 @@ def register():
     bpy.types.WindowManager.gpencil_editor_active = bpy.props.PointerProperty(
         type=bpy.types.GreasePencil
     )
-    bpy.types.Scene.target_bone = bpy.props.EnumProperty(items=bone_items)
+    bpy.types.Scene.target_bone = bpy.props.EnumProperty(name="Bones", items=bone_items)
+    bpy.types.Scene.target_bone_group = bpy.props.EnumProperty(name="Bone Group",items=bone_groups)
 
 
 def unregister():

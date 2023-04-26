@@ -48,6 +48,7 @@ from tiny_seq_tools_master.core_functions.bone import (
     make_limb_set,
     make_ik_bones
 )
+from tiny_seq_tools_master.core_functions.object import (get_gp_modifier, get_vertex_group)
 import bpy
 
 
@@ -111,11 +112,25 @@ class RIGTOOLS_rig_edit_base_class(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if context.active_object is None:
+            return cls.poll_message_set("No Object is Active")
         obj = context.active_object
         res = not (obj.library or obj.override_library)
         if not res:
             cls.poll_message_set("Cannot Edit Reference Objects")
         return res
+
+class RIGTOOLS_rig_gp_base_class(bpy.types.Operator):
+    """Base Class for all Rig Edit Operations"""
+
+    @classmethod
+    def poll(cls, context):
+        if context.active_object is None:
+            return False
+        return (context.active_object.type == "GPENCIL" 
+                and context.scene.target_armature
+                and context.scene.target_bone)
+
 
 
 class RIGTOOLS_enter_grease_pencil_editor(bpy.types.Operator):
@@ -126,6 +141,8 @@ class RIGTOOLS_enter_grease_pencil_editor(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if context.active_object is None:
+            return False
         obj = context.active_object
         res = not (
             obj.library
@@ -146,6 +163,7 @@ class RIGTOOLS_enter_grease_pencil_editor(bpy.types.Operator):
             self.report({"ERROR"}, f"{obj.name} failed to enter draw mode")
             return {"CANCELLED"}
         context.window_manager.gpencil_editor_active = obj.data
+        bpy.ops.object.mode_set(mode="PAINT_GPENCIL")
         self.report({"INFO"}, f"{obj.name} entered draw mode")
         return {"FINISHED"}
 
@@ -165,6 +183,7 @@ class RIGTOOLS_enter_grease_pencil_editor_exit(RIGTOOLS_rig_edit_base_class):
         if hide_grease_pencil_editor(obj, True) is False:
             self.report({"ERROR"}, f"{obj.name} failed to enter draw mode")
             return {"CANCELLED"}
+        bpy.ops.object.mode_set(mode="OBJECT")
         context.window_manager.gpencil_editor_active = None
         self.report({"INFO"}, f"{obj.name} exited draw mode")
         return {"FINISHED"}
@@ -210,7 +229,7 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return     context.scene.bone_selection
+        return  context.scene.bone_selection
 
 
 
@@ -222,19 +241,12 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
         col = self.layout.column(align=True)
 
         col.prop(self, "update_face_constraints")
-        col.prop(self, "is_turnaround")
+        col.prop(self, "set_turnaround")
         if self.set_turnaround:
             col = self.layout.column()
             col.label(text="Proceed with Caution!", icon="ERROR")
 
-            lines = [
-                "Turnaround Length effects how the turnaround pose ",
-                "is interperted. Changing this will break compatibility",
-                "with previous animations tracks.",
-            ]
-            for line in lines:
-                col.alert = True
-                col.label(text=line)
+            col.label(text="Can break compatibility with previous animations tracks.")
             col.label(text="Use 'ESC' to cancel")
             if context.active_object.tiny_rig.pose_length:
                 self.pose_length_set = context.active_object.tiny_rig.pose_length
@@ -271,6 +283,7 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
         if self.set_turnaround:
             obj.tiny_rig.pose_length = self.pose_length_set
             msg += (f"Pose Length set to {obj.tiny_rig.pose_length} \n")
+            obj.tiny_rig.is_turnaround = True
 
         bone_groups_created = bone_create_groups(obj, bone_groups)
         if bone_groups_created:
@@ -370,7 +383,7 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
                 msg += (f"Copy Nudge Loc Added on '{bone.name}'\n")
 
         # add turnaround action
-        if obj.offset_action is None:
+        if obj.offset_action is None and self.set_turnaround:
             action = bpy.data.actions.new(f'{obj.name}_TURNAROUND')
             obj.offset_action = action
 
@@ -418,7 +431,7 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
 class RIGTOOLS_toggle_enable_action(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
-        if not context.active_object.animation_data:
+        if context.active_object is None or not context.active_object.animation_data:
             return False
         return (
             context.active_object.animation_data.action
@@ -469,6 +482,8 @@ class RIGTOOLS_toggle_disable_action(RIGTOOLS_rig_edit_base_class):
 
     @classmethod
     def poll(cls, context):
+        if context.active_object is None or not context.active_object.animation_data:
+            return False
         return (
             context.active_object.animation_data.action
             == context.active_object.offset_action
@@ -523,6 +538,8 @@ class RIGTOOLS_add_action_const_to_bone(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if context.active_object is None:
+            return False
         obj = context.scene.target_armature
         res = not (
             obj.library
@@ -719,7 +736,7 @@ class RIGTOOLS_add_custom_prop(RIGTOOLS_rig_edit_base_class):
         return {"FINISHED"}
 
 
-class RIGTOOLS_gp_constraint_armature(bpy.types.Operator):
+class RIGTOOLS_gp_constraint_armature(RIGTOOLS_rig_gp_base_class):
     bl_idname = "rigools.gp_constraint_armature"
     bl_label = "Add Armature Contraint"
     bl_description = """"""  # TODO
@@ -731,23 +748,19 @@ class RIGTOOLS_gp_constraint_armature(bpy.types.Operator):
 
     def draw(self, context):
         self.layout.prop(context.scene, "target_bone")
-        
-
-    @classmethod
-    def poll(cls, context):
-        return (context.active_object.type == "GPENCIL")
 
     def execute(self, context):
         obj = context.active_object
         const = obj.constraints.new("ARMATURE")
         const.name = "ARMATURE_CONST"
+        obj.parent = context.scene.target_armature
         const.targets.new()
         target_entry = const.targets[-1]
         target_entry.target= context.scene.target_armature
         target_entry.subtarget = context.scene.target_bone
         return {"FINISHED"}
 
-class RIGTOOLS_gp_vertex_by_layer(bpy.types.Operator):
+class RIGTOOLS_gp_vertex_by_layer(RIGTOOLS_rig_gp_base_class):
     bl_idname = "rigools.gp_vertex_by_layer"
     bl_label = "Vertex Parent Active Layer"
     bl_description = """"""  # TODO
@@ -762,30 +775,14 @@ class RIGTOOLS_gp_vertex_by_layer(bpy.types.Operator):
     
     def get_frames(self, context, gp_layer):
         return [frame.frame_number for frame in gp_layer.frames]  
-    
-    def get_vertex_group(self, object, name):
-        # try:
-        group = object.vertex_groups.get(f'{name}')
-        if not group:
-            object.vertex_groups.new(name=f'{name}')
-            group = object.vertex_groups.get(f'{name}')
-        return group.index
-    def get_modifier(self, context):
-        obj = context.active_object
-        mod = obj.grease_pencil_modifiers.get("ARMATURE_MOD")
-        if mod is None:
-            mod = obj.grease_pencil_modifiers.new(name= "ARMATURE_MOD", type="GP_ARMATURE")
-        return mod
-
-    @classmethod
-    def poll(cls, context):
-        return (context.active_object.type == "GPENCIL" and context.scene.target_armature)
 
     def execute(self, context):
+        armature = context.scene.target_armature
         obj = context.active_object
         layer = obj.data.layers.active
-        mod = self.get_modifier(context)
-        mod.object = context.scene.target_armature
+        mod = get_gp_modifier(obj, "ARMATURE_MOD", "GP_ARMATURE")
+        obj.parent = armature
+        mod.object = armature
         bpy.ops.object.mode_set(mode='EDIT_GPENCIL')
         bone = context.scene.target_armature.pose.bones[context.scene.target_bone]
         if bone is False:
@@ -794,13 +791,71 @@ class RIGTOOLS_gp_vertex_by_layer(bpy.types.Operator):
         for frame in self.get_frames(context, layer):
             context.scene.frame_set(frame)
             context.scene.tool_settings.gpencil_selectmode_edit = 'POINT'
-            obj.vertex_groups.active_index = self.get_vertex_group(obj, bone.name)
+            vertex_group = get_vertex_group(obj, bone.name)
+            obj.vertex_groups.active_index = vertex_group.index
             for other_layer in [pther_layer for pther_layer in obj.data.layers if pther_layer.info != layer.info]:
                 other_layer.lock = True
             layer.lock = False
             bpy.ops.gpencil.select_all(action='SELECT')
             bpy.ops.gpencil.vertex_group_assign()
             bpy.ops.gpencil.select_all(action='DESELECT')
+        return {"FINISHED"}
+    
+
+class RIGTOOLS_gp_rig_via_lattice(RIGTOOLS_rig_gp_base_class):
+    bl_idname = "rigools.gp_rig_via_lattice"
+    bl_label = "Rig Via Lattice"
+    bl_description = """"""  # TODO
+    bl_options = {"UNDO"}
+
+
+    def get_bone_group(self, context, armature):
+        if context.scene.target_bone_group == "All_Bones":
+            return armature.pose.bones
+        bone_group =  armature.pose.bone_groups[context.scene.target_bone_group]
+        return [bone for bone in armature.pose.bones if bone.bone_group == bone_group]
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    def draw(self, context):
+        self.layout.prop(context.scene, "target_bone_group")
+
+
+    def execute(self, context):
+        # Make lattice
+        obj = context.active_object
+        if obj is None:
+            self.report({"ERROR"}, f"Active Object must be a grease pencil")
+            return {"CANCELLED"}
+        armature = context.scene.target_armature
+        obj.parent = armature
+        lattice = bpy.data.lattices.new("Lattice")
+        lattice_ob = bpy.data.objects.new("Lattice", lattice)
+        context.collection.objects.link(lattice_ob)
+        lattice_ob.data.points_u = 64
+        lattice_ob.data.points_v = 1
+        lattice_ob.data.points_w = 64
+
+        
+        lattice_ob.location = obj.location
+        lattice_ob.parent = armature
+        
+        obj_scale = max(obj.dimensions.xyz.to_tuple())*1.1
+        lattice_ob.scale[0] = obj_scale
+        lattice_ob.scale[1] = obj_scale
+        lattice_ob.scale[2] = obj_scale
+        mod = get_gp_modifier(obj, "LATTICE_MOD", "GP_LATTICE")
+        mod.object = lattice_ob 
+        amr_mod = lattice_ob.modifiers.new(name="ARMATURE_MOD", type="ARMATURE")
+        amr_mod.object = armature
+        bone_group = self.get_bone_group(context, armature)
+        for bone in bone_group:
+            get_vertex_group(lattice_ob, bone.name)
+        context.view_layer.objects.active = lattice_ob
+        bpy.ops.object.mode_set(mode="EDIT")
+        self.report({"INFO"}, f"Ready to assign Vetex Groups for {lattice_ob.name}")
         return {"FINISHED"}
 
 classes = (
@@ -824,6 +879,7 @@ classes = (
     RIGTOOLS_add_copy_transforms_to_ik_ctrl,
     RIGTOOLS_gp_constraint_armature,
     RIGTOOLS_gp_vertex_by_layer,
+    RIGTOOLS_gp_rig_via_lattice,
 )
 
 

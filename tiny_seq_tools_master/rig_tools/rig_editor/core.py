@@ -80,9 +80,6 @@ def enable_armature_constraint(const, bool):
 
 
 def enable_cont_rig_gpencil(obj, bool):
-    # Check Driver on GP
-    if len(get_driver_ob_obj(obj)) != 1:
-        return False
     armature_constraint = get_armature_constraint(obj)
     # Reset Rig
     enable_armature_constraint(armature_constraint, bool)
@@ -102,9 +99,6 @@ def enable_mod_rig_gpencil(obj, bool):
 
 
 def hide_grease_pencil_editor(obj, bool):
-    # Check Driver on GP
-    if len(get_driver_ob_obj(obj)) != 1:
-        return False
     armature_mod = get_gpencil_armature_modifier(obj)
     if armature_mod:
         return enable_mod_rig_gpencil(obj, bool)

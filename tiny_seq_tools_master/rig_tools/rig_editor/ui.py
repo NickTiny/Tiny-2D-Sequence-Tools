@@ -16,13 +16,13 @@ class SEQUENCER_PT_rig_settings(bpy.types.Panel):
         layout = self.layout
         layout.operator("rigools.create_2d_armature")
         layout.prop(context.scene, "target_armature" )
-        obj = context.active_object
-        if obj.type == "ARMATURE" :
+        obj = context.scene.target_armature
+        if obj is not None and obj.type == "ARMATURE" :
             self.layout.prop_search(
                     context.scene, "bone_selection", obj.id_data.pose, "bones", text="Property Bone"
                 )
         layout.operator("rigools.initialize_rig")
-        if not obj.tiny_rig.is_rig:
+        if obj is None or not obj.tiny_rig.is_rig:
             self.layout.label(text="Rig not Found", icon="ARMATURE_DATA")
             return
         layout.label(text=f"Turnaround Length: {obj.tiny_rig.pose_length}")        
@@ -37,9 +37,9 @@ class SEQUENCER_PT_turnaround_editor(bpy.types.Panel):
         obj = context.scene.target_armature
         layout = self.layout
         action_row = layout.row(align=True)
-        # if not obj.tiny_rig.is_rig:
-        #     self.layout.label(text="Rig not Found", icon="ARMATURE_DATA")
-        #     return
+        if obj is None or not(obj.tiny_rig.is_rig and obj.tiny_rig.is_turnaround):
+            self.layout.label(text="Rig has no turnaround", icon="ARMATURE_DATA")
+            return
 
         action_row.prop(obj, "offset_action")
 
@@ -75,6 +75,7 @@ class SEQUENCER_PT_rig_grease_pencil(bpy.types.Panel):
         layout = self.layout
         layout.operator("rigools.gp_constraint_armature")
         layout.operator("rigools.gp_vertex_by_layer")
+        layout.operator("rigools.gp_rig_via_lattice")
 
 
 class SEQUENCER_PT_edit_grease_pencil(bpy.types.Panel):
@@ -97,9 +98,8 @@ class SEQUENCER_PT_edit_grease_pencil(bpy.types.Panel):
             edit_gp_row.operator(
                 "rigools.enter_grease_pencil_editor_exit", icon="LOOP_BACK", text=""
             )
-            drivers = get_driver_ob_obj(context.active_object)
             self.layout.label(
-                text=f"Currently Editing {drivers[0].driver.expression}: {context.scene.frame_current}"
+                text=f"Currently Editing GREASE PENCIL"
             )
         row = self.layout.row(align=True)
         row.operator("rigools.isolate_gpencil", icon="HIDE_OFF")
@@ -116,9 +116,10 @@ class SEQUENCER_PT_rig_properties(bpy.types.Panel):
 
     def draw(self, context):
                
-        obj = context.active_object
+        obj = context.scene.target_armature
         prop_col = self.layout.box()
-        
+        if obj is None:
+            return
         try:
             if obj.type != "ARMATURE":
                 return
