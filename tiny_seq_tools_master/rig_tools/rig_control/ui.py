@@ -96,10 +96,10 @@ def draw_limb_control(bone, col):
     draw_leg(bone, right_col, "R", "Leg")
 
 
-def draw_pose_row(layout, bone, body):
+def draw_pose_row(layout, bone, body, name):
     pose_row = layout.row(align=True)
     pose_row.operator(f"rigcontrol.prev_{body}_pose", icon="BACK", text="")
-    pose_row.prop(bone.id_data.tiny_rig, f"ui_{body}_pose")
+    pose_row.prop(bone, f'["{name}"]')
     pose_row.operator(f"rigcontrol.next_{body}_pose", icon="FORWARD", text="")
 
 
@@ -144,8 +144,8 @@ class SEQUENCER_PT_rig_control(bpy.types.Panel):
             layout.prop(bone, '["A. Hat"]', text="Hat")
 
         if bone.id_data.tiny_rig.is_turnaround:
-            draw_pose_row(layout, bone, "head")
-            draw_pose_row(layout, bone, "body")
+            draw_pose_row(layout, bone, "head", bone.id_data.tiny_rig.head_pose_name)
+            draw_pose_row(layout, bone, "body", bone.id_data.tiny_rig.body_pose_name)
 
         for x in bone.keys():
             if x in obj.tiny_rig.user_props and not (x == "L_Hand" or x == "R_Hand"):

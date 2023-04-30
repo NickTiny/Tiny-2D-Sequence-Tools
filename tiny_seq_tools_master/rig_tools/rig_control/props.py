@@ -28,79 +28,78 @@ class RIGCONTROL_settings(bpy.types.PropertyGroup):
     body_pose_name: bpy.props.StringProperty(name="Pose Body", default="Pose")
     head_pose_name: bpy.props.StringProperty(name="Pose Head", default="Pose Head")
 
-    def get_body_pose(self):
-        obj = self.id_data
-        rig_set = obj.tiny_rig
-        if obj.tiny_rig.is_rig and obj.mode == 'POSE':
-            posedata_bone = obj.pose.bones[f"{rig_set.pose_data_name}"]
-            if posedata_bone[rig_set.body_pose_name] is not None:
-                return posedata_bone[rig_set.body_pose_name]
-        return 0
+    # def get_body_pose(self):
+    #     obj = self.id_data
+    #     rig_set = obj.tiny_rig
+    #     if obj.tiny_rig.is_rig and obj.mode == 'POSE':
+    #         posedata_bone = obj.pose.bones[f"{rig_set.pose_data_name}"]
+    #         if posedata_bone[rig_set.body_pose_name] is not None:
+    #             return posedata_bone[rig_set.body_pose_name]
 
-    def set_body_pose(self, val: int):
-        obj = self.id_data
-        rig_set = obj.tiny_rig
-        if obj.tiny_rig.is_rig:
-            normalize_val = normalize_pose(val, rig_set.pose_length)
-            normalize_head = normalize_pose(
-                normalize_val + rig_set.ui_head_pose, rig_set.pose_length
-            )
-            obj.pose.bones[rig_set.pose_data_name][rig_set.body_pose_name]  =normalize_head
-        return
+    # def set_body_pose(self, val: int):
+    #     obj = self.id_data
+    #     rig_set = obj.tiny_rig
+    #     if obj.tiny_rig.is_rig:
+    #         normalize_val = normalize_pose(val, rig_set.pose_length)
+    #         normalize_head = normalize_pose(
+    #             normalize_val + rig_set.ui_head_pose, rig_set.pose_length
+    #         )
+    #         obj.pose.bones[rig_set.pose_data_name][rig_set.body_pose_name]  =normalize_head
+    #     return normalize_head
 
-    ui_body_pose: bpy.props.IntProperty(
-        name="Body Pose",
-        description="Character Turnaround Body Pose, includes head",
-        get=get_body_pose,
-        # set=set_body_pose,
-        # options=set(),
-        override={"LIBRARY_OVERRIDABLE"},
-        min=1,
-        max=20,
-    )
+    # ui_body_pose: bpy.props.IntProperty(
+    #     name="Body Pose",
+    #     description="Character Turnaround Body Pose, includes head",
+    #     get=get_body_pose,
+    #     set=set_body_pose,
+    #     options=set(),
+    #     override={"LIBRARY_OVERRIDABLE"},
+    #     min=1,
+    #     max=20,
+    # )
 
-    def get_head_pose(self):
-        obj = self.id_data
-        rig_set = obj.tiny_rig
-        if obj.tiny_rig.is_rig:
-            posedata_bone = obj.pose.bones[f"{rig_set.pose_data_name}"]
-            if (
-                posedata_bone.get(rig_set.body_pose_name)
-                and posedata_bone.get(rig_set.head_pose_name)
-            ):
-                if posedata_bone.get(rig_set.head_pose_name) != 0:
-                    return (
-                        posedata_bone.get(rig_set.head_pose_name)
-                        - posedata_bone.get(rig_set.body_pose_name)
-                    )
-        return 0
+    # def get_head_pose(self):
+    #     obj = self.id_data
+    #     rig_set = obj.tiny_rig
+    #     if obj.tiny_rig.is_rig:
+    #         posedata_bone = obj.pose.bones[f"{rig_set.pose_data_name}"]
+    #         if (
+    #             posedata_bone.get(rig_set.body_pose_name)
+    #             and posedata_bone.get(rig_set.head_pose_name)
+    #         ):
+    #             if posedata_bone.get(rig_set.head_pose_name) != 0:
+    #                 return (
+    #                     posedata_bone.get(rig_set.head_pose_name)
+    #                     - posedata_bone.get(rig_set.body_pose_name)
+    #                 )
+    #     return 0
 
-    def set_head_pose(self, val: int):
-        obj = self.id_data
-        rig_set = obj.tiny_rig
-        if obj.tiny_rig.is_rig:
-            posedata_bone = obj.pose.bones[f"{rig_set.pose_data_name}"]
-            if val == 0:  # if no offset set head pose to body pose
-                obj.pose.bones[rig_set.pose_data_name][rig_set.head_pose_name]  = posedata_bone.get(rig_set.body_pose_name)
-                return
-            normalize_val = (
-                val + posedata_bone.get(rig_set.body_pose_name)
-            ) % rig_set.pose_length
+    # def set_head_pose(self, val: int):
+    #     obj = self.id_data
+    #     rig_set = obj.tiny_rig
+    #     if obj.tiny_rig.is_rig:
+    #         posedata_bone = obj.pose.bones[f"{rig_set.pose_data_name}"]
+    #         if val == 0:  # if no offset set head pose to body pose
+    #             obj.pose.bones[rig_set.pose_data_name][rig_set.head_pose_name]  = posedata_bone.get(rig_set.body_pose_name)
+    #             return
+    #         normalize_val = (
+    #             val + posedata_bone.get(rig_set.body_pose_name)
+    #         ) % rig_set.pose_length
 
-            normalize_val = normalize_pose(normalize_val, rig_set.pose_length)
-            obj.pose.bones[rig_set.pose_data_name]= normalize_val
-        return
+    #         normalize_val = normalize_pose(normalize_val, rig_set.pose_length)
+    #         obj.pose.bones[rig_set.pose_data_name]= normalize_val
+    #     return normalize_val
 
-    ui_head_pose: bpy.props.IntProperty(
-        name="Head Offset",
-        description="Character Turnaround Head Pose Offset from Body",
-        get=get_head_pose,
-        set=set_head_pose,
-        # options=set(),
-        # override={"LIBRARY_OVERRIDABLE"},
-        min=-20,
-        max=20,
-    )
+    # ui_head_pose: bpy.props.IntProperty(
+    #     name="Head Offset",
+    #     description="Character Turnaround Head Pose Offset from Body",
+    #     get=get_head_pose,
+    #     set=set_head_pose,
+    #     options=set(),
+    #     # override={"LIBRARY_OVERRIDABLE"},
+    #     # min=-20,
+    #     # max=20,
+    # )
 
 
 def get_prop_as_bool(prop_name):
