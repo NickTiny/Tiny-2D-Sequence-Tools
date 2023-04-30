@@ -1,7 +1,6 @@
 from tiny_seq_tools_master.core_functions.drivers import add_driver
 import bpy
 import math
-import numpy as np
 # PoseBone
 
 
