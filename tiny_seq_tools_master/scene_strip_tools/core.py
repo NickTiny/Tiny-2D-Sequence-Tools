@@ -37,6 +37,7 @@ def make_render_scene(context: bpy.types.Context) -> (bpy.types.Scene):
 
     render_scene = context.scene.copy()
     render_scene.name = scene_name
+    render_scene.use_fake_user = True
 
     for strip in render_scene.sequence_editor.sequences_all:
         if strip.type == "SCENE":

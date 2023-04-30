@@ -16,7 +16,7 @@ class SEQUENCER_preview_render(bpy.types.Operator):
         if context.scene.name == "RENDER":
             self.report({"ERROR"}, "Render scene cannot be active")
             return {"CANCELLED"}
-        
+
         render_scene = make_render_scene(context)
         render_scene.render.engine = 'BLENDER_WORKBENCH'
         wm = context.window_manager
@@ -24,12 +24,15 @@ class SEQUENCER_preview_render(bpy.types.Operator):
         render_scene.render.image_settings.file_format = "FFMPEG"
         render_scene.render.ffmpeg.codec = "H264"
         render_scene.render.ffmpeg.audio_codec = "AAC"
-        render_scene = bpy.data.scenes["RENDER"]
+        render_scene.render.filepath = render_scene.render.filepath+"_preview_.mov"
         if wm.render_settings.render_preview_range:
             render_scene.frame_start = wm.render_settings.render_start
             render_scene.frame_end = wm.render_settings.render_end
-        bpy.ops.render.render("INVOKE_DEFAULT", scene=render_scene.name)
+        user_scene = context.window.scene
+        context.window.scene = render_scene
+        bpy.ops.render.opengl(animation=True, sequencer=True,)
         self.report({"INFO"}, f"Full Render Complete")
+        context.window.scene = user_scene
         return {"FINISHED"}
 
 
@@ -43,6 +46,7 @@ class SEQUENCER_setup_render(bpy.types.Operator):
             self.report({"ERROR"}, "Render scene cannot be active")
             return {"CANCELLED"}
         make_render_scene(context)
+
         self.report({"INFO"}, f"Render Scene has been setup")
         return {"FINISHED"}
 
@@ -65,8 +69,12 @@ class SEQUENCER_full_render(bpy.types.Operator):
             self.report({"ERROR"}, "Render scene cannot be active")
             return {"CANCELLED"}
         render_scene = make_render_scene(context)
-        bpy.ops.render.render("INVOKE_DEFAULT", scene=render_scene.name)
+        user_scene = context.window.scene
+        context.window.scene = render_scene
+        render_scene.render.use_sequencer = True
+        bpy.ops.render.render(animation=True,)
         self.report({"INFO"}, f"Full Render Complete")
+        context.window.scene = user_scene
         return {"FINISHED"}
 
 
@@ -132,7 +140,8 @@ class THREEDPREVIEW_PT_add_scene_strip(bpy.types.Operator):
 
         if not bpy.context.scene.sequence_editor:
             bpy.context.scene.sequence_editor_create()
-            self.report({"INFO"}, f"New Sequence Editor cerated in '{scn.name}'")
+            self.report(
+                {"INFO"}, f"New Sequence Editor cerated in '{scn.name}'")
         scn = bpy.context.scene
         seq = scn.sequence_editor
         cf = scn.frame_current
