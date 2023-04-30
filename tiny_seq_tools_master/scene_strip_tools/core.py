@@ -27,13 +27,14 @@ def sync_strip_camera_to_viewport(strip: bpy.types.Sequence) -> bool:
 
 
 def make_render_scene(context: bpy.types.Context) -> (bpy.types.Scene):
-    """Create Scene called 'RENDER' from current scene settings, and copy all strips into it."""
+    """Create Scene called 'RENDER' from current scene settings, and copy all strips into it"""
     scene_name = "RENDER"
     user_scene = context.scene
 
     for scene in bpy.data.scenes:
         if scene.name == scene_name:
             bpy.ops.scene.delete({"scene": bpy.data.scenes[scene_name]})
+    bpy.context.view_layer.update()
 
     render_scene = context.scene.copy()
     render_scene.name = scene_name
