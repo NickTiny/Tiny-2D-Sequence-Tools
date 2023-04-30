@@ -44,7 +44,7 @@ class TINYSEQ_STATUS_PG(bpy.types.PropertyGroup):
         get=check_linked_files,
         set=set_linked_files,
         options=set(),
-        description="Ensure linked files are set to relative paths and all linked files are within BLOWN APART folder.",
+        description="Ensure linked files are set to relative paths and all linked files.",
     )
 
     def check_render_settings(self):
@@ -69,6 +69,22 @@ class TINYSEQ_STATUS_PG(bpy.types.PropertyGroup):
         set=set_render_settings,
         options=set(),
         description="Ensure under VIEW LAYER, both 'Combine' and 'Z' passes are enabled.",
+    )
+
+    def check_pack_status(self):
+        return bpy.data.use_autopack
+
+    def set_pack_status(self, context):
+        if not bpy.data.use_autopack:
+            bpy.ops.file.autopack_toggle()
+        return 
+
+    pack_status: bpy.props.BoolProperty(
+        name="Images Packed",
+        get=check_pack_status,
+        set=set_pack_status,
+        options=set(),
+        description="Ensure images are packed.",
     )
 
 
