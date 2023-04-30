@@ -11,11 +11,17 @@ class RIGCONTROL_settings(bpy.types.PropertyGroup):
     is_turnaround : bpy.props.BoolProperty(
         name="Rig Has Turnraround",  default=False
     )
+    is_ik: bpy.props.BoolProperty(
+        name="Rig has IKs", default=False
+    )
     pose_length: bpy.props.IntProperty(
         name="Turnaround Length",
         description="The number of turnaround poses in this character",
         default=0,
     )
+
+    user_props: bpy.props.StringProperty(name="User Properties")
+
     pose_data_name: bpy.props.StringProperty(
         name="Pose Data Bone Name", default="PoseData"
     )

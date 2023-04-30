@@ -11,17 +11,19 @@ def check_tiny_rig(obj):
 
 
 def draw_arm(bone, col, side, limb):
-    draw_nudge_row(col, side, limb)
-    draw_ik_row(col, side, limb)
+    if bone.id_data.tiny_rig.is_ik:
+        draw_nudge_row(col, side, limb)
+        draw_ik_row(col, side, limb)
     sub_limb = get_sub_limb(limb)
     col.separator()
     hand_row = col.row(align=True)
-    hand_row.prop(
-        bpy.context.window_manager.tiny_rig_ui,
-        f"{side}_Hand_Nudge",
-        icon="SORT_DESC",
-        text="",
-    )
+    if bone.id_data.tiny_rig.is_ik:
+        hand_row.prop(
+            bpy.context.window_manager.tiny_rig_ui,
+            f"{side}_Hand_Nudge",
+            icon="SORT_DESC",
+            text="",
+        )
     hand_row.prop(bone, f'["{side}_Hand"]', text=f"{side} Hand")
     hand_row.prop(
         bpy.context.window_manager.tiny_rig_ui,
@@ -38,9 +40,10 @@ def get_sub_limb(limb):
     return sub_limb
 
 
-def draw_leg(col, side, limb):
-    draw_nudge_row(col, side, limb)
-    draw_ik_row(col, side, limb)
+def draw_leg(bone, col, side, limb):
+    if bone.id_data.tiny_rig.is_ik:
+        draw_nudge_row(col, side, limb)
+        draw_ik_row(col, side, limb)
     sub_limb = get_sub_limb(limb)
     col.prop(
         bpy.context.window_manager.tiny_rig_ui,
@@ -86,11 +89,11 @@ def draw_limb_control(bone, col):
     split = row.split(factor=0.5)
     left_col = split.column(align=True)
     draw_arm(bone, left_col, "L", "Arm")
-    draw_leg(left_col, "L", "Leg")
+    draw_leg(bone, left_col, "L", "Leg")
     right_col = split.split()
     right_col = right_col.column(align=True)
     draw_arm(bone, right_col, "R", "Arm")
-    draw_leg(right_col, "R", "Leg")
+    draw_leg(bone, right_col, "R", "Leg")
 
 
 def draw_pose_row(layout, bone, body):
@@ -113,6 +116,8 @@ class SEQUENCER_PT_rig_control(bpy.types.Panel):
     bl_label = "Tiny Rig Controller"
     bl_category = "Tiny Rig Control"
 
+
+
     def draw(self, context):
 
         obj = context.active_object
@@ -129,14 +134,22 @@ class SEQUENCER_PT_rig_control(bpy.types.Panel):
         
 
         draw_brow_row(layout, bone)
-        layout.prop(bone, '["A. Mouth"]', text="Mouth")
+
         layout.separator()
+
+        if bone.get('A. Mouth') is not None:
+            layout.prop(bone, '["A. Mouth"]', text="Mouth")
 
         if bone.get('A. Hat') is not None:
             layout.prop(bone, '["A. Hat"]', text="Hat")
 
-        draw_pose_row(layout, bone, "head")
-        draw_pose_row(layout, bone, "body")
+        if bone.id_data.tiny_rig.is_turnaround:
+            draw_pose_row(layout, bone, "head")
+            draw_pose_row(layout, bone, "body")
+
+        for x in bone.keys():
+            if x in obj.tiny_rig.user_props and not (x == "L_Hand" or x == "R_Hand"):
+                layout.prop(bone, f'["{x}"]')
 
         layout.separator()
 

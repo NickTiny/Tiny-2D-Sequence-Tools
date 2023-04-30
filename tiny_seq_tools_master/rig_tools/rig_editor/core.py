@@ -122,9 +122,10 @@ def bone_custom_prop_bools_add(bone: bpy.types.PoseBone, bools_to_add):
     """bools_to_add should be a = ['str', 'str', 'str',]"""
     for index, item in enumerate(bools_to_add):
         custom_int_create(bone, bools_to_add[index], 1, 0, 1)
-        custom_int_create(bone, "L_Hand", 1, 0, 60)
-        custom_int_create(bone, "R_Hand", 1, 0, 60)
 
+def custom_int_create_timeoffset(target, name, value, min, max):
+    custom_int_create(target, name, value, min, max)
+    target.id_data.tiny_rig.user_props += name
 
 def custom_int_create(target, name, value, min, max):
     target[name] = value

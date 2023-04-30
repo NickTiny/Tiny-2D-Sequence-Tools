@@ -73,16 +73,20 @@ class SEQUENCER_PT_rig_grease_pencil(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        layout.operator("rigools.gp_constraint_armature")
-        layout.operator("rigools.gp_vertex_by_layer")
-        layout.operator("rigools.gp_rig_via_lattice")
+        col = layout.column(align=True)
+        col.operator("rigools.gp_constraint_armature", icon="CONSTRAINT")
+        col.operator("rigools.gp_vertex_by_layer",
+                     icon="OUTLINER_DATA_GP_LAYER")
+        col.operator("rigools.gp_rig_via_lattice", icon="MOD_LATTICE")
+        layout.operator(
+            "rigtools.gp_add_time_offset_with_driver", icon="MOD_TIME")
 
 
 class SEQUENCER_PT_edit_grease_pencil(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_idname = "SEQUENCER_PT_edit_grease_pencil"
-    bl_label = "Rigged Grease Pencil Draw Helper"
+    bl_label = "Grease Pencil Draw Helper"
     bl_category = "Tiny Rig Edit"
 
     def draw(self, context):
@@ -129,6 +133,7 @@ class SEQUENCER_PT_rig_properties(bpy.types.Panel):
                 prop_col.label(text = f"No Properties on '{prop_bone.name}'")
             for x in prop_bone.keys():
                 prop_col.prop(prop_bone, f'["{x}"]') 
+            prop_col.operator("rigools.add_custom_prop", icon="PLUS")
         except KeyError or AttributeError:
             prop_col.label(text = "No Property Bone Found")
             return

@@ -2,36 +2,59 @@ import bpy
 
 classes = ()
 
+
 def bone_items(self, context):
     arma = context.scene.target_armature
     return [(bone.name, bone.name, "") for bone in arma.data.bones]
 
+
 def bone_groups(self, context):
     bone_groups = context.scene.target_armature.pose.bone_groups
-    items =  [(bone_group.name, bone_group.name, "") for bone_group in bone_groups]
+    items = [(bone_group.name, bone_group.name, "")
+             for bone_group in bone_groups]
     items.append(("All_Bones", "All Bones", ""))
     return items
 
-def find_bones(self,context):
+
+def get_user_props(self, context):
+    items = []
+    obj = context.scene.target_armature
+    bone = obj.pose.bones[context.scene.bone_selection]
+    for x in bone.keys():
+        if (x in obj.tiny_rig.user_props):
+            items.append((f'{x}', f'{x}', f'{x}'))
+    return items
+
+
+def find_bones(self, context):
     return context.scene.target_armature.pose.bones
+
+
 def check_armature(self, object):
     return object.type == "ARMATURE"
+
+
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
-    bpy.types.Scene.target_armature = bpy.props.PointerProperty(name="Target Arm", type=bpy.types.Object, poll=check_armature)
+    bpy.types.Scene.target_armature = bpy.props.PointerProperty(
+        name="Target Arm", type=bpy.types.Object, poll=check_armature)
     bpy.types.WindowManager.offset_editor_active = bpy.props.BoolProperty(
         name="Offset Editor is Active", default=False
     )
     bpy.types.WindowManager.gpencil_editor_active = bpy.props.PointerProperty(
         type=bpy.types.GreasePencil
     )
-    bpy.types.Scene.target_bone = bpy.props.EnumProperty(name="Bones", items=bone_items)
-    bpy.types.Scene.target_bone_group = bpy.props.EnumProperty(name="Bone Group",items=bone_groups)
+    bpy.types.Scene.target_bone = bpy.props.EnumProperty(
+        name="Bones", items=bone_items)
+    bpy.types.Scene.target_bone_group = bpy.props.EnumProperty(
+        name="Bone Group", items=bone_groups)
+    bpy.types.Scene.target_user_prop = bpy.props.EnumProperty(
+        name="User Properties", items=get_user_props)
 
 
 def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
-    #TODO del properties 
+    # TODO del properties
     del bpy.types.Scene.target_armature
