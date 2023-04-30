@@ -120,13 +120,6 @@ def update_line_art_override_cam_from_sequence(
 
     win_man = bpy.context.window_manager
 
-    # Set 'Rot to Seq Cam' Items
-    if override_rot:
-        refresh_rot_to_cam_list(bpy.context, strip)
-        win_man.enable_rot_seq_cam = False
-        for item in win_man.rot_to_seq_cam_items:
-            item.object.constraints["ROT_TO_STRIP_CAM"].target = line_art_cam
-
     # Set line art items
     win_man.line_art_cam_override = True
     for item in win_man.line_art_seq_items:
