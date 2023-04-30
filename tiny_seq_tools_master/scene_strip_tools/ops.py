@@ -3,7 +3,6 @@ import bpy
 from tiny_seq_tools_master.scene_strip_tools.core import make_render_scene
 from bpy.props import StringProperty
 
-
 class SEQUENCER_preview_render(bpy.types.Operator):
     bl_idname = "sequencer.preview_render"
     bl_label = "Render Preview Video"
@@ -65,6 +64,11 @@ class SEQUENCER_full_render(bpy.types.Operator):
         self.layout.label(text="Are you sure you want to proceed?")
 
     def execute(self, context):
+        import bpy
+        wm = bpy.context.window_manager
+        tot = 1000
+        wm.progress_begin(0, tot)
+        wm.progress_update(25)
         if context.scene.name == "RENDER":
             self.report({"ERROR"}, "Render scene cannot be active")
             return {"CANCELLED"}
@@ -73,8 +77,10 @@ class SEQUENCER_full_render(bpy.types.Operator):
         context.window.scene = render_scene
         render_scene.render.use_sequencer = True
         bpy.ops.render.render(animation=True,)
+        wm.progress_update(50)
         self.report({"INFO"}, f"Full Render Complete")
         context.window.scene = user_scene
+        wm.progress_end()
         return {"FINISHED"}
 
 
