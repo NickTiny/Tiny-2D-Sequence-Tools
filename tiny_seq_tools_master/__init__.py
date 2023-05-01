@@ -5,6 +5,7 @@ from tiny_seq_tools_master import (
     scene_strip_tools,
     rig_tools,
     core,
+    render
 )
 
 bl_info = {
@@ -26,6 +27,7 @@ def register():
     scene_strip_tools.register()
     core.register()
     rig_tools.register()
+    render.register()
 
 
 def unregister():
@@ -35,3 +37,4 @@ def unregister():
     scene_strip_tools.unregister()
     core.unregister()
     rig_tools.unregister()
+    render.unregister()

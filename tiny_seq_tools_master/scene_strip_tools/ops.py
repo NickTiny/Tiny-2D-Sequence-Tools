@@ -135,7 +135,7 @@ class SEQUENCER_refresh_viewport_camera(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class THREEDPREVIEW_PT_add_scene_strip(bpy.types.Operator):
+class SEQUENCER_OT_add_scene_strip(bpy.types.Operator):
 
     bl_description = """Adds current camera as a scene strip to the Sequencer"""
     bl_idname = "view3d.add_scene_strip"
@@ -167,7 +167,7 @@ class THREEDPREVIEW_PT_add_scene_strip(bpy.types.Operator):
 
 
 classes = (
-    THREEDPREVIEW_PT_add_scene_strip,
+    SEQUENCER_OT_add_scene_strip,
     SEQUENCER_add_camera_from_view,
     SEQUENCER_full_render,
     SEQUENCER_setup_render,
