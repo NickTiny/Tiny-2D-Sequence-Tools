@@ -25,11 +25,21 @@ def get_action_from_constraints(bones):
     return actions[0]
 
 
-def enable_all_mod_const(obj, bool):
+def set_modifier_and_constraint_viewport(obj, bool):
     for mod in obj.grease_pencil_modifiers:
         mod.show_viewport = bool
     for const in obj.constraints:
         const.enabled = bool
+
+def check_modifier_and_constraint_viewport(obj):
+    for mod in obj.grease_pencil_modifiers:
+        if mod.show_viewport == False:
+            return mod.show_viewport
+    for const in obj.constraints:
+        if const.enabled == False:
+            return const.enabled
+
+    return True
 
 
 def get_grease_pencil_modifiers(obj, type):

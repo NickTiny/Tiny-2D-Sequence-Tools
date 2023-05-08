@@ -10,8 +10,9 @@ def bone_items(self, context):
 
 def bone_groups(self, context):
     bone_groups = context.scene.target_armature.pose.bone_groups
-    items = [(bone_group.name, bone_group.name, "")
-             for bone_group in bone_groups]
+    items = []
+    for bone_group in bone_groups:
+          items.append((bone_group.name, bone_group.name, ""))
     items.append(("All_Bones", "All Bones", ""))
     return items
 
@@ -42,15 +43,17 @@ def register():
     bpy.types.WindowManager.offset_editor_active = bpy.props.BoolProperty(
         name="Offset Editor is Active", default=False
     )
-    bpy.types.WindowManager.gpencil_editor_active = bpy.props.PointerProperty(
-        type=bpy.types.GreasePencil
+    bpy.types.WindowManager.gpencil_editor = bpy.props.PointerProperty(
+        type=bpy.types.Object, name="Active Object", description="Name of Active Grease Pencil Object"
     )
+
     bpy.types.Scene.target_bone = bpy.props.EnumProperty(
         name="Bones", items=bone_items)
     bpy.types.Scene.target_bone_group = bpy.props.EnumProperty(
-        name="Bone Group", items=bone_groups)
+        name="Bone Group", items=bone_groups,)
     bpy.types.Scene.target_user_prop = bpy.props.EnumProperty(
         name="User Properties", items=get_user_props)
+    bpy.types.Scene.operator_bone_selection = bpy.props.StringProperty()
 
 
 def unregister():

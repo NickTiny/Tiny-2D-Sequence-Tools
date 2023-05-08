@@ -1,6 +1,8 @@
 import bpy
 
-from tiny_seq_tools_master.core_functions.drivers import get_driver_ob_obj
+from tiny_seq_tools_master.core_functions.label import split_lines
+from tiny_seq_tools_master.rig_tools.rig_editor.core import check_modifier_and_constraint_viewport
+
 
 class SEQUENCER_PT_rig_settings(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
@@ -26,6 +28,8 @@ class SEQUENCER_PT_rig_settings(bpy.types.Panel):
             self.layout.label(text="Rig not Found", icon="ARMATURE_DATA")
             return
         layout.label(text=f"Turnaround Length: {obj.tiny_rig.pose_length}")        
+
+
 class SEQUENCER_PT_turnaround_editor(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -35,32 +39,34 @@ class SEQUENCER_PT_turnaround_editor(bpy.types.Panel):
 
     def draw(self, context):
         obj = context.scene.target_armature
-        layout = self.layout
-        action_row = layout.row(align=True)
+        if obj is None:
+            self.layout.label(text="'Target Armature' not set", icon="ARMATURE_DATA")
+            return
         if obj is None or not(obj.tiny_rig.is_rig and obj.tiny_rig.is_turnaround):
             self.layout.label(text="Rig has no turnaround", icon="ARMATURE_DATA")
             return
+        offset_row = self.layout.row(align=True)
+        layout = self.layout.box()
+        message_row = layout.row()
+        
+        
 
+        action_row = layout.row(align=True)
+        
+        editor_active = not(context.window_manager.offset_editor_active)
+        action_row.enabled = editor_active
         action_row.prop(obj, "offset_action")
 
-        if obj.offset_action is not None:
-            
-            if obj.library or obj.override_library:
-                action_row.enabled = False
-
         action_row.operator("rigools.load_action", icon="FILE_REFRESH", text="")
-        offset_row = layout.row(align=True)
-        offset_row.operator("rigools.enable_offset_action", icon="ACTION_TWEAK")
-        if obj.animation_data and obj.animation_data.action == obj.offset_action:
-            offset_row.operator(
-                "rigools.disable_offset_action", icon="LOOP_BACK", text=""
-            )
+        
+        offset_row.operator("rigools.enable_offset_action", icon="ACTION_TWEAK", depress=not(editor_active)).enable = editor_active
         if (
             context.window_manager.offset_editor_active
             and context.active_object.mode != "POSE"
-        ):
-            offset_row.alert = True
-            offset_row.label(text="Must be in POSE Mode")
+        ):  
+            
+            message_row.alert = True
+            message_row.label(icon="ERROR",text="Offset Editor is still Active")
         layout.operator("rigools.add_action_const_to_bone", icon="CONSTRAINT_BONE")
         
         
@@ -72,6 +78,23 @@ class SEQUENCER_PT_rig_grease_pencil(bpy.types.Panel):
     bl_category = "Tiny Rig Edit"
 
     def draw(self, context):
+        if context.active_object.type == "GPENCIL":
+            status = check_modifier_and_constraint_viewport(context.active_object)
+            context.window_manager.gpencil_editor = context.active_object
+            box = self.layout.box()
+            box_row = box.row(align=True)
+            obj_row = box_row.split(factor=.5, align=True)
+            obj_row.prop(
+                context.window_manager, "gpencil_editor", text="", icon="OUTLINER_OB_GREASEPENCIL"
+            )
+            obj_row.enabled = True
+            obj_row.operator("rigools.enable_gp_mod_const", text="", icon=("HIDE_OFF" if status else "HIDE_ON"), depress=status).enabled = not(status)
+        else:
+            warn_row = self.layout.box()
+            warn_row.label(
+                text=f"Active Object is not Grease Pencil", icon="INFO"
+            )
+        self.layout.operator("rigools.enable_all_gp_mod_const_all", icon="HIDE_OFF")
         layout = self.layout
         col = layout.column(align=True)
         col.operator("rigools.gp_constraint_armature", icon="CONSTRAINT")
@@ -80,33 +103,7 @@ class SEQUENCER_PT_rig_grease_pencil(bpy.types.Panel):
         col.operator("rigools.gp_rig_via_lattice", icon="MOD_LATTICE")
         layout.operator(
             "rigtools.gp_add_time_offset_with_driver", icon="MOD_TIME")
-
-
-class SEQUENCER_PT_edit_grease_pencil(bpy.types.Panel):
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_idname = "SEQUENCER_PT_edit_grease_pencil"
-    bl_label = "Grease Pencil Draw Helper"
-    bl_category = "Tiny Rig Edit"
-
-    def draw(self, context):
-        self.layout.operator("rigools.enable_all_gp_mod_const", icon="CHECKMARK")
-        edit_gp_row = self.layout.row(align=True)
-        edit_gp_row.operator("rigools.enter_grease_pencil_editor", icon="GREASEPENCIL")
-        if context.window_manager.gpencil_editor_active:
-            obj_row = self.layout.row()
-            obj_row.enabled = False
-            obj_row.prop(
-                context.window_manager, "gpencil_editor_active", text="Active GP"
-            )
-            edit_gp_row.operator(
-                "rigools.enter_grease_pencil_editor_exit", icon="LOOP_BACK", text=""
-            )
-            self.layout.label(
-                text=f"Currently Editing GREASE PENCIL"
-            )
-        row = self.layout.row(align=True)
-        row.operator("rigools.isolate_gpencil", icon="HIDE_OFF")
+        
 
 
 
@@ -118,10 +115,22 @@ class SEQUENCER_PT_rig_properties(bpy.types.Panel):
     bl_category = "Tiny Rig Edit"
     bl_parent_id = "SEQUENCER_PT_rig_settings"
 
-    def draw(self, context):
-               
+    def draw(self, context):    
         obj = context.scene.target_armature
+        self.layout.operator("rigools.add_custom_prop", icon="PLUS")
+        self.layout.separator()
+
+        # Time Offset Properties
+        time_offset_props = self.layout.box()
+        self.layout.separator
+        time_offset_props.label(text="User Properties", icon="USER")
+
+
+        self.layout.separator()
+        # All Properties
         prop_col = self.layout.box()
+        prop_col.label(text="Other Properties", icon="OUTLINER_OB_ARMATURE")   
+
         if obj is None:
             return
         try:
@@ -131,9 +140,11 @@ class SEQUENCER_PT_rig_properties(bpy.types.Panel):
             
             if len(prop_bone.keys()) == 0:
                 prop_col.label(text = f"No Properties on '{prop_bone.name}'")
-            for x in prop_bone.keys():
+            for x in [x for x in prop_bone.keys() if x in obj.tiny_rig.user_props]:
+                time_offset_props.prop(prop_bone, f'["{x}"]') 
+            for x in [x for x in prop_bone.keys() if x not in obj.tiny_rig.user_props]:
                 prop_col.prop(prop_bone, f'["{x}"]') 
-            prop_col.operator("rigools.add_custom_prop", icon="PLUS")
+            
         except KeyError or AttributeError:
             prop_col.label(text = "No Property Bone Found")
             return
@@ -147,7 +158,6 @@ classes = (
     SEQUENCER_PT_rig_settings,
     SEQUENCER_PT_turnaround_editor,
     SEQUENCER_PT_rig_properties,
-    SEQUENCER_PT_edit_grease_pencil,
     SEQUENCER_PT_rig_grease_pencil,
 )
 

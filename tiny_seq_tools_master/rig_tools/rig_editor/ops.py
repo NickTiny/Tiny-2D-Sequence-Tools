@@ -8,12 +8,15 @@ from tiny_seq_tools_master.rig_tools.rig_editor.bone_names import (
 from tiny_seq_tools_master.core_functions.object import (
     check_object_type,
 )
+
+from tiny_seq_tools_master.core_functions.label import split_lines
+
 from tiny_seq_tools_master.core_functions.drivers import add_driver, get_driver_ob_obj
 from tiny_seq_tools_master.rig_tools.rig_editor.core import (
     get_action_offset_bones,
     get_action_from_constraints,
     hide_grease_pencil_editor,
-    enable_all_mod_const,
+    set_modifier_and_constraint_viewport,
     bone_custom_prop_bools_add,
     bone_create_groups,
     bone_assign_groups,
@@ -70,90 +73,68 @@ class RIGTOOLS_rig_gp_base_class(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         if context.active_object is None:
-            return False
-        return (context.active_object.type == "GPENCIL"
-                and context.scene.target_armature
-                and context.scene.target_bone)
+            return cls.poll_message_set("No Object is Active")
+        if not context.scene.target_armature:
+            return cls.poll_message_set("Target Armature is not active")
+        if not  context.scene.bone_selection:
+            return cls.poll_message_set("Property Bone is not set")
+        if not (context.active_object.type == "GPENCIL"):
+            return cls.poll_message_set("Active object is not Grease Pencil")
+        return True 
+        
 
-
-class RIGTOOLS_enter_grease_pencil_editor(bpy.types.Operator):
-    bl_idname = "rigools.enter_grease_pencil_editor"
-    bl_label = "Edit Selected Grease Pencil"
-    bl_description = "Edit Selected Grease Pencil"
-    bl_options = {"UNDO"}
+class RIGTOOLS_turnaround_base_class(bpy.types.Operator):
+    """Base Class for all Rig Edit Operations"""
 
     @classmethod
     def poll(cls, context):
-        if context.active_object is None:
-            return False
-        obj = context.active_object
-        res = not (
-            obj.library
-            or obj.override_library
-            # or context.window_manager.gpencil_editor_active
-        )
-        if not res:
-            cls.poll_message_set("Cannot Edit Reference Objects")
-        return res
-
-    def execute(self, context):
-        obj = context.active_object
-        obj_type = "GPENCIL"
-        if not check_object_type(obj, obj_type):
-            self.report({"ERROR"}, f"Active Object type must be {obj_type}")
-            return {"CANCELLED"}
-        if hide_grease_pencil_editor(obj, False) is False:
-            self.report({"ERROR"}, f"{obj.name} failed to enter draw mode")
-            return {"CANCELLED"}
-        context.window_manager.gpencil_editor_active = obj.data
-        bpy.ops.object.mode_set(mode="PAINT_GPENCIL")
-        self.report({"INFO"}, f"{obj.name} entered draw mode")
-        return {"FINISHED"}
+        if context.active_object.mode != "POSE":
+            return cls.poll_message_set("Mode is not POSE")
+        if not context.scene.target_armature:
+            return cls.poll_message_set("Target Armature is not active")
+        if not context.scene.target_armature.offset_action:
+            return cls.poll_message_set("Offset Action is not active")
+        if context.scene.bone_selection == "":
+            return cls.poll_message_set("Property Bone is not set")
+        if context.active_object != context.scene.target_armature:
+            return cls.poll_message_set(f"{context.scene.target_armature.name} is not active Object")
+        
+        else:
+            return True
 
 
-class RIGTOOLS_enter_grease_pencil_editor_exit(RIGTOOLS_rig_edit_base_class):
-    bl_idname = "rigools.enter_grease_pencil_editor_exit"
-    bl_label = "Exit Edit Selected Grease Pencil"
-    bl_description = "Exit Edit on Selected Grease Pencil"
-    bl_options = {"UNDO"}
-
-    def execute(self, context):
-        obj = context.active_object
-        obj_type = "GPENCIL"
-        if not check_object_type(obj, obj_type):
-            self.report({"ERROR"}, f"Active Object type must be {obj_type}")
-            return {"CANCELLED"}
-        if hide_grease_pencil_editor(obj, True) is False:
-            self.report({"ERROR"}, f"{obj.name} failed to enter draw mode")
-            return {"CANCELLED"}
-        bpy.ops.object.mode_set(mode="OBJECT")
-        context.window_manager.gpencil_editor_active = None
-        self.report({"INFO"}, f"{obj.name} exited draw mode")
-        return {"FINISHED"}
-
-
-class RIGTOOLS_isolate_gpencil(bpy.types.Operator):
-    bl_idname = "rigools.isolate_gpencil"
-    bl_label = "Isolate Selected Grease Pencil"
-    bl_description = "Toggles Isolation for objects in the current scene"
-    bl_options = {"UNDO"}
-
-    def execute(self, context):
-        bpy.ops.view3d.localview(frame_selected=True)
-        return {"FINISHED"}
-
-
-class RIGTOOLS_enable_all_gp_mod_const(bpy.types.Operator):
-    bl_idname = "rigools.enable_all_gp_mod_const"
-    bl_label = "Check all Grease Pencil Objects"
-    bl_description = "Ensure all Grease Pencil Modifiers are enabled if any are not."
+class RIGTOOLS_gp_set_mod_const(bpy.types.Operator):
+    bl_idname = "rigools.enable_gp_mod_const"
+    bl_label = "Toggle Visability of All Modifiers & Constraints"
+    bl_description = "Enable/Disable visablitiy of modifiers and constraints on grease pencil active object"
     bl_options = {"REGISTER", "UNDO"}
 
+    enabled: bpy.props.BoolProperty(name="Enabled")
+    @classmethod
+    def poll(cls, context):
+        if (len(context.active_object.grease_pencil_modifiers)==0 and len(context.active_object.constraints)==0):
+            cls.poll_message_set("Object has no Modifiers or Constraints")
+            return False
+        return True
+
     def execute(self, context):
-        enable_all_mod_const(context.active_object, True)
-        self.report({"INFO"}, "All Modifiers and Constraints are Enabled!")
+        set_modifier_and_constraint_viewport(context.active_object, self.enabled)
+        self.report({"INFO"}, f"All Modifiers and Constraints are {self.enabled}!")
         return {"FINISHED"}
 
+class RIGTOOLS_gp_set_mod_const_all(bpy.types.Operator):
+    bl_idname = "rigools.enable_all_gp_mod_const_all"
+    bl_label = "Unhide all Modifers & Constraints"
+    bl_description = "Ensure Modifers and Constraints are visable/enabled on all grease pencil objects"
+    bl_options = {"REGISTER", "UNDO"}
+
+    enabled: bpy.props.BoolProperty(name="Enabled")
+
+    def execute(self, context):
+        for obj in [obj for obj in context.scene.objects if obj.type == "GPENCIL"]:
+            set_modifier_and_constraint_viewport(obj, True)
+        self.report({"INFO"}, f"Modifiers and Constraints on all objects are enabled")
+        return {"FINISHED"}
 
 class RIGTOOLS_OT_create_armatue(bpy.types.Operator):
     bl_idname = "rigools.create_2d_armature"
@@ -163,7 +144,9 @@ class RIGTOOLS_OT_create_armatue(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return (not context.scene.target_armature)
+        if (context.scene.target_armature):
+           return cls.poll_message_set("Target Armature already Set")
+        return True
 
     def execute(self, context):
         bpy.ops.object.armature_add(enter_editmode=True)
@@ -224,6 +207,8 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.scene.bone_selection:
+            cls.poll_message_set("Set a Property Bone before Intilization")
         return context.scene.bone_selection
 
     def invoke(self, context, event):
@@ -399,28 +384,16 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
 old_action = None
 
 
-class RIGTOOLS_toggle_enable_action(bpy.types.Operator):
-    @classmethod
-    def poll(cls, context):
-        if context.active_object is None or not context.active_object.animation_data:
-            return False
-        return (
-            context.active_object.animation_data.action
-            != context.active_object.offset_action
-            and context.active_object.mode == "POSE"
-        )
-
+class RIGTOOLS_toggle_enable_action(RIGTOOLS_turnaround_base_class):
     bl_idname = "rigools.enable_offset_action"
     bl_label = "Edit Offset Action"
     bl_description = "Enable Turnaround Offset Action Editor"
     bl_options = {"REGISTER", "UNDO"}
 
+    enable : bpy.props.BoolProperty(name="Enable Offset Action Editor")
+
     def execute(self, context):
         obj = context.active_object
-
-        if context.window_manager.offset_editor_active == True:
-            self.report({"ERROR"}, "Offset Editor already Enabled")
-            return {"CANCELLED"}
         offset_action = obj.offset_action
         if not offset_action:
             self.report({"ERROR"}, "Offset Action not Set")
@@ -428,61 +401,39 @@ class RIGTOOLS_toggle_enable_action(bpy.types.Operator):
         if obj.mode != "POSE":
             self.report({"ERROR"}, "Must be in POSE Mode")
             return {"CANCELLED"}
-        if obj.animation_data.action == offset_action:
-            self.report({"ERROR"}, "Offset Action already Enabled")
-            return {"CANCELLED"}
-        if obj.animation_data and obj.animation_data.action:
-            global old_action
-            old_action = obj.animation_data.action
-
-        obj.animation_data.action = None
-        reset_bones(obj.pose.bones)
-        constraints = get_action_offset_bones(obj.pose.bones)
-        show_hide_constraints(constraints, False)
-        obj.animation_data.action = offset_action
-        context.window_manager.offset_editor_active = True
-        self.report({"INFO"}, "Offset Editing Enabled!")
-        return {"FINISHED"}
-
-
-class RIGTOOLS_toggle_disable_action(RIGTOOLS_rig_edit_base_class):
-    bl_idname = "rigools.disable_offset_action"
-    bl_label = "Disable Offset Action Editing"
-    bl_description = "Disable Turnaround Offset Action Editor"
-    bl_options = {"REGISTER", "UNDO"}
-
-    @classmethod
-    def poll(cls, context):
-        if context.active_object is None or not context.active_object.animation_data:
-            return False
-        return (
-            context.active_object.animation_data.action
-            == context.active_object.offset_action
-            and context.active_object.mode == "POSE"
-        )
-
-    def execute(self, context):
-        obj = context.active_object
-        offset_action = obj.offset_action
-        if not offset_action:
-            self.report({"ERROR"}, "Offset Action not Set")
-            return {"CANCELLED"}
-        if not obj.animation_data.action == offset_action:
-            self.report({"ERROR"}, "Offset Action not Enabled")
-            return {"CANCELLED"}
-        obj.animation_data.action = None
-        reset_bones(obj.pose.bones)
-        constraints = get_action_offset_bones(obj.pose.bones)
-        show_hide_constraints(constraints, True)
-        context.window_manager.offset_editor_active = False
         global old_action
-        if old_action is not None:
-            obj.animation_data.action = old_action
-        self.report({"INFO"}, "Offset Editing Disabled!")
+
+        if self.enable == True:
+            old_action = obj.animation_data.action
+            obj.animation_data.action = None
+            reset_bones(obj.pose.bones)
+            constraints = get_action_offset_bones(obj.pose.bones)
+            show_hide_constraints(constraints, False)
+            obj.animation_data.action = offset_action
+            context.window_manager.offset_editor_active = True
+            self.report({"INFO"}, "Offset Editing Enabled!")
+        else:
+            obj = context.active_object
+            offset_action = obj.offset_action
+            if not offset_action:
+                self.report({"ERROR"}, "Offset Action not Set")
+                return {"CANCELLED"}
+            if not obj.animation_data.action == offset_action:
+                self.report({"ERROR"}, "Offset Action not Enabled")
+                return {"CANCELLED"}
+            obj.animation_data.action = None
+            reset_bones(obj.pose.bones)
+            constraints = get_action_offset_bones(obj.pose.bones)
+            show_hide_constraints(constraints, True)
+            context.window_manager.offset_editor_active = False
+            if old_action is not None:
+                obj.animation_data.action = old_action
+            self.report({"INFO"}, "Offset Editing Disabled!")
         return {"FINISHED"}
 
 
-class RIGTOOLS_load_action(RIGTOOLS_rig_edit_base_class):
+
+class RIGTOOLS_load_action(RIGTOOLS_turnaround_base_class):
     bl_idname = "rigools.load_action"
     bl_label = "Load Offset Action"
     bl_description = "Offset Action"
@@ -495,39 +446,33 @@ class RIGTOOLS_load_action(RIGTOOLS_rig_edit_base_class):
         return {"FINISHED"}
 
 
-class RIGTOOLS_add_action_const_to_bone(bpy.types.Operator):
+class RIGTOOLS_add_action_const_to_bone(RIGTOOLS_turnaround_base_class):
     bl_idname = "rigools.add_action_const_to_bone"
     bl_label = "Add Offset to Selected Bones"
-    bl_description = """If a bone is included in the active_object's 'Offset Action' add constraint to move bone via action constraint. 
-    This will also add a driver back to the Body/Head Poses"""
+    bl_description = """If a bone is included in the active_object's 'Offset Action' add constraint to move bone via action constraint. This will also add a driver back to the Body/Head Poses"""
     bl_options = {"UNDO"}
 
     is_head: bpy.props.BoolProperty(
-        name="Is Head",
+        name="Use Head Pose",
         description="Set selected bone(s) as Head Turnaround and create a Head Pose Action Offset. Else Body Action Offset",
     )
 
     @classmethod
     def poll(cls, context):
-        if context.active_object is None:
-            return False
-        obj = context.scene.target_armature
-        res = not (
-            obj.library
-            or obj.override_library
-            or obj.animation_data.action == obj.offset_action
-        )
-        if not res:
-            cls.poll_message_set(
-                "Cannot Edit while Offsetting Turnaround Action")
-        return res
+        if not context.active_pose_bone:
+            return cls.poll_message_set("Pose Bone is not selected")
+        if context.window_manager.offset_editor_active == True:
+            return cls.poll_message_set("Cannot Edit while Offsetting Turnaround Action")
+        return True
 
     def invoke(self, context, event):
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
 
     def draw(self, context):
-        self.layout.prop(self, "is_head")
+        row = self.layout.row(align=True)
+        row.label(text="Offset Driver Source:")
+        row.prop(self, "is_head", toggle=True, text=("Use Pose" if self.is_head else "Use Head Pose" ))
 
     def execute(self, context):
         if self.is_head:
@@ -539,14 +484,22 @@ class RIGTOOLS_add_action_const_to_bone(bpy.types.Operator):
 
 class RIGTOOLS_add_custom_prop(RIGTOOLS_rig_edit_base_class):
     bl_idname = "rigools.add_custom_prop"
-    bl_label = "Add Custom Props"
-    bl_description = """TODO"""
+    bl_label = "Add Custom Property"
+    bl_description = """Create a Custom Integer Property. This Property can be used to control a driver on modifiers like Time Offset"""
     bl_options = {"UNDO"}
 
     name: bpy.props.StringProperty(name="Name")
     default: bpy.props.IntProperty(name="Default", default=1)
     min: bpy.props.IntProperty(name="Min", default=1)
     max: bpy.props.IntProperty(name="Max", default=50)
+
+    @classmethod
+    def poll(cls, context):
+        if not context.scene.target_armature:
+            return cls.poll_message_set("Target Armature is not active")
+        if  context.scene.bone_selection == "":
+            return cls.poll_message_set("Property Bone is not set")
+        return True 
 
     def invoke(self, context, event):
         wm = context.window_manager
@@ -577,7 +530,9 @@ class RIGTOOLS_gp_constraint_armature(RIGTOOLS_rig_gp_base_class):
         return wm.invoke_props_dialog(self)
 
     def draw(self, context):
-        self.layout.prop(context.scene, "target_bone")
+        self.layout.prop_search(
+                        context.scene, "operator_bone_selection", context.scene.target_armature.id_data.pose, "bones", text="Bone"
+                    )
 
     def execute(self, context):
         obj = context.active_object
@@ -587,22 +542,35 @@ class RIGTOOLS_gp_constraint_armature(RIGTOOLS_rig_gp_base_class):
         const.targets.new()
         target_entry = const.targets[-1]
         target_entry.target = context.scene.target_armature
-        target_entry.subtarget = context.scene.target_bone
+        target_entry.subtarget = context.scene.operator_bone_selection
         return {"FINISHED"}
 
 
 class RIGTOOLS_gp_vertex_by_layer(RIGTOOLS_rig_gp_base_class):
     bl_idname = "rigools.gp_vertex_by_layer"
-    bl_label = "Parent Vertex from Active Layer"
-    bl_description = """"""  # TODO
+    bl_label = "Parent with Armature Deform"
+    bl_description = """Add Armature Modifier, """ 
     bl_options = {"UNDO"}
+    
+    assign_all_vertex_groups : bpy.props.BoolProperty(name="Create Empty Groups", description="Assign Empty Vertex Groups for all Bones in Armature")
+    assign_active_layer : bpy.props.BoolProperty(name="Assign Active Grease Pencil to Bone", description="Assign all strokes in all frames of Active Grease Pencil Layer to selected Bone")
+
 
     def invoke(self, context, event):
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
 
     def draw(self, context):
-        self.layout.prop(context.scene, "target_bone")
+        self.layout.prop(self, "assign_all_vertex_groups")
+        if self.assign_active_layer:
+            box = self.layout.box()
+        else:
+            box = self.layout
+        box.prop(self, "assign_active_layer")
+        if self.assign_active_layer:            
+            box.prop_search(
+                            context.scene, "operator_bone_selection", context.scene.target_armature.id_data.pose, "bones", text="Bone"
+                        )
 
     def get_frames(self, context, gp_layer):
         return [frame.frame_number for frame in gp_layer.frames]
@@ -614,29 +582,33 @@ class RIGTOOLS_gp_vertex_by_layer(RIGTOOLS_rig_gp_base_class):
         mod = get_gp_modifier(obj, "ARMATURE_MOD", "GP_ARMATURE")
         obj.parent = armature
         mod.object = armature
+        user_mode = context.mode
         bpy.ops.object.mode_set(mode='EDIT_GPENCIL')
-        bone = context.scene.target_armature.pose.bones[context.scene.target_bone]
-        if bone is False:
-            self.report({"ERROR"}, f"Bone not found")
-            return {"CANCELLED"}
-        for frame in self.get_frames(context, layer):
-            context.scene.frame_set(frame)
-            context.scene.tool_settings.gpencil_selectmode_edit = 'POINT'
-            vertex_group = get_vertex_group(obj, bone.name)
-            obj.vertex_groups.active_index = vertex_group.index
-            for other_layer in [pther_layer for pther_layer in obj.data.layers if pther_layer.info != layer.info]:
-                other_layer.lock = True
-            layer.lock = False
-            bpy.ops.gpencil.select_all(action='SELECT')
-            bpy.ops.gpencil.vertex_group_assign()
-            bpy.ops.gpencil.select_all(action='DESELECT')
+        bone = context.scene.target_armature.pose.bones[context.scene.operator_bone_selection]
+        if self.assign_all_vertex_groups:
+            for posebone in armature.pose.bones:
+                get_vertex_group(obj, posebone.name)
+        if self.assign_active_layer:
+            for frame in self.get_frames(context, layer):
+                context.scene.frame_set(frame)
+                context.scene.tool_settings.gpencil_selectmode_edit = 'POINT'
+                
+                vertex_group = get_vertex_group(obj, bone.name)
+                obj.vertex_groups.active_index = vertex_group.index
+                for other_layer in [pther_layer for pther_layer in obj.data.layers if pther_layer.info != layer.info]:
+                    other_layer.lock = True
+                layer.lock = False
+                bpy.ops.gpencil.select_all(action='SELECT')
+                bpy.ops.gpencil.vertex_group_assign()
+                bpy.ops.gpencil.select_all(action='DESELECT')
+        bpy.ops.object.mode_set(mode=user_mode)
         return {"FINISHED"}
 
     
 class RIGTOOLS_gp_rig_via_lattice(RIGTOOLS_rig_gp_base_class):
     bl_idname = "rigools.gp_rig_via_lattice"
     bl_label = "Parent Object with Lattice Modifier"
-    bl_description = """"""  # TODO
+    bl_description = """Rig Active Object by Creating Lattice, and adding Vertex Groups from Selected Bone Group. Lattice is deformed with Armature Modifier. Vertex Group/Weights are created but not assigned""" 
     bl_options = {"UNDO"}
 
     def get_bone_group(self, context, armature):
@@ -650,7 +622,9 @@ class RIGTOOLS_gp_rig_via_lattice(RIGTOOLS_rig_gp_base_class):
         return wm.invoke_props_dialog(self)
 
     def draw(self, context):
+        split_lines(context, "Add Empty Groups to lattice from bones in group", self.layout.column(align=True), .056)
         self.layout.prop(context.scene, "target_bone_group")
+        
 
     def execute(self, context):
         # Make lattice
@@ -667,8 +641,8 @@ class RIGTOOLS_gp_rig_via_lattice(RIGTOOLS_rig_gp_base_class):
         lattice_ob.data.points_u = 64
         lattice_ob.data.points_v = 1
         lattice_ob.data.points_w = 64
-        lattice_ob.parent = armature    
-        lattice_ob.matrix_parent_inverse    = obj.matrix_world  
+        lattice_ob.parent = obj    
+        lattice_ob.matrix_parent_inverse    = obj.matrix_parent_inverse 
         
 
         obj_scale = max(obj.dimensions.xyz.to_tuple())*1.1
@@ -684,16 +658,14 @@ class RIGTOOLS_gp_rig_via_lattice(RIGTOOLS_rig_gp_base_class):
         for bone in bone_group: 
             get_vertex_group(lattice_ob, bone.name)
         context.view_layer.objects.active = lattice_ob
-        bpy.ops.object.mode_set(mode="EDIT")
         self.report(
             {"INFO"}, f"Ready to assign Vetex Groups for {lattice_ob.name}")
         return {"FINISHED"}
 
-
-class RIGTOOLS_gp_add_time_offset_with_driver(RIGTOOLS_rig_edit_base_class):
+class RIGTOOLS_gp_add_time_offset_with_driver(RIGTOOLS_rig_gp_base_class):
     bl_idname = "rigtools.gp_add_time_offset_with_driver"
-    bl_label = "Add Time Offset to Selected"
-    bl_description = """Add Time Offset modifier with Driver to active GP"""
+    bl_label = "Add Time Offset with Driver"
+    bl_description = """Add Time Offset modifier with Driver from Rig Properties"""
     bl_options = {"UNDO"}
 
     def invoke(self, context, event):
@@ -701,7 +673,9 @@ class RIGTOOLS_gp_add_time_offset_with_driver(RIGTOOLS_rig_edit_base_class):
         return wm.invoke_props_dialog(self)
 
     def draw(self, context):
-        self.layout.prop(context.scene, "target_user_prop")
+        layout = self.layout.column(align=True)
+        split_lines(context, "Add Time Offset Modifier with user property as Driver", layout, .056)
+        self.layout.prop(context.scene, "target_user_prop", text="Property")
 
     def execute(self, context):
         # From selected IK Bone
@@ -725,13 +699,10 @@ classes = (
     RIGTOOLS_OT_create_armatue,
     RIGTOOLS_add_action_const_to_bone,
     RIGTOOLS_toggle_enable_action,
-    RIGTOOLS_toggle_disable_action,
     RIGTOOLS_load_action,
     RIGTOOLS_initialize_rig,
-    RIGTOOLS_enter_grease_pencil_editor,
-    RIGTOOLS_enter_grease_pencil_editor_exit,
-    RIGTOOLS_isolate_gpencil,
-    RIGTOOLS_enable_all_gp_mod_const,
+    RIGTOOLS_gp_set_mod_const,
+    RIGTOOLS_gp_set_mod_const_all,
     RIGTOOLS_add_custom_prop,
     RIGTOOLS_gp_constraint_armature,
     RIGTOOLS_gp_vertex_by_layer,
