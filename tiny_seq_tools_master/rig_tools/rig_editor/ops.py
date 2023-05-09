@@ -268,13 +268,13 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
             self.report({"ERROR"}, f"Set Property Bone")
             return {"CANCELLED"}
         propbone = obj.pose.bones[context.scene.bone_selection]
+        obj.tiny_rig.is_rig = True
+        obj.tiny_rig.pose_data_name = context.scene.bone_selection
 
-        # Add Time Offset Props 
         if self.set_base_time_offset_props:
             for property in ("Mouth", "L_Hand", "R_Hand"):
                 custom_int_create_timeoffset(propbone, property, 1, 1, 100)
 
-        # Add Appendage Flip Props
         if self.set_appendage_flip:
             for property in ('R_Foot_Flip', 'R_Hand_Flip', 'L_Foot_Flip', 'L_Hand_Flip'):
                 prop = custom_int_create(propbone, property, 1, 0, 1)
@@ -301,13 +301,6 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
 
         bpy.ops.object.mode_set(mode='POSE')
 
-        # Set as Rig
-        obj.tiny_rig.is_rig = True
-
-        # Set bone for poperties
-        obj.tiny_rig.pose_data_name = context.scene.bone_selection
-
-        # Set Turnaround Length
         if self.set_turnaround:
             custom_int_create(
                 propbone, obj.tiny_rig.body_pose_name, 1, 1, self.pose_length_set)
