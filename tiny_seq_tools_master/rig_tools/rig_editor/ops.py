@@ -262,6 +262,7 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
 
     def execute(self, context):
         # TODO Make safe to re-run (collect related bones clear and reset)
+        # TODO Make all Bone Names Generic/Passable via Preferences
         msg = ""
         obj = context.active_object
         if context.scene.bone_selection is None:
