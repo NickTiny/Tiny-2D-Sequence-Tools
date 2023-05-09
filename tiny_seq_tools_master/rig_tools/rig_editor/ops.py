@@ -193,17 +193,37 @@ class RIGTOOLS_OT_create_armatue(bpy.types.Operator):
 
 class RIGTOOLS_initialize_rig(bpy.types.Operator):
     bl_idname = "rigools.initialize_rig"
-    bl_label = "Initialize Rig"
-    bl_description = "Load all of the rig settings"
+    bl_label = "Initialize Armature"
+    bl_description = "Create Drivers and Custom Properties on current Armature for use in Tiny Rig Control panel"
     bl_options = {"REGISTER", "UNDO"}
 
     pose_length_set: bpy.props.IntProperty(name="Turnaround Length")
     update_face_constraints: bpy.props.BoolProperty(
         name="Add Face Constraints", default=False)
     set_turnaround: bpy.props.BoolProperty(
-        name="Turnaround", default=False)
+        name="Turnaround", default=False, description="Set Length of Pose Turnaround. Drives Body and Head position for action constraints and time offset modifiers")
     create_limb_iks: bpy.props.BoolProperty(
-        name="Add IKs", default=False)
+        name="Create IK & Pole Bones", default=False, description="Create IK and Pole Bones based on current limb positions")
+    
+    set_ik_modifiers: bpy.props.BoolProperty(
+        name="Setup IK Constraints & Drivers", default=False, description="Set Modifiers & Drivers for Rig's Inverse Kinematics")     
+    set_base_time_offset_props: bpy.props.BoolProperty(
+        name="Setup Basic Time Offset Properties", default=True, description="Create Standard Mouth and Hand Time Offset Modifiers")
+    set_appendage_flip: bpy.props.BoolProperty(
+        name="Setup Mirror for Hands & Feet", default=True, description="Set Modifier and Driver to Mirror/Flip Hand/Foot bones")
+    set_bone_groups:bpy.props.BoolProperty(
+        name="Setup Bone Groups", default=True, description="Setup Bone Groups based on naming conventions")
+    set_bone_rotation_locks:bpy.props.BoolProperty(
+        name="Lock Bone Roation", default=True, description="Set Rotations to Euler 'XYZ' with only 'Z' Axis unlocked")
+    set_bone_roll:bpy.props.BoolProperty(
+        name="Set Bone Roll", default=True, description="Set Bone Roll for all bones to 'GLOBAL_POS_Y'")
+    
+    def create_sub_box(self, layout, bool):
+        if bool:
+            return layout.box()
+        else:
+            return layout
+
 
     @classmethod
     def poll(cls, context):
@@ -216,20 +236,29 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
         return wm.invoke_props_dialog(self)
 
     def draw(self, context):
-        col = self.layout.column(align=True)
-
-        col.prop(self, "create_limb_iks")
-        col.prop(self, "set_turnaround")
+        split_lines(context, "This can break animation track compatibility.", self.layout, .056, icon="ERROR")
+        box = self.layout.box()
+        col = box.column(align=False)
+        col.prop(self, "set_base_time_offset_props")
+        col.prop(self, "set_appendage_flip")
+        col.prop(self, "set_bone_groups")
+        col.prop(self, "set_bone_rotation_locks")
+        col.prop(self, "set_bone_roll")
+        ik_box = self.create_sub_box(col,self.set_ik_modifiers)
+        ik_box.prop(self, "set_ik_modifiers")
+        if self.set_ik_modifiers:
+            ik_box.prop(self, "create_limb_iks")
+    
+        turnaround_box = self.create_sub_box(col,self.set_turnaround)
+        turnaround_box.prop(self, "set_turnaround")
         if self.set_turnaround:
-            col = self.layout.column()
-            col.label(text="Proceed with Caution!", icon="ERROR")
-
-            col.label(
-                text="Can break compatibility with previous animations tracks.")
-            col.label(text="Use 'ESC' to cancel")
             if context.active_object.tiny_rig.pose_length:
                 self.pose_length_set = context.active_object.tiny_rig.pose_length
-            col.prop(self, "pose_length_set")
+            turnaround_box.prop(self, "pose_length_set", text="Turnaround Length")
+        col = self.layout.column(align=True)
+
+        
+        col.label(text="Use 'ESC' to cancel")
 
     def execute(self, context):
         # TODO Make safe to re-run (collect related bones clear and reset)
@@ -241,12 +270,14 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
         propbone = obj.pose.bones[context.scene.bone_selection]
 
         # Add Time Offset Props 
-        for property in ("Mouth", "L_Hand", "R_Hand"):
-            custom_int_create_timeoffset(propbone, property, 1, 1, 100)
+        if self.set_base_time_offset_props:
+            for property in ("Mouth", "L_Hand", "R_Hand"):
+                custom_int_create_timeoffset(propbone, property, 1, 1, 100)
 
-        # Add Rig Props
-        for property in ('R_Foot_Flip', 'R_Hand_Flip', 'L_Foot_Flip', 'L_Hand_Flip'):
-            prop = custom_int_create(propbone, property, 1, 0, 1)
+        # Add Appendage Flip Props
+        if self.set_appendage_flip:
+            for property in ('R_Foot_Flip', 'R_Hand_Flip', 'L_Foot_Flip', 'L_Hand_Flip'):
+                prop = custom_int_create(propbone, property, 1, 0, 1)
 
         if self.create_limb_iks:
             obj.tiny_rig.is_ik = True
@@ -286,24 +317,23 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
             msg += (f"Pose Length set to {obj.tiny_rig.pose_length} \n")
             obj.tiny_rig.is_turnaround = True
 
-        bone_create_groups(obj, bone_groups)
-        bone_assign_groups(obj, bone_group_assignments)
+        if self.set_bone_groups:
+            bone_create_groups(obj, bone_groups)
+            bone_assign_groups(obj, bone_group_assignments)
 
-        # Add Driver Properties
-        # TODO only add relavant bools
-
-        for bone in obj.pose.bones:
-            bone.rotation_mode = 'XYZ'
-            bone.lock_rotation[0] = True
-            bone.lock_rotation[1] = True
-            bone.lock_rotation[2] = False
-            bone.rotation_mode = 'XYZ'
-            bone.lock_rotation[0] = False
-            bone.lock_rotation[1] = False
-            bone.lock_location[2] = True
+        if self.set_bone_rotation_locks:
+            for bone in obj.pose.bones:
+                bone.rotation_mode = 'XYZ'
+                bone.lock_rotation[0] = True
+                bone.lock_rotation[1] = True
+                bone.lock_rotation[2] = False
+                bone.rotation_mode = 'XYZ'
+                bone.lock_rotation[0] = False
+                bone.lock_rotation[1] = False
+                bone.lock_location[2] = True
 
         lw_bones = ik_mod_bones
-        if self.create_limb_iks:
+        if self.set_ik_modifiers:
             # Add IK Constraints
             ik_bones = [
                 bone for bone in obj.pose.bones if bone.name in lw_bones]
@@ -362,20 +392,22 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
                 if not bone_check_constraint(bone, "Copy Nudge Location"):
                     bone_copy_location_nudge(bone)
 
-        for bone in [bone for bone in obj.pose.bones if bone.name in appendage_bones]:
-            bone_transform_mirror_add(bone)
+        if self.set_appendage_flip:
+            for bone in [bone for bone in obj.pose.bones if bone.name in appendage_bones]:
+                bone_transform_mirror_add(bone)
 
         # add turnaround action
         if obj.offset_action is None and self.set_turnaround:
             action = bpy.data.actions.new(f'{obj.name}_TURNAROUND')
             obj.offset_action = action
 
-        bpy.ops.object.mode_set(mode='EDIT')
-        for bone in obj.data.edit_bones:
-            bone.select = True
-        bpy.ops.armature.calculate_roll(
-            type='GLOBAL_POS_Y', axis_flip=False, axis_only=False)
-        bpy.ops.object.mode_set(mode='POSE')
+        if self.set_bone_roll:
+            bpy.ops.object.mode_set(mode='EDIT')
+            for bone in obj.data.edit_bones:
+                bone.select = True
+            bpy.ops.armature.calculate_roll(
+                type='GLOBAL_POS_Y', axis_flip=False, axis_only=False)
+            bpy.ops.object.mode_set(mode='POSE')
 
         self.report({"INFO"}, f"Initilizaton Completed! \n {msg}")
         return {"FINISHED"}
