@@ -214,7 +214,7 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
     set_bone_groups:bpy.props.BoolProperty(
         name="Setup Bone Groups", default=True, description="Setup Bone Groups based on naming conventions")
     set_bone_rotation_locks:bpy.props.BoolProperty(
-        name="Lock Bone Roation", default=True, description="Set Rotations to Euler 'XYZ' with only 'Z' Axis unlocked")
+        name="Lock Bone Rotation", default=True, description="Set Rotations to Euler 'XYZ' with only 'Z' Axis unlocked")
     set_bone_roll:bpy.props.BoolProperty(
         name="Set Bone Roll", default=True, description="Set Bone Roll for all bones to 'GLOBAL_POS_Y'")
     
