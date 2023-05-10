@@ -11,9 +11,6 @@ class SEQUENCER_PT_rig_settings(bpy.types.Panel):
     bl_label = "Rig Settings"
     bl_category = "Tiny Rig Edit"
 
-    bpy.types.Scene.obj_selection = bpy.props.PointerProperty(type=bpy.types.Object)
-    bpy.types.Scene.property_bone_name = bpy.props.StringProperty()
-
     def draw(self, context):
         layout = self.layout
         layout.operator("rigools.create_2d_armature")
@@ -45,28 +42,28 @@ class SEQUENCER_PT_turnaround_editor(bpy.types.Panel):
         if obj is None or not(obj.tiny_rig.is_rig and obj.tiny_rig.is_turnaround):
             self.layout.label(text="Rig has no turnaround", icon="ARMATURE_DATA")
             return
-        offset_row = self.layout.row(align=True)
+        
         layout = self.layout.box()
-        message_row = layout.row()
+        editor_col = layout.column(align=True)
         
         
-
         action_row = layout.row(align=True)
         
         editor_active = not(context.window_manager.offset_editor_active)
         action_row.enabled = editor_active
-        action_row.prop(obj, "offset_action")
+        action_row.prop(obj, "offset_action", text="Action")
 
         action_row.operator("rigools.load_action", icon="FILE_REFRESH", text="")
         
-        offset_row.operator("rigools.enable_offset_action", icon="ACTION_TWEAK", depress=not(editor_active)).enable = editor_active
+        editor_col.operator("rigools.enable_offset_action", icon="ACTION_TWEAK", depress=not(editor_active)).enable = editor_active
         if (
             context.window_manager.offset_editor_active
             and context.active_object.mode != "POSE"
         ):  
-            
-            message_row.alert = True
-            message_row.label(icon="ERROR",text="Offset Editor is still Active")
+            #message_row = layout.row(align=True)
+            editor_col.alert = True
+            editor_col.separator()
+            editor_col.label(icon="ERROR",text="Offset Editor is still Active")
         layout.operator("rigools.add_action_const_to_bone", icon="CONSTRAINT_BONE")
         
         

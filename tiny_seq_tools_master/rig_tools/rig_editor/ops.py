@@ -102,7 +102,6 @@ class RIGTOOLS_turnaround_base_class(bpy.types.Operator):
         else:
             return True
 
-
 class RIGTOOLS_gp_set_mod_const(bpy.types.Operator):
     bl_idname = "rigools.enable_gp_mod_const"
     bl_label = "Toggle Visability of All Modifiers & Constraints"
@@ -139,7 +138,7 @@ class RIGTOOLS_gp_set_mod_const_all(bpy.types.Operator):
 class RIGTOOLS_OT_create_armatue(bpy.types.Operator):
     bl_idname = "rigools.create_2d_armature"
     bl_label = "Create Armature"
-    bl_description = "add better description."
+    bl_description = "Create a new base armature object, matching conventions set in armature preferences."
     bl_options = {"REGISTER", "UNDO"}
 
     @classmethod
@@ -412,17 +411,17 @@ old_action = None
 
 class RIGTOOLS_toggle_enable_action(RIGTOOLS_turnaround_base_class):
     bl_idname = "rigools.enable_offset_action"
-    bl_label = "Edit Offset Action"
-    bl_description = "Enable Turnaround Offset Action Editor"
+    bl_label = "Edit Turnaround Action"
+    bl_description = "Set turnaround action from target armature as the active action and hide all action constraints to allow easy editing of turnaround"
     bl_options = {"REGISTER", "UNDO"}
 
-    enable : bpy.props.BoolProperty(name="Enable Offset Action Editor")
+    enable : bpy.props.BoolProperty(name="Enable Turnaround Action Editor")
 
     def execute(self, context):
         obj = context.active_object
         offset_action = obj.offset_action
         if not offset_action:
-            self.report({"ERROR"}, "Offset Action not Set")
+            self.report({"ERROR"}, "Turnaround Action not Set")
             return {"CANCELLED"}
         if obj.mode != "POSE":
             self.report({"ERROR"}, "Must be in POSE Mode")
@@ -437,15 +436,15 @@ class RIGTOOLS_toggle_enable_action(RIGTOOLS_turnaround_base_class):
             show_hide_constraints(constraints, False)
             obj.animation_data.action = offset_action
             context.window_manager.offset_editor_active = True
-            self.report({"INFO"}, "Offset Editing Enabled!")
+            self.report({"INFO"}, "Turnaround Editing Enabled!")
         else:
             obj = context.active_object
             offset_action = obj.offset_action
             if not offset_action:
-                self.report({"ERROR"}, "Offset Action not Set")
+                self.report({"ERROR"}, "Turnaround Action not Set")
                 return {"CANCELLED"}
             if not obj.animation_data.action == offset_action:
-                self.report({"ERROR"}, "Offset Action not Enabled")
+                self.report({"ERROR"}, "Turnaround Action not Enabled")
                 return {"CANCELLED"}
             obj.animation_data.action = None
             reset_bones(obj.pose.bones)
@@ -454,15 +453,15 @@ class RIGTOOLS_toggle_enable_action(RIGTOOLS_turnaround_base_class):
             context.window_manager.offset_editor_active = False
             if old_action is not None:
                 obj.animation_data.action = old_action
-            self.report({"INFO"}, "Offset Editing Disabled!")
+            self.report({"INFO"}, "Turnaround Editing Disabled!")
         return {"FINISHED"}
 
 
 
 class RIGTOOLS_load_action(RIGTOOLS_turnaround_base_class):
     bl_idname = "rigools.load_action"
-    bl_label = "Load Offset Action"
-    bl_description = "Offset Action"
+    bl_label = "Refresh Offset Action"
+    bl_description = "Get Action data-block from target armature's constraints"
     bl_options = {"UNDO"}
 
     def execute(self, context):
@@ -548,7 +547,7 @@ class RIGTOOLS_add_custom_prop(RIGTOOLS_rig_edit_base_class):
 class RIGTOOLS_gp_constraint_armature(RIGTOOLS_rig_gp_base_class):
     bl_idname = "rigools.gp_constraint_armature"
     bl_label = "Parent with Armature Contraint"
-    bl_description = """Rig the entire active grease pencil object, with an object contraint: Armature"""  # TODO
+    bl_description = """Rig the entire active grease pencil object, with an object contraint: Armature"""  
     bl_options = {"UNDO"}
 
     def invoke(self, context, event):
@@ -575,7 +574,7 @@ class RIGTOOLS_gp_constraint_armature(RIGTOOLS_rig_gp_base_class):
 class RIGTOOLS_gp_vertex_by_layer(RIGTOOLS_rig_gp_base_class):
     bl_idname = "rigools.gp_vertex_by_layer"
     bl_label = "Parent with Armature Deform"
-    bl_description = """Add Armature Modifier, """ 
+    bl_description = """Rig Grease Pencil with Armature Modifier. Optionally create empty groups from pose bones in target armature. Optionally assign all strokes (from all frames) in active GP layer to selectd bone""" 
     bl_options = {"UNDO"}
     
     assign_all_vertex_groups : bpy.props.BoolProperty(name="Create Empty Groups", description="Assign Empty Vertex Groups for all Bones in Armature")

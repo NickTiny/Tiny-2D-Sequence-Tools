@@ -355,7 +355,7 @@ def register():
     for cls in classes:
         bpy.utils.register_class(cls)
     bpy.types.Object.offset_action = bpy.props.PointerProperty(
-        name="Offset Action", type=bpy.types.Action
+        name="Turnaround Action", type=bpy.types.Action, description="Turnaround action pre-determines the position of a bone via action constraint. Control turnaround with 'POSE' or 'POSE HEAD' property"
     )
     bpy.types.Object.tiny_rig = bpy.props.PointerProperty(type=RIGCONTROL_settings)
     bpy.types.WindowManager.tiny_rig_ui = bpy.props.PointerProperty(type=RIGCONTROL_UI)

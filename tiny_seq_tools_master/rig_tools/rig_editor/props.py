@@ -1,8 +1,7 @@
 import bpy
 
-classes = ()
 
-def bone_groups(self, context):
+def get_bone_groups(self, context):
     bone_groups = context.scene.target_armature.pose.bone_groups
     items = []
     for bone_group in bone_groups:
@@ -11,7 +10,7 @@ def bone_groups(self, context):
     return items
 
 
-def get_user_props(self, context):
+def get_user_propertys(self, context):
     items = []
     obj = context.scene.target_armature
     bone = obj.pose.bones[context.scene.property_bone_name]
@@ -21,19 +20,18 @@ def get_user_props(self, context):
     return items
 
 
-def find_bones(self, context):
+def get_pose_bones(self, context):
     return context.scene.target_armature.pose.bones
 
 
-def check_armature(self, object):
+def get_obj_type_armature(self, object):
     return object.type == "ARMATURE"
 
 
 def register():
-    for cls in classes:
-        bpy.utils.register_class(cls)
     bpy.types.Scene.target_armature = bpy.props.PointerProperty(
-        name="Target Arm", type=bpy.types.Object, poll=check_armature)
+        name="Target Armature", type=bpy.types.Object, poll=get_obj_type_armature, description="Target Armature for Rig Editor. Armature must match naming conventions defined in addon preferences")
+    bpy.types.Scene.property_bone_name = bpy.props.StringProperty(name="Property Bone", description="Bone that will contain custom properties, used by Rig Controller")
     bpy.types.WindowManager.offset_editor_active = bpy.props.BoolProperty(
         name="Offset Editor is Active", default=False
     )
@@ -42,14 +40,18 @@ def register():
     )
 
     bpy.types.Scene.target_bone_group = bpy.props.EnumProperty(
-        name="Bone Group", items=bone_groups,)
+        name="Bone Group", items=get_bone_groups,)
     bpy.types.Scene.target_user_prop = bpy.props.EnumProperty(
-        name="User Properties", items=get_user_props)
+        name="User Properties", items=get_user_propertys)
     bpy.types.Scene.operator_property_bone_name = bpy.props.StringProperty()
+    
 
 
 def unregister():
-    for cls in reversed(classes):
-        bpy.utils.unregister_class(cls)
-    # TODO del properties
     del bpy.types.Scene.target_armature
+    del bpy.types.Scene.property_bone_name
+    del bpy.types.WindowManager.offset_editor_active 
+    del bpy.types.WindowManager.gpencil_editor
+    del bpy.types.Scene.target_bone_group 
+    del bpy.types.Scene.target_user_prop 
+    del bpy.types.Scene.operator_property_bone_name
