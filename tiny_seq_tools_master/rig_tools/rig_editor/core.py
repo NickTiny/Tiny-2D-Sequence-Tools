@@ -241,7 +241,7 @@ def bone_copy_location_limb(context, bone, driver=True, name="COPY_LIMB_LOC"):
             bone.id_data,
             bone.name,
             f'pose.bones["{bone.name}"].constraints["{constraint.name}"].influence',
-            f'pose.bones["{context.scene.bone_selection}"]["{bone.name}"]',
+            f'pose.bones["{context.scene.property_bone_name}"]["{bone.name}"]',
             -1,
             expression,
         )

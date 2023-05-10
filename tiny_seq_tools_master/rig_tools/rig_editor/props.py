@@ -2,12 +2,6 @@ import bpy
 
 classes = ()
 
-
-def bone_items(self, context):
-    arma = context.scene.target_armature
-    return [(bone.name, bone.name, "") for bone in arma.data.bones]
-
-
 def bone_groups(self, context):
     bone_groups = context.scene.target_armature.pose.bone_groups
     items = []
@@ -20,7 +14,7 @@ def bone_groups(self, context):
 def get_user_props(self, context):
     items = []
     obj = context.scene.target_armature
-    bone = obj.pose.bones[context.scene.bone_selection]
+    bone = obj.pose.bones[context.scene.property_bone_name]
     for x in bone.keys():
         if (x in obj.tiny_rig.user_props):
             items.append((f'{x}', f'{x}', f'{x}'))
@@ -47,13 +41,11 @@ def register():
         type=bpy.types.Object, name="Active Object", description="Name of Active Grease Pencil Object"
     )
 
-    bpy.types.Scene.target_bone = bpy.props.EnumProperty(
-        name="Bones", items=bone_items)
     bpy.types.Scene.target_bone_group = bpy.props.EnumProperty(
         name="Bone Group", items=bone_groups,)
     bpy.types.Scene.target_user_prop = bpy.props.EnumProperty(
         name="User Properties", items=get_user_props)
-    bpy.types.Scene.operator_bone_selection = bpy.props.StringProperty()
+    bpy.types.Scene.operator_property_bone_name = bpy.props.StringProperty()
 
 
 def unregister():

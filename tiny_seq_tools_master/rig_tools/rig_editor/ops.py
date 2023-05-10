@@ -76,7 +76,7 @@ class RIGTOOLS_rig_gp_base_class(bpy.types.Operator):
             return cls.poll_message_set("No Object is Active")
         if not context.scene.target_armature:
             return cls.poll_message_set("Target Armature is not active")
-        if not  context.scene.bone_selection:
+        if not  context.scene.property_bone_name:
             return cls.poll_message_set("Property Bone is not set")
         if not (context.active_object.type == "GPENCIL"):
             return cls.poll_message_set("Active object is not Grease Pencil")
@@ -94,7 +94,7 @@ class RIGTOOLS_turnaround_base_class(bpy.types.Operator):
             return cls.poll_message_set("Target Armature is not active")
         if not context.scene.target_armature.offset_action:
             return cls.poll_message_set("Offset Action is not active")
-        if context.scene.bone_selection == "":
+        if context.scene.property_bone_name == "":
             return cls.poll_message_set("Property Bone is not set")
         if context.active_object != context.scene.target_armature:
             return cls.poll_message_set(f"{context.scene.target_armature.name} is not active Object")
@@ -227,9 +227,9 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if not context.scene.bone_selection:
+        if not context.scene.property_bone_name:
             cls.poll_message_set("Set a Property Bone before Intilization")
-        return context.scene.bone_selection
+        return context.scene.property_bone_name
 
     def invoke(self, context, event):
         wm = context.window_manager
@@ -265,12 +265,12 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
         # TODO Make all Bone Names Generic/Passable via Preferences
         msg = ""
         obj = context.active_object
-        if context.scene.bone_selection is None:
+        if context.scene.property_bone_name is None:
             self.report({"ERROR"}, f"Set Property Bone")
             return {"CANCELLED"}
-        propbone = obj.pose.bones[context.scene.bone_selection]
+        propbone = obj.pose.bones[context.scene.property_bone_name]
         obj.tiny_rig.is_rig = True
-        obj.tiny_rig.pose_data_name = context.scene.bone_selection
+        obj.tiny_rig.pose_data_name = context.scene.property_bone_name
 
         if self.set_base_time_offset_props:
             for property in ("Mouth", "L_Hand", "R_Hand"):
@@ -523,7 +523,7 @@ class RIGTOOLS_add_custom_prop(RIGTOOLS_rig_edit_base_class):
     def poll(cls, context):
         if not context.scene.target_armature:
             return cls.poll_message_set("Target Armature is not active")
-        if  context.scene.bone_selection == "":
+        if  context.scene.property_bone_name == "":
             return cls.poll_message_set("Property Bone is not set")
         return True 
 
@@ -539,7 +539,7 @@ class RIGTOOLS_add_custom_prop(RIGTOOLS_rig_edit_base_class):
 
     def execute(self, context):
         obj = context.scene.target_armature
-        prop_bone = obj.pose.bones[context.scene.bone_selection]
+        prop_bone = obj.pose.bones[context.scene.property_bone_name]
         custom_int_create_timeoffset(
             prop_bone, self.name, self.default, self.min, self.max)
         return {"FINISHED"}
@@ -557,7 +557,7 @@ class RIGTOOLS_gp_constraint_armature(RIGTOOLS_rig_gp_base_class):
 
     def draw(self, context):
         self.layout.prop_search(
-                        context.scene, "operator_bone_selection", context.scene.target_armature.id_data.pose, "bones", text="Bone"
+                        context.scene, "operator_property_bone_name", context.scene.target_armature.id_data.pose, "bones", text="Bone"
                     )
 
     def execute(self, context):
@@ -568,7 +568,7 @@ class RIGTOOLS_gp_constraint_armature(RIGTOOLS_rig_gp_base_class):
         const.targets.new()
         target_entry = const.targets[-1]
         target_entry.target = context.scene.target_armature
-        target_entry.subtarget = context.scene.operator_bone_selection
+        target_entry.subtarget = context.scene.operator_property_bone_name
         return {"FINISHED"}
 
 
@@ -595,7 +595,7 @@ class RIGTOOLS_gp_vertex_by_layer(RIGTOOLS_rig_gp_base_class):
         box.prop(self, "assign_active_layer")
         if self.assign_active_layer:            
             box.prop_search(
-                            context.scene, "operator_bone_selection", context.scene.target_armature.id_data.pose, "bones", text="Bone"
+                            context.scene, "operator_property_bone_name", context.scene.target_armature.id_data.pose, "bones", text="Bone"
                         )
 
     def get_frames(self, context, gp_layer):
@@ -610,7 +610,7 @@ class RIGTOOLS_gp_vertex_by_layer(RIGTOOLS_rig_gp_base_class):
         mod.object = armature
         user_mode = context.mode
         bpy.ops.object.mode_set(mode='EDIT_GPENCIL')
-        bone = context.scene.target_armature.pose.bones[context.scene.operator_bone_selection]
+        bone = context.scene.target_armature.pose.bones[context.scene.operator_property_bone_name]
         if self.assign_all_vertex_groups:
             for posebone in armature.pose.bones:
                 get_vertex_group(obj, posebone.name)
@@ -705,17 +705,17 @@ class RIGTOOLS_gp_add_time_offset_with_driver(RIGTOOLS_rig_gp_base_class):
 
     def execute(self, context):
         # From selected IK Bone
-        bone = context.scene.target_armature.pose.bones[context.scene.target_bone]
+        prop_bone = context.scene.target_armature.pose.bones[context.scene.property_bone_name]
         obj = context.active_object
         mod = get_gp_modifier(obj, "GP_TIME", "GP_TIME")
         mod.mode = 'FIX'
 
         add_driver(
             obj,
-            bone.id_data,
-            bone.name,
+            prop_bone.id_data,
+            context.scene.target_user_prop,
             f'grease_pencil_modifiers["{mod.name}"].offset',
-            f'pose.bones["{context.scene.bone_selection}"]["{context.scene.target_user_prop}"]',
+            f'pose.bones["{context.scene.property_bone_name}"]["{context.scene.target_user_prop}"]',
             -1,
         )
         return {"FINISHED"}

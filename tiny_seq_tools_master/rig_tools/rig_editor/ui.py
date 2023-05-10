@@ -12,7 +12,7 @@ class SEQUENCER_PT_rig_settings(bpy.types.Panel):
     bl_category = "Tiny Rig Edit"
 
     bpy.types.Scene.obj_selection = bpy.props.PointerProperty(type=bpy.types.Object)
-    bpy.types.Scene.bone_selection = bpy.props.StringProperty()
+    bpy.types.Scene.property_bone_name = bpy.props.StringProperty()
 
     def draw(self, context):
         layout = self.layout
@@ -21,7 +21,7 @@ class SEQUENCER_PT_rig_settings(bpy.types.Panel):
         obj = context.scene.target_armature
         if obj is not None and obj.type == "ARMATURE" :
             self.layout.prop_search(
-                    context.scene, "bone_selection", obj.id_data.pose, "bones", text="Property Bone"
+                    context.scene, "property_bone_name", obj.id_data.pose, "bones", text="Property Bone"
                 )
         layout.operator("rigools.initialize_rig")
         if obj is None or not obj.tiny_rig.is_rig:
@@ -136,7 +136,7 @@ class SEQUENCER_PT_rig_properties(bpy.types.Panel):
         try:
             if obj.type != "ARMATURE":
                 return
-            prop_bone = obj.pose.bones[context.scene.bone_selection]
+            prop_bone = obj.pose.bones[context.scene.property_bone_name]
             
             if len(prop_bone.keys()) == 0:
                 prop_col.label(text = f"No Properties on '{prop_bone.name}'")
