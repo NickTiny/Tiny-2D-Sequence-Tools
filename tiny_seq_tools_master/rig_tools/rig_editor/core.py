@@ -1,8 +1,12 @@
 import bpy
+import math
 from tiny_seq_tools_master.core_functions.bone import get_consts_on_bone
 from tiny_seq_tools_master.core_functions.drivers import get_driver_ob_obj, add_driver
 from tiny_seq_tools_master.core_functions.object import get_consts_on_obj
+from tiny_seq_tools_master.rig_tools.rig_editor.prefs import bone_side_prefix_get, bone_limb_get
 
+def get_rig_prefs():
+    return bpy.context.window_manager.tiny_rig_prefs
 
 # Action Constraints
 def get_action_offset_bones(bones):
@@ -149,36 +153,30 @@ def custom_int_create(target, name, value, min, max):
     return target[name]
 
 
-def bone_create_groups(obj: bpy.types.Object, bone_groups: dict):
+def bone_create_group(obj: bpy.types.Object, bone_group_name: str, color:str):
     """bone_groups must be in {'name': color_set',} format"""
     status = False
-    for key, value in bone_groups.items():
-        try:
-            obj.pose.bone_groups[key]
-        except KeyError:
-            group = obj.pose.bone_groups.new(name=key)
-            group.color_set = value
-            status = True
+    try:
+        obj.pose.bone_groups[bone_group_name]
+    except KeyError:
+        group = obj.pose.bone_groups.new(name=bone_group_name)
+        group.color_set = color
+        status = True
     return status
 
 
-def bone_assign_groups(obj: bpy.types.Object, bone_assignments: dict):
+def bone_assign_group(bone: bpy.types.PoseBone, bone_group_name: str):
     """bone_assignments must be in {'bone_name': group_name',} format"""
-    updated_bones = ""
-    for bone in obj.pose.bones:
-        if bone.name in bone_assignments:
-            bone.bone_group = obj.pose.bone_groups[bone_assignments[bone.name]]
-            updated_bones += f"{bone.name},"
+    obj = bone.id_data
+    bone.bone_group = obj.pose.bone_groups[bone_group_name]
     obj.data.show_group_colors = True
-    if updated_bones != "":
-        updated_bones = f"Changed Bone Group: {updated_bones}"
-    return updated_bones
 
 
 def bone_transform_mirror_add(bone, name="FLIP_BONE"):
     """bone must be hand or foot bone"""
-    prefix = bone.name[0]
-    suffix = bone.name.split(".")[1]
+    rig_prefs = get_rig_prefs()
+    prefix = bone_side_prefix_get(bone.name, rig_prefs)
+    limb = bone_limb_get(bone.name, rig_prefs)
     new = bone.constraints.new("TRANSFORM")
     new.name = name
     new.target = bone.id_data
@@ -190,19 +188,20 @@ def bone_transform_mirror_add(bone, name="FLIP_BONE"):
     add_driver(
         bone.id_data,
         bone.id_data,
-        f"{prefix}_{suffix}_Flip",
+        f"{prefix}{limb}{rig_prefs.flip}",
         f'pose.bones["{bone.name}"].constraints["{new.name}"].influence',
-        f'pose.bones["{bone.id_data.tiny_rig.pose_data_name}"]["{prefix}_{suffix}_Flip"]',
+        f'pose.bones["{bone.id_data.tiny_rig.pose_data_name}"]["{prefix}{limb}{rig_prefs.flip}"]',
     )
 
 
 def bone_transform_nudge_add(bone, name="HAND_NUDGE"):
     """Bone must be a hand or Foot"""
-    suffix = bone.name.split(".Hand")[0]
-    side = suffix.split("_Arm")[0]
+    rig_prefs = get_rig_prefs()
+    prefix = bone_side_prefix_get(bone.name, rig_prefs)
+    limb = bone_limb_get(bone.name, rig_prefs)
     constraint = bone.constraints.new("TRANSFORM")
     constraint.target = bone.id_data
-    constraint.subtarget = f"{suffix}_Nudge"
+    constraint.subtarget = f"{prefix}{limb}{rig_prefs.nudge}"
     constraint.target_space = "LOCAL"
     constraint.owner_space = "LOCAL"
     constraint.to_min_z = -0.05
@@ -210,22 +209,23 @@ def bone_transform_nudge_add(bone, name="HAND_NUDGE"):
     add_driver(
         bone.id_data,
         bone.id_data,
-        f"{side}_Hand_Nudge",
+        f'{prefix}{rig_prefs.hand.replace(".","")}{rig_prefs.nudge}',
         f'pose.bones["{bone.name}"].constraints["{constraint.name}"].influence',
-        f'pose.bones["{bone.id_data.tiny_rig.pose_data_name}"]["{side}_Hand_Nudge"]',
+        f'pose.bones["{bone.id_data.tiny_rig.pose_data_name}"]["{prefix}{rig_prefs.hand.replace(".","")}{rig_prefs.nudge}"]',
     )
     return constraint
 
 
 def bone_copy_location_limb(context, bone, driver=True, name="COPY_LIMB_LOC"):
     """Copy location of Lw bone to IK Target bone"""
-    prefix = bone.name[0]
-    suffix = bone.name[2:5]
+    rig_prefs = get_rig_prefs()
+    prefix = bone_side_prefix_get(bone.name, rig_prefs)
+    limb = bone_limb_get(bone.name, rig_prefs)
     mod_type = "COPY_LOCATION"
     constraint = bone.constraints.new(mod_type)
     constraint.name = name
     constraint.target = bone.id_data
-    constraint.subtarget = f"{prefix}_{suffix}.Lw"
+    constraint.subtarget = f"{prefix}{limb}{rig_prefs.limb_lw}"
     constraint.target_space = "POSE"
     constraint.owner_space = "POSE"
     constraint.head_tail = 1.0
@@ -260,9 +260,10 @@ def add_ik_flip_to_pole(bone, nudge_bone_name, name="IK_FLIP"):
 
 
 def get_nudge_bone_name(bone):
-    prefix = bone.name[0]
-    suffix = bone.name[2:5]
-    return f"{prefix}_{suffix}_Nudge"
+    rig_prefs = get_rig_prefs()
+    prefix = bone_side_prefix_get(bone.name, rig_prefs)
+    limb = bone_limb_get(bone.name, rig_prefs)
+    return f"{prefix}{limb}{rig_prefs.nudge}"
 
 
 def copy_ik_rotation(bone, target_name, name="COPY_IK_ROT"):
@@ -307,14 +308,14 @@ def bone_ik_driver_add(bone, constraint, propbone, ik_prop_name):
     return
 
 
-def bone_ik_constraint_add(bone, prefix, suffix):
+def bone_ik_constraint_add(bone, prefix, limb, rig_prefs):
     """Add IK Constrain on Lw Bone, with Target + Pole"""
     # angle = (0 if bone.name(".").split[0] else 180)
     constraint = bone.constraints.new("IK")
     constraint.target = bone.id_data
-    constraint.subtarget = f"{prefix}_{suffix}_IK"
+    constraint.subtarget = f"{prefix}{limb}{rig_prefs.ik}"
     constraint.pole_target = bone.id_data
-    constraint.pole_subtarget = f"{prefix}_{suffix}_Pole"
+    constraint.pole_subtarget = f"{prefix}{limb}{rig_prefs.pole}"
     # constraint.pole_angle = angle
     constraint.chain_count = 2
     constraint.use_tail = True
@@ -323,8 +324,6 @@ def bone_ik_constraint_add(bone, prefix, suffix):
 
 def bone_position_limits_add(bone, name="Nudge - Limit Location"):
     """Position Limits on Limb's 'Nudge' Bone"""
-    suffix = bone.name.split(".Hand")[0]
-    side = suffix.split("_Arm")[0]
     constraint = bone.constraints.new("LIMIT_LOCATION")
     constraint.owner_space = "LOCAL"
     constraint.use_min_z = True
@@ -361,3 +360,169 @@ def bone_copy_location_add(bone, subtarget, offset, name):
     constraint.use_offset = offset
     constraint.target_space = "LOCAL"
     constraint.owner_space = "LOCAL"
+
+
+def add_action_const_to_body(context):
+    rig_prefs = get_rig_prefs()
+    action_length = int(context.active_object.offset_action.frame_range[1])
+    for bone in context.selected_pose_bones:
+        if not get_consts_on_bone(bone, "ACTION"):
+            new = bone.constraints.new("ACTION")
+            new.action = bone.id_data.offset_action
+            new.use_eval_time = True
+            add_driver(
+                bone.id_data,
+                bone.id_data,
+                "Pose",
+                f'pose.bones["{bone.name}"].constraints["{new.name}"].eval_time',
+                f'pose.bones["{bone.id_data.tiny_rig.pose_data_name}"]["{rig_prefs.pose_body}"]',
+                -1,
+                f"Pose/{action_length}",
+            )
+            new.frame_end = action_length
+        return
+
+
+def add_action_const_to_head(context):
+    rig_prefs = get_rig_prefs()
+    action_length = int(context.active_object.offset_action.frame_range[1])
+    for bone in context.selected_pose_bones:
+        if not get_consts_on_bone(bone, "ACTION"):
+            new = bone.constraints.new("ACTION")
+            new.action = bone.id_data.offset_action
+            new.use_eval_time = True
+            add_driver(
+                bone.id_data,
+                bone.id_data,
+                "Pose_Head",
+                f'pose.bones["{bone.name}"].constraints["{new.name}"].eval_time',
+                f'pose.bones["{bone.id_data.tiny_rig.pose_data_name}"]["{rig_prefs.pose_head}"]',
+                -1,
+                f"Pose_Head/{action_length}",
+            )
+            new.frame_end = action_length
+        return True
+
+def bone_new(
+    edit_bones,
+    name: str,
+    head,
+    tail,
+    global_y=0,
+):
+    bone = edit_bones.new(name)
+    # a new bone will have zero length and not be kept
+    # move the head/tail to keep the bone
+    bone.head = (head[0], global_y, head[1])
+    bone.tail = (tail[0], global_y, tail[1])
+    return bone
+
+def child_bone_new(
+    parent_bone: bpy.types.EditBone,
+    name: str,
+    head,
+    tail,
+):
+
+    bone = bone_new(parent_bone.id_data.edit_bones, name, head, tail)
+    bone.parent = parent_bone
+    return bone
+
+
+def child_bone_connected_new(
+    parent_bone: bpy.types.EditBone,
+    name: str,
+    tail,
+):
+    head = parent_bone.tail.xz
+    bone = bone_new(parent_bone.id_data.edit_bones, name, head, tail)
+    bone.parent = parent_bone
+    bone.use_connect = True
+    return bone
+
+
+def make_nudge(parent_bone, prefix, limb, up_limb_head):
+    rig_prefs = get_rig_prefs()
+    new_head = (up_limb_head[0], up_limb_head[1]+.1)
+    tail = (new_head[0]-.1, new_head[1])
+    return child_bone_new(parent_bone, f'{prefix}{limb}{rig_prefs.nudge}', new_head, tail)
+
+
+def make_limb(parent_bone: bpy.types.EditBone, prefix: str, limb: str, origin, angle: int, appendage_angle: int,):
+    rig_prefs = get_rig_prefs()
+    limb_up = child_bone_new(
+        parent_bone, f'{prefix}{limb}{rig_prefs.limb_up}', origin, calculate_bone_vector(.6, origin, angle))
+    limb_lw = child_bone_connected_new(
+        limb_up, f'{prefix}{limb}{rig_prefs.limb_lw}', calculate_bone_vector(.7, limb_up.tail.xz, angle*.98))
+    limb_appendage = child_bone_connected_new(
+        limb_lw, f'{prefix}{limb}.{get_appendage_name(limb)}', calculate_bone_vector(.2, limb_lw.tail.xz, appendage_angle))
+    return [limb_up, limb_lw, limb_appendage]
+
+
+def calculate_bone_vector(length, origin, angle=0):
+    x = length * math.sin(math.radians(angle)) + origin[0]
+    y = length * math.cos(math.radians(angle)) + origin[1]
+    return (x, y)
+
+def calculate_bone_angle(p2, p1):
+    return math.degrees(math.atan2((p2[0]-p1[0]), (p2[1]-p1[1])))
+
+
+def make_nudge_bone(nudge_parent, prefix: str, limb: str, origin,):
+    rig_prefs = get_rig_prefs()
+    new_head = (origin[0], origin[1]+.1)
+    tail = (new_head[0]-.1, new_head[1])
+    return child_bone_new(nudge_parent, f'{prefix}{limb}{rig_prefs.nudge}', new_head, tail)
+
+def get_appendage_name(limb):
+    rig_prefs = get_rig_prefs()
+    if limb == rig_prefs.leg:
+        return rig_prefs.foot
+    if limb == rig_prefs.arm:
+        return rig_prefs.hand
+
+def make_limb_chain(parent_bone: bpy.types.EditBone, prefix: str, limb: str, origin, angle: int, appendage_angle: int, use_make_nudge=True, use_make_iks=True, use_mirror=False):
+    angle_mirror = 1
+    if use_mirror:
+        angle_mirror = -1
+    angle = angle*angle_mirror
+    appendage_angle = appendage_angle*angle_mirror
+
+    if use_make_nudge:
+        parent_bone = make_nudge_bone(parent_bone, prefix, limb, origin)
+    limbs = make_limb(parent_bone, prefix, limb,
+                      origin, angle, appendage_angle)
+    return limbs
+
+
+def make_limb_set(parent, limb, origin, angle: int, appendage_angle: int, use_make_nudge=True, make_ik_bones=True,):
+    rig_prefs = get_rig_prefs()
+    l_limbs = make_limb_chain(parent_bone=parent, prefix=rig_prefs.l_side, limb=limb, origin=origin, angle=angle,
+                              appendage_angle=appendage_angle, use_make_nudge=use_make_nudge, use_make_iks=make_ik_bones, use_mirror=False)
+    r_limbs = make_limb_chain(
+        parent_bone=parent, prefix=rig_prefs.r_side, limb=limb, origin=[-origin[0], origin[1]], angle=angle, appendage_angle=appendage_angle, use_make_nudge=use_make_nudge, use_make_iks=make_ik_bones, use_mirror=True)
+
+
+def create_bones_ik(parent_bone: bpy.types.PoseBone, limb_bone:bpy.types.PoseBone, use_mirror=False):
+    rig_prefs = get_rig_prefs()
+    prefix = bone_side_prefix_get(limb_bone.name, rig_prefs)
+    limb = bone_limb_get(limb_bone.name, rig_prefs)
+    root_bone = parent_bone
+    mirror_mult = (1 if prefix == rig_prefs.r_side else -1)
+    if limb == rig_prefs.leg:
+        root_bone = parent_bone.id_data.edit_bones[0]
+
+    limb_angle = calculate_bone_angle(
+        (limb_bone.tail.xz[0], limb_bone.tail.xz[1]), (limb_bone.head.xz[0], limb_bone.head.xz[1]))
+
+    ik_offset = calculate_bone_vector(
+        1, (limb_bone.head.xz[0], limb_bone.head.xz[1]), (limb_angle))
+    
+    ik_bone = child_bone_new(
+        root_bone, f"{prefix}{limb}{rig_prefs.ik}", ik_offset, calculate_bone_vector(.2, ik_offset,   limb_angle))
+
+    pole_offset = calculate_bone_vector(
+        2, (limb_bone.head.xz[0], limb_bone.head.xz[1]), (limb_angle+(90*mirror_mult)))
+    pole_bone = child_bone_new(
+        parent_bone, f"{prefix}{limb}{rig_prefs.pole}", pole_offset, calculate_bone_vector(.2, pole_offset, (limb_angle+(90*mirror_mult))))
+    return [ik_bone, pole_bone]

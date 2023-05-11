@@ -17,7 +17,7 @@ class RIGCONTROL_settings(bpy.types.PropertyGroup):
     pose_length: bpy.props.IntProperty(
         name="Turnaround Length",
         description="The number of turnaround poses in this character",
-        default=0,
+        default=2,
     )
 
     user_props: bpy.props.StringProperty(name="User Properties")

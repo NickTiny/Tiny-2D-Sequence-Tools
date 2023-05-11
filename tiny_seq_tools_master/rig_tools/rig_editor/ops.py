@@ -1,12 +1,9 @@
-from tiny_seq_tools_master.rig_tools.rig_editor.bone_names import (
-    ik_control_bools, 
-    bone_groups,
-    bone_group_assignments,
-    ik_mod_bones,
-    appendage_bones,
-)
-from tiny_seq_tools_master.core_functions.object import (
-    check_object_type,
+from tiny_seq_tools_master.rig_tools.rig_editor.prefs import (
+    get_ik_control_bools,
+    get_ik_mod_bones,
+    get_appendage_bones,
+    bone_side_prefix_get, 
+    bone_limb_get,
 )
 
 from tiny_seq_tools_master.core_functions.label import split_lines
@@ -15,11 +12,10 @@ from tiny_seq_tools_master.core_functions.drivers import add_driver, get_driver_
 from tiny_seq_tools_master.rig_tools.rig_editor.core import (
     get_action_offset_bones,
     get_action_from_constraints,
-    hide_grease_pencil_editor,
     set_modifier_and_constraint_viewport,
     bone_custom_prop_bools_add,
-    bone_create_groups,
-    bone_assign_groups,
+    bone_create_group,
+    bone_assign_group,
     bone_ik_driver_add,
     bone_transform_mirror_add,
     bone_transform_nudge_add,
@@ -33,11 +29,6 @@ from tiny_seq_tools_master.rig_tools.rig_editor.core import (
     copy_ik_rotation,
     custom_int_create,
     custom_int_create_timeoffset,
-)
-from tiny_seq_tools_master.core_functions.bone import (
-    get_consts_on_bone,
-    reset_bones,
-    show_hide_constraints,
     add_action_const_to_head,
     add_action_const_to_body,
     bone_new,
@@ -45,7 +36,12 @@ from tiny_seq_tools_master.core_functions.bone import (
     child_bone_connected_new,
     calculate_bone_vector,
     make_limb_set,
-    make_ik_bones
+    create_bones_ik
+)
+from tiny_seq_tools_master.core_functions.bone import (
+    get_consts_on_bone,
+    reset_bones,
+    show_hide_constraints,
 )
 from tiny_seq_tools_master.core_functions.object import (get_gp_modifier, get_vertex_group)
 import bpy
@@ -148,6 +144,7 @@ class RIGTOOLS_OT_create_armatue(bpy.types.Operator):
         return True
 
     def execute(self, context):
+        rig_prefs = context.window_manager.tiny_rig_prefs
         bpy.ops.object.armature_add(enter_editmode=True)
         # must be in edit mode to add bones
         arm_obj = context.active_object
@@ -160,22 +157,22 @@ class RIGTOOLS_OT_create_armatue(bpy.types.Operator):
 
         # Create root bones
         master_bone = bone_new(
-            edit_bones, 'Global.Location', (-.3, -.5), (.3, -.5))
+            edit_bones, rig_prefs.master_bone, (-.3, -.5), (.3, -.5))
         # Create Spine Bones
         spine_root = (0, .8)
         spine_root = child_bone_new(
-            master_bone, 'Location', spine_root, calculate_bone_vector(.3, spine_root))
+            master_bone, rig_prefs.spine_root, spine_root, calculate_bone_vector(.3, spine_root))
         lower_offset = (spine_root.tail.xz[0], (spine_root.tail.xz[1]+.1))
         lower = child_bone_new(
-            spine_root, 'Lower', lower_offset, calculate_bone_vector(.7, lower_offset))
+            spine_root, rig_prefs.spine_lower, lower_offset, calculate_bone_vector(.7, lower_offset))
         upper = child_bone_connected_new(
-            lower, 'Upper', calculate_bone_vector(.7, lower.tail.xz))
-        neck = child_bone_new(upper, 'Neck', upper.tail.xz,
+            lower, rig_prefs.spine_upper, calculate_bone_vector(.7, lower.tail.xz))
+        neck = child_bone_new(upper, rig_prefs.spine_neck, upper.tail.xz,
                               calculate_bone_vector(.2, upper.tail.xz))
 
-        make_limb_set(parent=upper, limb='Arm', origin=(0.5, 2.5), angle=130,
-                      appendage_angle=130, use_make_nudge=True, make_ik_bones=True)
-        make_limb_set(lower, 'Leg', (.2, 1.4), 180, 180-45, True, True)
+        make_limb_set(parent=upper, limb=rig_prefs.arm, origin=(0.5, 2.5), angle=130,
+                      appendage_angle=130, use_make_nudge=True, make_ik_bones=True, )
+        make_limb_set(parent=lower, limb=rig_prefs.leg, origin=(.2, 1.4), angle=180, appendage_angle=180-45, use_make_nudge=True, make_ik_bones=True, )
 
         # Select all bones to recalculate roll
         for bone in edit_bones:
@@ -271,16 +268,21 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
         obj.tiny_rig.is_rig = True
         obj.tiny_rig.pose_data_name = context.scene.property_bone_name
 
+        #LISTS
+        rig_prefs = context.window_manager.tiny_rig_prefs
+        appendage_bones = get_appendage_bones(rig_prefs)
+
         if self.set_base_time_offset_props:
             for property in ("Mouth", "L_Hand", "R_Hand"):
                 custom_int_create_timeoffset(propbone, property, 1, 1, 100)
 
         if self.set_appendage_flip:
-            for property in ('R_Foot_Flip', 'R_Hand_Flip', 'L_Foot_Flip', 'L_Hand_Flip'):
+            for property in (f'{rig_prefs.r_side}{rig_prefs.hand}{rig_prefs.flip}', f'{rig_prefs.l_side}{rig_prefs.hand}{rig_prefs.flip}', f'{rig_prefs.r_side}{rig_prefs.foot}{rig_prefs.flip}', f'{rig_prefs.l_side}{rig_prefs.foot}{rig_prefs.flip}'):
                 prop = custom_int_create(propbone, property, 1, 0, 1)
 
         if self.create_limb_iks:
             obj.tiny_rig.is_ik = True
+            ik_control_bools = get_ik_control_bools(context.window_manager.tiny_rig_prefs)
             bone_custom_prop_bools_add(propbone, ik_control_bools)
             # TODO only clear constraitns for needed bones
             for bone in [bone for bone in obj.pose.bones if bone.constraints]:
@@ -293,13 +295,13 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
                 hand_bone.parent = None
                 hand_bone.select = True
 
-            for bone in [bone for bone in obj.data.edit_bones if bone.name in ik_mod_bones]:
-                prefix = bone.name[0]
-                limb = bone.name[2:5]
-                make_ik_bones(
-                    obj.data.edit_bones[f"{prefix}_{limb}_Nudge"], bone)
+            for bone in [bone for bone in obj.data.edit_bones if bone.name in get_ik_mod_bones(context.window_manager.tiny_rig_prefs)]:
+                prefix = bone_side_prefix_get(bone.name, rig_prefs)
+                limb = bone_limb_get(bone.name, rig_prefs)
+                create_bones_ik(
+                    obj.data.edit_bones[f"{prefix}{limb}{rig_prefs.nudge}"], bone, rig_prefs)
 
-        bpy.ops.object.mode_set(mode='POSE')
+            bpy.ops.object.mode_set(mode='POSE')
 
         if self.set_turnaround:
             custom_int_create(
@@ -309,10 +311,19 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
             obj.tiny_rig.pose_length = self.pose_length_set
             msg += (f"Pose Length set to {obj.tiny_rig.pose_length} \n")
             obj.tiny_rig.is_turnaround = True
-
+        
         if self.set_bone_groups:
-            bone_create_groups(obj, bone_groups)
-            bone_assign_groups(obj, bone_group_assignments)
+            bone_create_group(obj, rig_prefs.right_bone_group, 'THEME01')
+            bone_create_group(obj, rig_prefs.left_bone_group, 'THEME03')
+            bone_create_group(obj, rig_prefs.spine_bone_group, 'THEME09')
+            for bone in obj.pose.bones:
+                prefix = bone_side_prefix_get(bone.name, rig_prefs)
+                if prefix == rig_prefs.l_side:
+                    bone_assign_group(bone, rig_prefs.left_bone_group) 
+                if prefix == rig_prefs.r_side:
+                    bone_assign_group(bone, rig_prefs.right_bone_group) 
+                if bone.name in [rig_prefs.spine_lower, rig_prefs.spine_upper, rig_prefs.spine_neck]:
+                    bone_assign_group(bone, rig_prefs.spine_bone_group) 
 
         if self.set_bone_rotation_locks:
             for bone in obj.pose.bones:
@@ -325,29 +336,30 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
                 bone.lock_rotation[1] = False
                 bone.lock_location[2] = True
 
-        lw_bones = ik_mod_bones
+        lw_bones = get_ik_mod_bones(context.window_manager.tiny_rig_prefs)
         if self.set_ik_modifiers:
             # Add IK Constraints
             ik_bones = [
                 bone for bone in obj.pose.bones if bone.name in lw_bones]
             for bone in ik_bones:
+                prefix = bone_side_prefix_get(bone.name, rig_prefs)
+                limb = bone_limb_get(bone.name, rig_prefs)
                 if not get_consts_on_bone(bone, "IK"):
-                    prefix = bone.name[0]
-                    suffix = bone.name[2:5]
-                    bone_ik_constraint_add(bone, prefix, suffix)
+                    bone_ik_constraint_add(bone, prefix, limb, rig_prefs)
                     msg += (f"IK Added on '{bone.name}'/n")
                 constraint = get_consts_on_bone(bone, "IK")[0]
                 # Add IK Drivers
+
                 bone_ik_driver_add(bone, constraint, propbone,
-                                   f"{bone.name.split('.')[0]}_IK")
+                                   f"{prefix}{limb}{rig_prefs.ik}")
 
             # Add IK_Flip to Poles
             for bone in [bone for bone in obj.pose.bones if "Pole" in bone.name]:
                 # If nudge pass the corrisponding nudge bone, else pass master bone
                 nudge_bone_name = get_nudge_bone_name(bone)
-                prefix = bone.name[0]
-                suffix = bone.name[2:5]
-                ik_prop_name = f"{prefix}_{suffix}_Flip_IK"
+                prefix = bone_side_prefix_get(bone.name, rig_prefs)
+                limb = bone_limb_get(bone.name, rig_prefs)
+                ik_prop_name = f"{prefix}{limb}{rig_prefs.flip}{rig_prefs.ik}"
 
                 constraint = add_ik_flip_to_pole(bone, nudge_bone_name)
                 add_driver(
@@ -363,9 +375,9 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
             for bone in [bone for bone in obj.pose.bones if bone.name in appendage_bones]:
                 bone_copy_location_nudge(bone, 'POSE', True)
                 bone_copy_location_limb(context, bone, False)
-                prefix = bone.name[0]
-                suffix = bone.name[2:5]
-                target_name = f"{prefix}_{suffix}_IK"
+                prefix = bone_side_prefix_get(bone.name, rig_prefs)
+                limb = bone_limb_get(bone.name, rig_prefs)
+                target_name = f"{prefix}{limb}{rig_prefs.ik}"
                 copy_ik_rotation(bone, target_name)
 
             # Add Hand Nudge
@@ -455,8 +467,6 @@ class RIGTOOLS_toggle_enable_action(RIGTOOLS_turnaround_base_class):
                 obj.animation_data.action = old_action
             self.report({"INFO"}, "Turnaround Editing Disabled!")
         return {"FINISHED"}
-
-
 
 class RIGTOOLS_load_action(RIGTOOLS_turnaround_base_class):
     bl_idname = "rigools.load_action"
