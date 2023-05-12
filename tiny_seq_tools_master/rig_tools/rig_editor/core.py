@@ -131,12 +131,6 @@ def armature_bones_rename(armature: bpy.types.Armature, bone_legend: dict):
 
     return f"Bones Renamed: {updated_bones} \n"
 
-
-def bone_custom_prop_bools_add(bone: bpy.types.PoseBone, bools_to_add):
-    """bools_to_add should be a = ['str', 'str', 'str',]"""
-    for index, item in enumerate(bools_to_add):
-        custom_int_create(bone, bools_to_add[index], 1, 0, 1)
-
 def custom_int_create_timeoffset(target, name, value, min, max):
     custom_int_create(target, name, value, min, max)
     target.id_data.tiny_rig.user_props += name

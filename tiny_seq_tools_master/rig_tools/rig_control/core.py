@@ -13,14 +13,6 @@ from tiny_seq_tools_master.core_functions.scene import (
 )
 
 
-def normalize_pose(pose, posemax):
-    if pose in range(1, posemax + 1):
-        return int(pose)
-    if pose <= 0:
-        return posemax
-    if pose >= (posemax + 1):
-        return 1
-
 
 def normalize_pose_vals(datapath, offset, posemax):
     if offset == 0:
@@ -34,23 +26,27 @@ def normalize_pose_vals(datapath, offset, posemax):
         return 1
 
 
-def change_pose(self, context, body_offset=0, head_offset=0):
+def change_pose(self, context, values):
+    rig_prefs = bpy.context.window_manager.tiny_rig_prefs
+    body_offset = values[0]
+    head_offset = values[1]
     obj = context.active_object
     bone = obj.pose.bones[obj.tiny_rig.pose_data_name]
     body_val = normalize_pose_vals(
-        bone["Pose"], body_offset, obj.tiny_rig.pose_length)
+        bone[rig_prefs.pose_body], body_offset, obj.tiny_rig.pose_length)
     head_val = normalize_pose_vals(
-        bone["Pose Head"], head_offset, obj.tiny_rig.pose_length
+        bone[rig_prefs.pose_head], head_offset, obj.tiny_rig.pose_length
     )
     if body_val is None or head_val is None:
-        self.report({"ERROR"}, "One is none")
+        self.report({"ERROR"}, "Error while changing poses")
         return {"CANCELLED"}
-    bone["Pose"] = body_val
-    bone["Pose Head"] = head_val
-    bone_datapath_insert_keyframe(bone, "Pose", body_val)
-    bone_datapath_insert_keyframe(bone, "Pose Head", head_val)
+    bone[rig_prefs.pose_body] = body_val
+    bone[rig_prefs.pose_head] = head_val
+    bone_datapath_insert_keyframe(bone, rig_prefs.pose_body, body_val)
+    bone_datapath_insert_keyframe(bone, rig_prefs.pose_head, head_val)
     refresh_current_frame(context.scene)
     return {"FINISHED"}
+    
 
 
 def get_nudge_limits(bone):
@@ -59,7 +55,7 @@ def get_nudge_limits(bone):
             return abs(const.max_z) * -1
 
 
-def nudge_bone(self, bone, negative):
+def nudge_bone(self, bone:bpy.types.PoseBone, negative:bool):
     val = 0.05
     if negative:
         val = -0.05
@@ -96,26 +92,15 @@ def save_prev_frame(scene, posebone: bpy.types.PoseBone, datapath: str):
     return
 
 
-def get_bone_names(suffix):
-    if "Arm" in suffix:
-        return (
-            f"{suffix}.Lw",
-            f"{suffix}.Up",
-            # f"{suffix}.Hand",
-        )
-    if "Leg" in suffix:
-        return (
-            f"{suffix}.Lw",
-            f"{suffix}.Up",
-            # f"{suffix}.Foot",
-        )
-
-
 def toggle_ik(
     context,
     datapath,
 ):
-    bone_names = get_bone_names(datapath.split("_IK")[0])
+    rig_prefs = context.window_manager.tiny_rig_r
+    bone_names = [f"{prefix}{rig_prefs.limb_lw}",f"{prefix}{rig_prefs.limb_up}"]
+    prefix = datapath.split(rig_prefs.ik)[0]
+
+    
     scene = context.scene
     index = int(scene.frame_current)
     obj = context.active_object

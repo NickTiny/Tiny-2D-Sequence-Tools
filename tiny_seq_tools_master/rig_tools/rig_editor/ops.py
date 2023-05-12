@@ -13,7 +13,6 @@ from tiny_seq_tools_master.rig_tools.rig_editor.core import (
     get_action_offset_bones,
     get_action_from_constraints,
     set_modifier_and_constraint_viewport,
-    bone_custom_prop_bools_add,
     bone_create_group,
     bone_assign_group,
     bone_ik_driver_add,
@@ -68,13 +67,14 @@ class RIGTOOLS_rig_gp_base_class(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if context.active_object is None:
+        if not context.view_layer.objects.active:
             return cls.poll_message_set("No Object is Active")
+        obj = context.view_layer.objects.active
         if not context.scene.target_armature:
             return cls.poll_message_set("Target Armature is not active")
-        if not  context.scene.property_bone_name:
+        if not context.scene.property_bone_name:
             return cls.poll_message_set("Property Bone is not set")
-        if not (context.active_object.type == "GPENCIL"):
+        if not (obj.type == "GPENCIL"):
             return cls.poll_message_set("Active object is not Grease Pencil")
         return True 
         
@@ -84,6 +84,8 @@ class RIGTOOLS_turnaround_base_class(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.active_object:
+            return cls.poll_message_set("Object must be active")
         if context.active_object.mode != "POSE":
             return cls.poll_message_set("Mode is not POSE")
         if not context.scene.target_armature:
@@ -180,7 +182,6 @@ class RIGTOOLS_OT_create_armatue(bpy.types.Operator):
         bpy.ops.armature.calculate_roll(
             type='GLOBAL_POS_Y', axis_flip=False, axis_only=False)
         bpy.ops.object.mode_set(mode='POSE')
-        # bpy.context.view_layer.update()
         context.scene.target_armature = arm_obj
 
         self.report({"INFO"}, "Created Armature")
@@ -199,10 +200,10 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
     set_turnaround: bpy.props.BoolProperty(
         name="Turnaround", default=False, description="Set Length of Pose Turnaround. Drives Body and Head position for action constraints and time offset modifiers")
     create_limb_iks: bpy.props.BoolProperty(
-        name="Create IK & Pole Bones", default=False, description="Create IK and Pole Bones based on current limb positions")
+        name="Create IK & Pole Bones", default=True, description="Create IK and Pole Bones based on current limb positions")
     
     set_ik_modifiers: bpy.props.BoolProperty(
-        name="Setup IK Constraints & Drivers", default=False, description="Set Modifiers & Drivers for Rig's Inverse Kinematics")     
+        name="Setup IK Constraints & Drivers", default=True, description="Set Modifiers & Drivers for Rig's Inverse Kinematics")     
     set_base_time_offset_props: bpy.props.BoolProperty(
         name="Setup Basic Time Offset Properties", default=True, description="Create Standard Mouth and Hand Time Offset Modifiers")
     set_appendage_flip: bpy.props.BoolProperty(
@@ -240,10 +241,8 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
         col.prop(self, "set_bone_groups")
         col.prop(self, "set_bone_rotation_locks")
         col.prop(self, "set_bone_roll")
-        ik_box = self.create_sub_box(col,self.set_ik_modifiers)
-        ik_box.prop(self, "set_ik_modifiers")
-        if self.set_ik_modifiers:
-            ik_box.prop(self, "create_limb_iks")
+        col.prop(self, "set_ik_modifiers")
+        col.prop(self, "create_limb_iks")
     
         turnaround_box = self.create_sub_box(col,self.set_turnaround)
         turnaround_box.prop(self, "set_turnaround")
@@ -273,8 +272,10 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
         appendage_bones = get_appendage_bones(rig_prefs)
 
         if self.set_base_time_offset_props:
-            for property in ("Mouth", "L_Hand", "R_Hand"):
-                custom_int_create_timeoffset(propbone, property, 1, 1, 100)
+            custom_int_create_timeoffset(propbone, "Mouth", 1, 1, 100)
+            custom_int_create(propbone, f"{rig_prefs.r_side}{rig_prefs.hand.replace('.','')}", 1, 1, 50) 
+            custom_int_create(propbone, f"{rig_prefs.l_side}{rig_prefs.hand.replace('.','')}", 1, 1, 50)
+        
 
         if self.set_appendage_flip:
             for property in (f'{rig_prefs.r_side}{rig_prefs.hand}{rig_prefs.flip}', f'{rig_prefs.l_side}{rig_prefs.hand}{rig_prefs.flip}', f'{rig_prefs.r_side}{rig_prefs.foot}{rig_prefs.flip}', f'{rig_prefs.l_side}{rig_prefs.foot}{rig_prefs.flip}'):
@@ -283,7 +284,9 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
         if self.create_limb_iks:
             obj.tiny_rig.is_ik = True
             ik_control_bools = get_ik_control_bools(context.window_manager.tiny_rig_prefs)
-            bone_custom_prop_bools_add(propbone, ik_control_bools)
+            for index, item in enumerate(ik_control_bools):
+                custom_int_create(bone, ik_control_bools[index], 1, 0, 1)
+
             # TODO only clear constraitns for needed bones
             for bone in [bone for bone in obj.pose.bones if bone.constraints]:
                 for constraint in bone.constraints:
@@ -304,10 +307,11 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
             bpy.ops.object.mode_set(mode='POSE')
 
         if self.set_turnaround:
+            
             custom_int_create(
-                propbone, obj.tiny_rig.body_pose_name, 1, 1, self.pose_length_set)
+                propbone, rig_prefs.pose_body, 1, 1, self.pose_length_set)
             custom_int_create(
-                propbone, obj.tiny_rig.head_pose_name, 1, 1, self.pose_length_set)
+                propbone, rig_prefs.pose_head, 1, 1, self.pose_length_set)
             obj.tiny_rig.pose_length = self.pose_length_set
             msg += (f"Pose Length set to {obj.tiny_rig.pose_length} \n")
             obj.tiny_rig.is_turnaround = True

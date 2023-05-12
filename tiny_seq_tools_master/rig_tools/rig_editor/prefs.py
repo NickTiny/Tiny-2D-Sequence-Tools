@@ -1,6 +1,7 @@
 import bpy
 
-
+# TODO create a simple dict that will return the assembled names for all bones and props
+# instead of constructing the name in multiple places.
 def get_ik_control_bools(rig_pref):
     return [
     f'{rig_pref.l_side}{rig_pref.arm}{rig_pref.flip}{rig_pref.ik}',
