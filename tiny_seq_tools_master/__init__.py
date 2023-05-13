@@ -3,16 +3,15 @@ from tiny_seq_tools_master import (
     tiny_status_tools,
     constraint_to_cams,
     scene_strip_tools,
-    rig_tools,
     core,
 )
 
 bl_info = {
     "name": "Tiny Sequencer Tools",
     "author": "Nick Alberelli ",
-    "description": "Tools for creating cut-out animation with Tiny's BLOWN APART Characters and Backgrounds",
+    "description": "Tools for creating multi-cam 2d animation sequences with Line Art",
     "blender": (3, 2, 0),
-    "version": (1, 0, 10),
+    "version": (1, 1, 0,),
     "location": "Sequencer > Sidebar > Tiny Sequencer Tools",
     "warning": "",
     "category": "Sequencer",
