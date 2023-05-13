@@ -7,7 +7,7 @@ import math
 import os
 from typing import Any, Callable, Optional
 import bpy
-from tiny_seq_tools_master.render.props import MEDIA_TYPES_FORMATS, BatchRenderOptions
+from tiny_seq_tools_master.scene_strip_tools.render.props import MEDIA_TYPES_FORMATS, BatchRenderOptions
 
 STRIP_PROP_SOURCE_BLENDER_FILE = "source_blender_file"
 STRIP_PROP_SOURCE_SEQUENCER = "source_sequencer"

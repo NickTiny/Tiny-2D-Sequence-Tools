@@ -4,7 +4,6 @@ from tiny_seq_tools_master import (
     constraint_to_cams,
     scene_strip_tools,
     core,
-    render
 )
 
 bl_info = {

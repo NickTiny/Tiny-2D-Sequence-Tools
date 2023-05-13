@@ -51,7 +51,7 @@ class SEQUENCER_setup_render(bpy.types.Operator):
 
 
 class SEQUENCER_full_render(bpy.types.Operator):
-    bl_idname = "sequencer.batch_render"
+    bl_idname = "sequencer.full_render_legacy"
     bl_label = "Render Scene"
     bl_description = "Render a sequencer video using Blender's native render. Will always match scene render settings."
 

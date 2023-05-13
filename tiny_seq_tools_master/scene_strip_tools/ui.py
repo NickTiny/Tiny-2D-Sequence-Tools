@@ -56,15 +56,18 @@ class SEQUENCER_PT_scene_tools(bpy.types.Panel):
             "filepath",
             text="Output",
         )
-        col.prop(context.window_manager.render_settings, "render_preview_range")
-        if context.window_manager.render_settings.render_preview_range:
-            row = col.row(align=True)
-            row.prop(context.window_manager.render_settings, "render_start")
-            row.prop(context.window_manager.render_settings, "render_end")
-        col.operator("sequencer.preview_render", icon="FILE_MOVIE")
         set_row = col.row(align=True)
-        set_row.operator("sequencer.batch_render", icon="RENDER_ANIMATION")
-        set_row.operator("sequencer.setup_render", icon="SCENE_DATA", text="")
+        layout = col
+        layout.use_property_split = True
+        options = context.scene.batch_render_options
+        layout.prop(options, "render_engine")
+        layout.prop(options, "resolution")
+        if options.media_type == "MOVIE":
+            layout.prop(options, "frames_handles")
+        layout.prop(options, "selection_only")
+        box = layout.box()
+        box.prop(options, "output_scene")
+        layout.operator("sequencer.batch_render")
 
 
 class SEQUENCER_PT_camera_from_view(bpy.types.Panel):

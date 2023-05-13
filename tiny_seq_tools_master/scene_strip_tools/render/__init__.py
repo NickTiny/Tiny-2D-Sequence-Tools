@@ -1,11 +1,13 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2023, The SPA Studios. All rights reserved.
 
-from tiny_seq_tools_master.render import (
+from tiny_seq_tools_master.scene_strip_tools.render import (
     props,
     ops,
     ui,
 )
+
+# Borrowed from https://github.com/The-SPA-Studios/sequencer-addon
 
 
 def register():
