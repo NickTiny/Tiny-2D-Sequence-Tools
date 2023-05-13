@@ -25,7 +25,6 @@ def register():
     tiny_status_tools.register()
     scene_strip_tools.register()
     core.register()
-    rig_tools.register()
 
 
 def unregister():
@@ -34,4 +33,3 @@ def unregister():
     tiny_status_tools.unregister()
     scene_strip_tools.unregister()
     core.unregister()
-    rig_tools.unregister()
