@@ -305,10 +305,10 @@ class TINYRENDER_OT_batch_render(bpy.types.Operator):
             self.start_active_task(context)
 
         # Active task is still running.
-        elif self.active_task.status == TaskStatus.RUNNING:
-            if isinstance(self.active_task, BaseRenderTask):
-                # Ensure the entire rendered image is visible in the render window.
-                self.render_view_update()
+        # elif self.active_task.status == TaskStatus.RUNNING:
+        #     if isinstance(self.active_task, BaseRenderTask):
+        #         # Ensure the entire rendered image is visible in the render window.
+        #         self.render_view_update()
 
         # Active task has finished, perform post run logic.
         # NOTE: A task without having asynchronous logic would have finished immediatly

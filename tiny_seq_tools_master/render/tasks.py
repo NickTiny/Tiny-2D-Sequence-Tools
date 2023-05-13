@@ -508,10 +508,11 @@ class SequenceRenderTask(BaseRenderTask):
         self.overrides.set(render, "filepath", filepath)
 
     def run(self, context, options):
-        with context.temp_override(scene=self.scene):
-            res = bpy.ops.render.render(self.render_op_exec_context, animation=True)
-            if res == {"RUNNING_MODAL"}:
-                self.status = TaskStatus.RUNNING
+        # with context.temp_override(scene=self.scene):
+        # DON'T OVERRIDE SCENE ALL STRIPS EXPECTED TO BE IN THE SAME SCENE
+        res = bpy.ops.render.render(self.render_op_exec_context, animation=True)
+        if res == {"RUNNING_MODAL"}:
+            self.status = TaskStatus.RUNNING
 
 
 def remap_frame_value(frame: int, scene_strip: bpy.types.SceneSequence) -> int:
