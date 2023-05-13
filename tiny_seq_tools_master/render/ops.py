@@ -26,9 +26,11 @@ class RenderCancelled(RuntimeError):
 
 
 def close_window(window: bpy.types.Window):
-    """Helper function to close the window `win`."""
-    with bpy.context.temp_override(windows=window,):
-        bpy.ops.wm.window_close("INVOKE_DEFAULT")
+    # LEAVE WINDOW OPEN AFTER BATCH RENDER
+    # """Helper function to close the window `win`."""
+    # with bpy.context.temp_override(windows=window,):
+    #     bpy.ops.wm.window_close("INVOKE_DEFAULT")
+    return
 
 
 class TINYRENDER_OT_batch_render(bpy.types.Operator):
