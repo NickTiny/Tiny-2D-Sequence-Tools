@@ -14,7 +14,7 @@ from tiny_seq_tools_master.core_functions.scene import (
 
 
 
-def normalize_pose_vals(datapath, offset, posemax):
+def normalize_pose_vals(datapath:str, offset:int, posemax:int):
     if offset == 0:
         return datapath
     pose = datapath + offset
@@ -26,7 +26,7 @@ def normalize_pose_vals(datapath, offset, posemax):
         return 1
 
 
-def change_pose(self, context, values):
+def change_pose(self, context:bpy.types.Context, values:list[int,int]):
     rig_prefs = bpy.context.window_manager.tiny_rig_prefs
     body_offset = values[0]
     head_offset = values[1]
@@ -49,7 +49,7 @@ def change_pose(self, context, values):
     
 
 
-def get_nudge_limits(bone):
+def get_nudge_limits(bone:bpy.types.PoseBone):
     for const in get_consts_on_bone(bone, "LIMIT_LOCATION"):
         if abs(const.min_z) == abs(const.max_z):
             return abs(const.max_z) * -1
@@ -76,15 +76,6 @@ def nudge_bone(self, bone:bpy.types.PoseBone, negative:bool):
     bone.keyframe_insert("location")
     return {"FINISHED"}
 
-
-def insert_keyframe_with_refresh(
-    scene, posebone: bpy.types.PoseBone, datapath: str, val: int
-):
-    bone_datapath_insert_keyframe(posebone, datapath, val)
-    refresh_current_frame(scene)
-    return
-
-
 def save_prev_frame(scene, posebone: bpy.types.PoseBone, datapath: str):
     offset_current_frame(scene, -1)
     posebone.keyframe_insert(f'["{datapath}"]', group=posebone.name)
@@ -93,14 +84,12 @@ def save_prev_frame(scene, posebone: bpy.types.PoseBone, datapath: str):
 
 
 def toggle_ik(
-    context,
-    datapath,
+    context:bpy.types.Context,
+    datapath:str,
 ):
-    rig_prefs = context.window_manager.tiny_rig_r
-    bone_names = [f"{prefix}{rig_prefs.limb_lw}",f"{prefix}{rig_prefs.limb_up}"]
+    rig_prefs = context.window_manager.tiny_rig_prefs
     prefix = datapath.split(rig_prefs.ik)[0]
-
-    
+    bone_names = [f"{prefix}{rig_prefs.limb_lw}",f"{prefix}{rig_prefs.limb_up}"]
     scene = context.scene
     index = int(scene.frame_current)
     obj = context.active_object
@@ -110,7 +99,8 @@ def toggle_ik(
     if posebone[f"{datapath}"] == 1:
         save_prev_frame(scene, posebone, datapath)
         bake_constraints(bones, index)
-        insert_keyframe_with_refresh(scene, posebone, datapath, 0)
+        bone_datapath_insert_keyframe(posebone, datapath, 0)
+        refresh_current_frame(scene)
         return {"FINISHED"}
     if posebone[f"{datapath}"] == 0:
         save_prev_frame(scene, posebone, datapath)
@@ -128,13 +118,10 @@ def toggle_ik(
         for bone in bones:
             bone.keyframe_insert("rotation_euler", group=bone.name)
             bone.keyframe_insert("rotation_quaternion", group=bone.name)
-        insert_keyframe_with_refresh(scene, posebone, datapath, 1)
+        bone_datapath_insert_keyframe(posebone, datapath, 1)
+        refresh_current_frame(scene)
         ik_bone.matrix = bone_matrix
         ik_bone.keyframe_insert("location", group=ik_bone.name)
         ik_bone.keyframe_insert("rotation_euler", group=ik_bone.name)
         return {"FINISHED"}
 
-
-def set_tiny_rig_status(obj, bool):
-    obj.tiny_rig.is_rig = bool
-    return obj.tiny_rig.is_rig

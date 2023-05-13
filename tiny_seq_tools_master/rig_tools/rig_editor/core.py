@@ -1,15 +1,16 @@
 import bpy
 import math
 from tiny_seq_tools_master.core_functions.bone import get_consts_on_bone
-from tiny_seq_tools_master.core_functions.drivers import get_driver_ob_obj, add_driver
+from tiny_seq_tools_master.core_functions.drivers import add_driver
 from tiny_seq_tools_master.core_functions.object import get_consts_on_obj
 from tiny_seq_tools_master.rig_tools.rig_editor.prefs import bone_side_prefix_get, bone_limb_get
 
 def get_rig_prefs():
+    """Returns Grpup of Properties from addon Preferences"""
     return bpy.context.window_manager.tiny_rig_prefs
 
 # Action Constraints
-def get_action_offset_bones(bones):
+def get_action_offset_bones(bones:list[bpy.types.PoseBone])-> list[bpy.types.ActionConstraint]:  
     action_constraints = []
     for bone in bones:
         for const in get_consts_on_bone(bone, "ACTION"):
@@ -17,25 +18,13 @@ def get_action_offset_bones(bones):
     return action_constraints
 
 
-def get_action_from_constraints(bones):
-    actions = []
-    for bone in bones:
-        for const in get_consts_on_bone(bone, "ACTION"):
-            if const.action not in actions:
-                actions.append(const.action)
-    # There should only be one action on action constraints for tiny rigs
-    if len(actions) != 1:
-        return
-    return actions[0]
-
-
-def set_modifier_and_constraint_viewport(obj, bool):
+def set_modifier_and_constraint_viewport(obj:bpy.types.Object, enable_status:bool) -> bool:
     for mod in obj.grease_pencil_modifiers:
-        mod.show_viewport = bool
+        mod.show_viewport = enable_status
     for const in obj.constraints:
-        const.enabled = bool
+        const.enabled = enable_status
 
-def check_modifier_and_constraint_viewport(obj):
+def check_modifier_and_constraint_viewport(obj:bpy.types.Object)-> bool:
     for mod in obj.grease_pencil_modifiers:
         if mod.show_viewport == False:
             return mod.show_viewport
@@ -45,83 +34,69 @@ def check_modifier_and_constraint_viewport(obj):
 
     return True
 
-
-def get_grease_pencil_modifiers(obj, type):
+def get_grease_pencil_modifiers(obj:bpy.types.Object, type) -> list[bpy.types.Constraint]:
     return [mod for mod in obj.grease_pencil_modifiers if mod.type == type]
 
 
-def gpencil_fix_offset_show_viewport(obj: bpy.types.Object, bool: bool):
+def gpencil_fix_offset_show_viewport(obj: bpy.types.Object, enable:bool):
     mods = get_grease_pencil_modifiers(obj, "GP_TIME")
     for mod in [mod for mod in mods if mod.mode == "FIX"]:
-        mod.show_viewport = bool
+        mod.show_viewport = enable
 
 
-def get_armature_constraint(obj) -> bpy.types.Constraint:
+def get_armature_constraint(obj:bpy.types.Object) -> bpy.types.Constraint:
     constraints = get_consts_on_obj(obj, "ARMATURE")
     if len(constraints) == 1:
         return constraints[0]
 
 
-def enable_rig(rig, bool):
-    position = "POSE"
-    if bool == False:
-        position = "REST"
-    rig.data.pose_position = position
-
-
-def enable_lattice_mod(obj, bool):
+def enable_lattice_mod(obj:bpy.types.Object, show_viewport:bool):
     for mod in get_grease_pencil_modifiers(obj, "GP_LATTICE"):
-        mod.show_viewport = bool
+        mod.show_viewport = show_viewport
 
 
-def get_gpencil_armature_modifier(obj):
-    mods = get_grease_pencil_modifiers(obj, "GP_ARMATURE")
-    if len(mods) == 1:
-        return mods[0]
-
-
-def enable_gpencil_armature_modifier(mod, bool):
+def enable_gpencil_armature_modifier(mod:bpy.types.Modifier, enable:bool):
     rig = mod.object
-    enable_rig(rig, bool)
-    mod.show_viewport = bool
+    rig.data.pose_position = "POSE" if enable else "REST"
+    mod.show_viewport = enable
 
 
-def enable_armature_constraint(const, bool):
-    const.enabled = bool
+def enable_armature_constraint(const:bpy.types.Constraint, enable:bool):
+    const.enabled = enable
     rig = const.targets[0].target
-    enable_rig(rig, bool)
+    rig.data.pose_position = "POSE" if enable else "REST"
     return True
 
 
-def enable_cont_rig_gpencil(obj, bool):
+def enable_cont_rig_gpencil(obj:bpy.types.Object, enable:bool):
     armature_constraint = get_armature_constraint(obj)
     # Reset Rig
-    enable_armature_constraint(armature_constraint, bool)
+    enable_armature_constraint(armature_constraint, enable)
     # Disable Time Offset Modifiers
-    gpencil_fix_offset_show_viewport(obj, bool)
-    enable_lattice_mod(obj, bool)
+    gpencil_fix_offset_show_viewport(obj, enable)
+    enable_lattice_mod(obj, enable)
 
 
-def enable_mod_rig_gpencil(obj, bool):
-    armature_mod = get_gpencil_armature_modifier(obj)
+def enable_mod_rig_gpencil(obj:bpy.types.Object, enable:bool):
+    armature_mod = get_grease_pencil_modifiers(obj, "GP_ARMATURE")
     # Reset Rig
-    enable_gpencil_armature_modifier(armature_mod, bool)
+    enable_gpencil_armature_modifier(armature_mod, enable)
     # Disable Time Offset Modifiers
-    gpencil_fix_offset_show_viewport(obj, bool)
-    enable_lattice_mod(obj, bool)
+    gpencil_fix_offset_show_viewport(obj, enable)
+    enable_lattice_mod(obj, enable)
     return True
 
 
-def hide_grease_pencil_editor(obj, bool):
-    armature_mod = get_gpencil_armature_modifier(obj)
+def hide_grease_pencil_editor(obj:bpy.types.Object, enable:bool):
+    armature_mod = get_grease_pencil_modifiers(obj, "GP_ARMATURE")
     if armature_mod:
-        return enable_mod_rig_gpencil(obj, bool)
+        return enable_mod_rig_gpencil(obj, enable)
     armature_constraint = get_armature_constraint(obj)
     if armature_constraint:
-        return enable_cont_rig_gpencil(obj, bool)
+        return enable_cont_rig_gpencil(obj, enable)
 
 
-def armature_bones_rename(armature: bpy.types.Armature, bone_legend: dict):
+def armature_bones_rename(armature: bpy.types.Armature, bone_legend: dict) -> str:
     """bone_legend must be in {'old_name': 'new_name',} format"""
     updated_bones = ""
     for bone in armature.bones:
@@ -131,11 +106,11 @@ def armature_bones_rename(armature: bpy.types.Armature, bone_legend: dict):
 
     return f"Bones Renamed: {updated_bones} \n"
 
-def custom_int_create_timeoffset(target, name, value, min, max):
+def custom_int_create_timeoffset(target:bpy.types.PoseBone, name:str, value:int, min:int, max:int):
     custom_int_create(target, name, value, min, max)
     target.id_data.tiny_rig.user_props += name
 
-def custom_int_create(target, name, value, min, max):
+def custom_int_create(target:bpy.types.PoseBone, name:str, value:int, min:int, max:int) -> str:
     target[name] = value
     id_props = target.id_properties_ui(name)
     id_props.update(
@@ -147,7 +122,7 @@ def custom_int_create(target, name, value, min, max):
     return target[name]
 
 
-def bone_create_group(obj: bpy.types.Object, bone_group_name: str, color:str):
+def bone_create_group(obj: bpy.types.Object, bone_group_name: str, color:str) -> bool:
     """bone_groups must be in {'name': color_set',} format"""
     status = False
     try:
@@ -166,7 +141,7 @@ def bone_assign_group(bone: bpy.types.PoseBone, bone_group_name: str):
     obj.data.show_group_colors = True
 
 
-def bone_transform_mirror_add(bone, name="FLIP_BONE"):
+def bone_transform_mirror_add(bone:bpy.types.PoseBone, name="FLIP_BONE"):
     """bone must be hand or foot bone"""
     rig_prefs = get_rig_prefs()
     prefix = bone_side_prefix_get(bone.name, rig_prefs)
@@ -188,7 +163,7 @@ def bone_transform_mirror_add(bone, name="FLIP_BONE"):
     )
 
 
-def bone_transform_nudge_add(bone, name="HAND_NUDGE"):
+def bone_transform_nudge_add(bone:bpy.types.PoseBone, name="HAND_NUDGE")-> bpy.types.Constraint:
     """Bone must be a hand or Foot"""
     rig_prefs = get_rig_prefs()
     prefix = bone_side_prefix_get(bone.name, rig_prefs)
@@ -210,7 +185,7 @@ def bone_transform_nudge_add(bone, name="HAND_NUDGE"):
     return constraint
 
 
-def bone_copy_location_limb(context, bone, driver=True, name="COPY_LIMB_LOC"):
+def bone_copy_location_limb(context, bone, driver=True, name="COPY_LIMB_LOC")-> bpy.types.Constraint:
     """Copy location of Lw bone to IK Target bone"""
     rig_prefs = get_rig_prefs()
     prefix = bone_side_prefix_get(bone.name, rig_prefs)
@@ -242,7 +217,7 @@ def bone_copy_location_limb(context, bone, driver=True, name="COPY_LIMB_LOC"):
     return constraint
 
 
-def add_ik_flip_to_pole(bone, nudge_bone_name, name="IK_FLIP"):
+def add_ik_flip_to_pole(bone:bpy.types.PoseBone, nudge_bone_name, name="IK_FLIP")-> bpy.types.Constraint:
     constraint = bone.constraints.new("TRANSFORM")
     constraint.name = name
     constraint.target = bone.id_data
@@ -260,7 +235,7 @@ def get_nudge_bone_name(bone):
     return f"{prefix}{limb}{rig_prefs.nudge}"
 
 
-def copy_ik_rotation(bone, target_name, name="COPY_IK_ROT"):
+def copy_ik_rotation(bone:bpy.types.PoseBone, target_name, name="COPY_IK_ROT"):
     mod_type = "COPY_ROTATION"
     constraint = bone.constraints.new(mod_type)
     constraint.name = name
@@ -269,7 +244,7 @@ def copy_ik_rotation(bone, target_name, name="COPY_IK_ROT"):
     constraint.subtarget = target_name
 
 
-def bone_copy_location_nudge(bone, space="POSE", offset=False, name="COPY_NUDGE_LOC"):
+def bone_copy_location_nudge(bone:bpy.types.PoseBone, space="POSE", offset=False, name="COPY_NUDGE_LOC")->bpy.types.Constraint:
     """Copy Location from Limb's 'Nudge' Bone"""
     nudge_bone_name = get_nudge_bone_name(bone)
     mod_type = "COPY_LOCATION"
@@ -288,7 +263,7 @@ def bone_copy_location_nudge(bone, space="POSE", offset=False, name="COPY_NUDGE_
     return constraint
 
 
-def bone_ik_driver_add(bone, constraint, propbone, ik_prop_name):
+def bone_ik_driver_add(bone:bpy.types.PoseBone, constraint:bpy.types.Constraint, propbone:bpy.types.PoseBone, ik_prop_name:str):
     """Add Driver to IK's Influence"""
     custom_int_create(propbone, ik_prop_name, 1, 0, 1)
     add_driver(
@@ -302,7 +277,7 @@ def bone_ik_driver_add(bone, constraint, propbone, ik_prop_name):
     return
 
 
-def bone_ik_constraint_add(bone, prefix, limb, rig_prefs):
+def bone_ik_constraint_add(bone:bpy.types.PoseBone, prefix:str, limb:str, rig_prefs:bpy.types.PropertyGroup):
     """Add IK Constrain on Lw Bone, with Target + Pole"""
     # angle = (0 if bone.name(".").split[0] else 180)
     constraint = bone.constraints.new("IK")
@@ -316,7 +291,7 @@ def bone_ik_constraint_add(bone, prefix, limb, rig_prefs):
     return constraint
 
 
-def bone_position_limits_add(bone, name="Nudge - Limit Location"):
+def bone_position_limits_add(bone:bpy.types.PoseBone, name="Nudge - Limit Location")-> bpy.types.Constraint:
     """Position Limits on Limb's 'Nudge' Bone"""
     constraint = bone.constraints.new("LIMIT_LOCATION")
     constraint.owner_space = "LOCAL"
@@ -328,74 +303,11 @@ def bone_position_limits_add(bone, name="Nudge - Limit Location"):
     return constraint
 
 
-def bone_check_constraint(bone, name):
+def bone_check_constraint(bone:bpy.types.PoseBone, name:str)->bool:
     constraint_names = [item.name for item in bone.constraints]
-    return name in constraint_names
+    return bool(name in constraint_names)
 
 
-def bone_copy_transforms_add(bone, name):
-    """Only Add to Eyelid/Brow Bones"""
-    constraint = bone.constraints.new("COPY_TRANSFORMS")
-    constraint.name = name
-    constraint.target = bone.id_data
-    constraint.subtarget = f"{bone.name}.001"
-    constraint.head_tail = 0.0
-    constraint.use_bbone_shape = False
-    constraint.target_space = "LOCAL"
-    constraint.owner_space = "LOCAL"
-
-
-def bone_copy_location_add(bone, subtarget, offset, name):
-    """Only Add to Eye Bones"""
-    constraint = bone.constraints.new("COPY_LOCATION")
-    constraint.name = name
-    constraint.target = bone.id_data
-    constraint.subtarget = subtarget
-    constraint.use_offset = offset
-    constraint.target_space = "LOCAL"
-    constraint.owner_space = "LOCAL"
-
-
-def add_action_const_to_body(context):
-    rig_prefs = get_rig_prefs()
-    action_length = int(context.active_object.offset_action.frame_range[1])
-    for bone in context.selected_pose_bones:
-        if not get_consts_on_bone(bone, "ACTION"):
-            new = bone.constraints.new("ACTION")
-            new.action = bone.id_data.offset_action
-            new.use_eval_time = True
-            add_driver(
-                bone.id_data,
-                bone.id_data,
-                "Pose",
-                f'pose.bones["{bone.name}"].constraints["{new.name}"].eval_time',
-                f'pose.bones["{bone.id_data.tiny_rig.pose_data_name}"]["{rig_prefs.pose_body}"]',
-                -1,
-                f"Pose/{action_length}",
-            )
-            new.frame_end = action_length
-        return
-
-
-def add_action_const_to_head(context):
-    rig_prefs = get_rig_prefs()
-    action_length = int(context.active_object.offset_action.frame_range[1])
-    for bone in context.selected_pose_bones:
-        if not get_consts_on_bone(bone, "ACTION"):
-            new = bone.constraints.new("ACTION")
-            new.action = bone.id_data.offset_action
-            new.use_eval_time = True
-            add_driver(
-                bone.id_data,
-                bone.id_data,
-                "Pose_Head",
-                f'pose.bones["{bone.name}"].constraints["{new.name}"].eval_time',
-                f'pose.bones["{bone.id_data.tiny_rig.pose_data_name}"]["{rig_prefs.pose_head}"]',
-                -1,
-                f"Pose_Head/{action_length}",
-            )
-            new.frame_end = action_length
-        return True
 
 def bone_new(
     edit_bones,

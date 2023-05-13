@@ -11,7 +11,6 @@ from tiny_seq_tools_master.core_functions.label import split_lines
 from tiny_seq_tools_master.core_functions.drivers import add_driver, get_driver_ob_obj
 from tiny_seq_tools_master.rig_tools.rig_editor.core import (
     get_action_offset_bones,
-    get_action_from_constraints,
     set_modifier_and_constraint_viewport,
     bone_create_group,
     bone_assign_group,
@@ -28,8 +27,6 @@ from tiny_seq_tools_master.rig_tools.rig_editor.core import (
     copy_ik_rotation,
     custom_int_create,
     custom_int_create_timeoffset,
-    add_action_const_to_head,
-    add_action_const_to_body,
     bone_new,
     child_bone_new,
     child_bone_connected_new,
@@ -194,7 +191,7 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
     bl_description = "Create Drivers and Custom Properties on current Armature for use in Tiny Rig Control panel"
     bl_options = {"REGISTER", "UNDO"}
 
-    pose_length_set: bpy.props.IntProperty(name="Turnaround Length")
+    pose_length_set: bpy.props.IntProperty(name="Turnaround Length", default=3)
     update_face_constraints: bpy.props.BoolProperty(
         name="Add Face Constraints", default=False)
     set_turnaround: bpy.props.BoolProperty(
@@ -247,8 +244,6 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
         turnaround_box = self.create_sub_box(col,self.set_turnaround)
         turnaround_box.prop(self, "set_turnaround")
         if self.set_turnaround:
-            if context.active_object.tiny_rig.pose_length:
-                self.pose_length_set = context.active_object.tiny_rig.pose_length
             turnaround_box.prop(self, "pose_length_set", text="Turnaround Length")
         col = self.layout.column(align=True)
 
@@ -285,7 +280,7 @@ class RIGTOOLS_initialize_rig(bpy.types.Operator):
             obj.tiny_rig.is_ik = True
             ik_control_bools = get_ik_control_bools(context.window_manager.tiny_rig_prefs)
             for index, item in enumerate(ik_control_bools):
-                custom_int_create(bone, ik_control_bools[index], 1, 0, 1)
+                custom_int_create(propbone, ik_control_bools[index], 1, 0, 1)
 
             # TODO only clear constraitns for needed bones
             for bone in [bone for bone in obj.pose.bones if bone.constraints]:
@@ -479,9 +474,16 @@ class RIGTOOLS_load_action(RIGTOOLS_turnaround_base_class):
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        offset_action = get_action_from_constraints(
-            context.active_object.pose.bones)
-        context.active_object.offset_action = offset_action
+        actions = []
+        for bone in context.active_object.pose.bones:
+            for const in get_consts_on_bone(bone, "ACTION"):
+                if const.action not in actions:
+                    actions.append(const.action)
+        # There should only be one action on action constraints for tiny rigs
+        if len(actions) != 1:
+            self.report({"ERROR"}, f"Found '{len(actions)}' Actions on action constraints in armature. Expected only one.")
+            return {"CANCELLED"}
+        context.active_object.offset_action =actions[0]
         return {"FINISHED"}
 
 
@@ -514,10 +516,28 @@ class RIGTOOLS_add_action_const_to_bone(RIGTOOLS_turnaround_base_class):
         row.prop(self, "is_head", toggle=True, text=("Use Pose" if self.is_head else "Use Head Pose" ))
 
     def execute(self, context):
+        rig_prefs = context.window_manager.tiny_rig_prefs
         if self.is_head:
-            add_action_const_to_head(context)
+            data_path = rig_prefs.pose_head
         else:
-            add_action_const_to_body(context)
+            data_path = rig_prefs.pose_head
+        
+        action_length = int(context.active_object.offset_action.frame_range[1])
+        for bone in context.selected_pose_bones:
+            if not get_consts_on_bone(bone, "ACTION"):
+                new = bone.constraints.new("ACTION")
+                new.action = bone.id_data.offset_action
+                new.use_eval_time = True
+                add_driver(
+                    bone.id_data,
+                    bone.id_data,
+                    "Pose_Head",
+                    f'pose.bones["{bone.name}"].constraints["{new.name}"].eval_time',
+                    f'pose.bones["{bone.id_data.tiny_rig.pose_data_name}"]["{data_path}"]',
+                    -1,
+                    f"Pose_Head/{action_length}",
+                )
+                new.frame_end = action_length
         return {"FINISHED"}
 
 

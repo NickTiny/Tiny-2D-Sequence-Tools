@@ -1,6 +1,5 @@
 import bpy
 
-from tiny_seq_tools_master.core_functions.label import split_lines
 from tiny_seq_tools_master.rig_tools.rig_editor.core import check_modifier_and_constraint_viewport
 
 
@@ -75,7 +74,7 @@ class SEQUENCER_PT_rig_grease_pencil(bpy.types.Panel):
     bl_category = "Tiny Rig Edit"
 
     def draw(self, context):
-        if context.active_object.type == "GPENCIL":
+        if context.active_object.type == "GPENCIL": 
             status = check_modifier_and_constraint_viewport(context.active_object)
             context.window_manager.gpencil_editor = context.active_object
             box = self.layout.box()
