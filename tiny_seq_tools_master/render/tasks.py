@@ -7,7 +7,7 @@ import math
 import os
 from typing import Any, Callable, Optional
 import bpy
-from tiny_seq_tools_master.scene_strip_tools.render.props import MEDIA_TYPES_FORMATS, BatchRenderOptions
+from tiny_seq_tools_master.render.props import MEDIA_TYPES_FORMATS, TinyBatchRenderOptions
 
 STRIP_PROP_SOURCE_BLENDER_FILE = "source_blender_file"
 STRIP_PROP_SOURCE_SEQUENCER = "source_sequencer"
@@ -60,15 +60,15 @@ class BaseTask:
     # Value overrides associated to this task.
     overrides: ValueOverrides = field(default_factory=ValueOverrides)
 
-    def setup(self, context: bpy.types.Context, render_options: BatchRenderOptions):
+    def setup(self, context: bpy.types.Context, render_options: TinyBatchRenderOptions):
         """Setup the task."""
         pass
 
-    def run(self, context: bpy.types.Context, render_options: BatchRenderOptions):
+    def run(self, context: bpy.types.Context, render_options: TinyBatchRenderOptions):
         """Start the task and update its status."""
         pass
 
-    def post_run(self, context: bpy.types.Context, render_options: BatchRenderOptions):
+    def post_run(self, context: bpy.types.Context, render_options: TinyBatchRenderOptions):
         """Called after run completed successfully."""
         pass
 
@@ -155,7 +155,7 @@ class StripRenderTask(BaseRenderTask):
         """Get the internal strip's scene."""
         return self.strip.scene
 
-    def setup(self, context: bpy.types.Context, render_options: BatchRenderOptions):
+    def setup(self, context: bpy.types.Context, render_options: TinyBatchRenderOptions):
         super().setup(context, render_options)
 
         strip = self.strip
@@ -229,7 +229,7 @@ class StripRenderTask(BaseRenderTask):
         # Setup final filepath
         self.overrides.set(scene.render, "filepath", filepath)
 
-    def run(self, context: bpy.types.Context, render_options: BatchRenderOptions):
+    def run(self, context: bpy.types.Context, render_options: TinyBatchRenderOptions):
         overrides = {"scene": self.scene}
         if self.viewport_area:
             overrides["area"] = self.viewport_area
@@ -262,7 +262,7 @@ class StripRenderTask(BaseRenderTask):
         if res == {"RUNNING_MODAL"}:
             self.status = TaskStatus.RUNNING
 
-    def post_run(self, context: bpy.types.Context, render_options: BatchRenderOptions):
+    def post_run(self, context: bpy.types.Context, render_options: TinyBatchRenderOptions):
         if callback := render_options.tasks_callbacks.get(self.__class__.__name__, []):
             # TODO: check callback compatibility
             new_filepath = callback(self.strip, self.scene.render.filepath)
@@ -285,7 +285,7 @@ class StripRenderTask(BaseRenderTask):
         media_type: str,
         frames_handles: int,
         channel_offset: int,
-        render_options: BatchRenderOptions,
+        render_options: TinyBatchRenderOptions,
     ):
         """Create media strip(s) in output scene for the given scene strip.
 
@@ -355,7 +355,7 @@ class CopySoundStripsTask(BaseTask):
     dst_scene: Optional[bpy.types.Scene] = None
     sound_strips: list[bpy.types.SoundSequence] = field(default_factory=list)
 
-    def run(self, context: bpy.types.Context, render_options: BatchRenderOptions):
+    def run(self, context: bpy.types.Context, render_options: TinyBatchRenderOptions):
         self.status = TaskStatus.FINISHED
 
     def post_run(self, context, render_options):
@@ -437,10 +437,10 @@ class FitResolutionToContentTask(BaseTask):
 
     scene: Optional[bpy.types.Scene] = None
 
-    def run(self, context: bpy.types.Context, render_options: BatchRenderOptions):
+    def run(self, context: bpy.types.Context, render_options: TinyBatchRenderOptions):
         self.status = TaskStatus.FINISHED
 
-    def post_run(self, context: bpy.types.Context, render_options: BatchRenderOptions):
+    def post_run(self, context: bpy.types.Context, render_options: TinyBatchRenderOptions):
         """Fit output scene resolution to visual content."""
 
         if not self.scene:
@@ -468,7 +468,7 @@ class FitResolutionToContentTask(BaseTask):
 class SequenceRenderTask(BaseRenderTask):
     scene: Optional[bpy.types.Scene] = None
 
-    def setup(self, context: bpy.types.Context, render_options: BatchRenderOptions):
+    def setup(self, context: bpy.types.Context, render_options: TinyBatchRenderOptions):
         if not self.scene:
             return
 

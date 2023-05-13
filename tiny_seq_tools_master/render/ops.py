@@ -7,7 +7,7 @@ import traceback
 
 import bpy
 
-from tiny_seq_tools_master.scene_strip_tools.render.tasks import (
+from tiny_seq_tools_master.render.tasks import (
     BaseRenderTask,
     BaseTask,
     CopySoundStripsTask,

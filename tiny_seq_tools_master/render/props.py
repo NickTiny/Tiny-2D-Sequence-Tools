@@ -12,7 +12,7 @@ MEDIA_TYPES_FORMATS = {
 }
 
 
-class BatchRenderOptions(bpy.types.PropertyGroup):
+class TinyBatchRenderOptions(bpy.types.PropertyGroup):
     """Options for batch rendering stored at scene level (saved in file)."""
 
     # Python API for executing callbacks on tasks execution.
@@ -44,8 +44,8 @@ class BatchRenderOptions(bpy.types.PropertyGroup):
         name="Engine",
         description="The render engine to use",
         items=(
-            ("BLENDER_EEVEE", "Eevee", "Eevee"),
-            ("BLENDER_WORKBENCH", "Workbench", "Workbench"),
+            ("BLENDER_EEVEE", "Eevee", "Render with EEVEE, often used to for final Render"),
+            ("BLENDER_WORKBENCH", "Workbench", "Render with Workbench, often used to render a Preview"),
         ),
         default="BLENDER_EEVEE",
         options=set(),
@@ -143,7 +143,7 @@ class BatchRenderOptions(bpy.types.PropertyGroup):
             del self.tasks_callbacks[task_name]
 
 
-class BatchRenderRuntimeProps(bpy.types.PropertyGroup):
+class TinyBatchRenderRuntimeProps(bpy.types.PropertyGroup):
     """Batch Render runtime properties."""
 
     status: bpy.props.EnumProperty(
@@ -170,8 +170,8 @@ class BatchRenderRuntimeProps(bpy.types.PropertyGroup):
 
 
 classes = (
-    BatchRenderOptions,
-    BatchRenderRuntimeProps,
+    TinyBatchRenderOptions,
+    TinyBatchRenderRuntimeProps,
 )
 
 
@@ -179,12 +179,12 @@ def register():
     for i in classes:
         bpy.utils.register_class(i)
     bpy.types.Scene.batch_render_options = bpy.props.PointerProperty(
-        type=BatchRenderOptions
+        type=TinyBatchRenderOptions
     )
 
     bpy.types.WindowManager.batch_render = bpy.props.PointerProperty(
         name="Batch Render",
-        type=BatchRenderRuntimeProps,
+        type=TinyBatchRenderRuntimeProps,
     )
 
 
