@@ -120,7 +120,30 @@ class SEQUENCER_check_viewport_sync_errors(bpy.types.Operator):
             return {"CANCELLED"}
         self.report({"INFO"}, f"All Strips are in sync")
         return {"FINISHED"}
+    
+class SEQUENCER_fix_viewport_sync_errors(bpy.types.Operator):
+    bl_idname = "sequencer.fix_viewport_sync_errors"
+    bl_label = "Fix Sync Errors"
+    bl_description = "Fix Sync Errors will re-generate all scene strips to ensure they are in sync"
+    def execute(self, context):
+        sequences = context.scene.sequence_editor.sequences
+        source_strips = [strip for strip in sequences if strip.type == "SCENE"]
 
+        for source_strip in source_strips:
+            channel = source_strip.channel
+            scene = source_strip.id_data
+            source_strip.mute = True
+            new_strip = scene.sequence_editor.sequences.new_scene("Scene", bpy.context.scene, channel+1, scene.frame_start)
+            source_strip.name = f"old_{source_strip.name}"
+            new_strip.name = source_strip.name.replace("old_","")
+            new_strip.frame_final_start = source_strip.frame_final_start
+            new_strip.frame_final_end = source_strip.frame_final_end
+            new_strip.scene_input = source_strip.scene_input
+            new_strip.scene_camera = source_strip.scene_camera
+            scene.sequence_editor.sequences.remove(source_strip)
+            new_strip.channel = channel
+            
+        return {"FINISHED"}
 
 class SEQUENCER_refresh_viewport_camera(bpy.types.Operator):
     bl_idname = "sequencer.refresh_viewport_camera"

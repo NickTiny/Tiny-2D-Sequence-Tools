@@ -16,9 +16,8 @@ class SEQUENCER_PT_scene_tools(bpy.types.Panel):
         row = col.row(align=True)
         row.label(text="Sequencer Sync", icon="UV_SYNC_SELECT")
         row.operator(
-            "sequencer.check_viewport_sync_errors",
+            "sequencer.fix_viewport_sync_errors",
             icon="ERROR",
-            text="Check Sync Errors",
         )
         row = col.row(align=True)
         row.prop(manager, "link_seq_to_3d_view", text="")
