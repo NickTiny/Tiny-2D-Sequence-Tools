@@ -18,7 +18,7 @@ class SEQUENCER_PT_scene_tools(bpy.types.Panel):
         row.operator(
             "sequencer.fix_viewport_sync_errors",
             icon="ERROR",
-        )
+        ) 
         row = col.row(align=True)
         row.prop(manager, "link_seq_to_3d_view", text="")
         row.separator()
@@ -35,6 +35,7 @@ class SEQUENCER_PT_scene_tools(bpy.types.Panel):
             text="Add Camera as Scene Strip",
             icon="CAMERA_DATA",
         )
+        col.operator("sequencer.renmae_strips", icon="SORTALPHA")
 
         strip = context.scene.sequence_editor.active_strip
         col = layout.box()

@@ -3,6 +3,33 @@ import bpy
 from tiny_seq_tools_master.scene_strip_tools.core import make_render_scene
 from bpy.props import StringProperty
 
+class SEQUENCER_rename_scene_strips(bpy.types.Operator):
+    bl_idname = "sequencer.renmae_strips"
+    bl_label = "Rename Scene Strips"
+    bl_description = "Set a new name for scene strips, add prefixes in the order they appear in timeline."
+
+    prefix : bpy.props.StringProperty(name="Name Pefix", description="prefix to add to renamed scene strips, followed a number", default="SH")
+    suffix_length : bpy.props.IntProperty(name="Number Length", description="Length of number to follow prefix", default=4)
+    
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    def draw(self, context):
+       self.layout.label(text="Rename all strips to '{Prefix}0010'")
+       self.layout.prop(self,"prefix" )
+       self.layout.prop(self,"suffix_length" )
+       
+    
+    def execute(self, context):
+        sequences = [strip for strip in context.scene.sequence_editor.sequences_all if strip.type =="SCENE"]
+        sequences_sorted = sorted(sequences, key=lambda x: x.frame_final_start)
+        for index, seq in enumerate(sequences_sorted):
+           
+            index = str((index+1)*10)
+            seq.name = f"{self.prefix}{index.zfill(self.suffix_length)}"
+        return {'FINISHED'}
+    
 class SEQUENCER_preview_render(bpy.types.Operator):
     bl_idname = "sequencer.preview_render"
     bl_label = "Render Preview Video"
@@ -201,6 +228,7 @@ classes = (
     SEQUENCER_check_viewport_sync_errors,
     SEQUENCER_fix_viewport_sync_errors,
     SEQUENCER_refresh_viewport_camera,
+    SEQUENCER_rename_scene_strips,
 )
 
 
