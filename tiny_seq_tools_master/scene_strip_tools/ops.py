@@ -112,6 +112,7 @@ class SEQUENCER_check_viewport_sync_errors(bpy.types.Operator):
             if strip.type == "SCENE" and not strip.mute:
                 if strip.animation_offset_start != 0:
                     error_msg += f"'{strip.name}' is out of sync. Frames: ({strip.frame_final_start}, {strip.frame_final_end})"
+                    
         if error_msg != "":
             self.report(
                 {"ERROR"},
@@ -152,8 +153,10 @@ class SEQUENCER_refresh_viewport_camera(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        context.scene.frame_set(context.scene.frame_current + 1)
-        context.scene.frame_set(context.scene.frame_current - 1)
+        cur_frame = context.scene.frame_current_final
+        end_of_strip = context.active_sequence_strip.frame_final_end
+        context.scene.frame_set(end_of_strip + 1)
+        context.scene.frame_set(int(cur_frame))
         self.report({"INFO"}, "Viewport Refreshed")
         return {"FINISHED"}
 
@@ -196,6 +199,7 @@ classes = (
     SEQUENCER_setup_render,
     SEQUENCER_preview_render,
     SEQUENCER_check_viewport_sync_errors,
+    SEQUENCER_fix_viewport_sync_errors,
     SEQUENCER_refresh_viewport_camera,
 )
 
