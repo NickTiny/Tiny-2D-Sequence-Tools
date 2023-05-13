@@ -65,8 +65,6 @@ class SEQUENCER_PT_scene_tools(bpy.types.Panel):
         if options.media_type == "MOVIE":
             layout.prop(options, "frames_handles")
         layout.prop(options, "selection_only")
-        box = layout.box()
-        box.prop(options, "output_scene")
         layout.operator("sequencer.batch_render")
 
 

@@ -43,7 +43,6 @@ class TINYRENDER_OT_batch_render(bpy.types.Operator):
         self.active_task: Optional[BaseTask] = None
 
         self.output_channel_offset: int = 0
-        self.output_sound_strips: list[bpy.types.SoundSequence] = []
 
         self.cancelled: bool = False
 
@@ -91,9 +90,6 @@ class TINYRENDER_OT_batch_render(bpy.types.Operator):
         for seq in sorted(seqs, key=lambda x: x.frame_final_start):
             self.tasks.append(StripRenderTask(strip=seq, is_modal=render_op_invoke))
 
-        # Early return if output scene is not set.
-        if not (output_scene := self.render_options.output_scene):
-            return
 
         # List sound strips if they need to be copied over output scene.
         if self.render_options.output_copy_sound_strips:
@@ -103,38 +99,7 @@ class TINYRENDER_OT_batch_render(bpy.types.Operator):
                 if isinstance(seq, bpy.types.SoundSequence)
                 and (seq.select or not self.render_options.selection_only)
             ]
-            self.output_sound_strips = sorted(
-                sound_strips, key=lambda x: x.frame_final_start
-            )
-            if self.output_sound_strips:
-                self.tasks.append(
-                    CopySoundStripsTask(
-                        src_scene=self.scene,
-                        dst_scene=output_scene,
-                        sound_strips=self.output_sound_strips,
-                    )
-                )
 
-        # Output scene setup.
-        if sed := output_scene.sequence_editor:
-            # Deselect all strips in output scene's sequencer in order to keep
-            # only the new strips as selected.
-            bpy.ops.sequencer.select_all({"scene": output_scene}, action="DESELECT")
-
-            # Compute channel offset in output scene based on existing content
-            if self.render_options.output_auto_offset_channels and sed.sequences:
-                self.output_channel_offset = max([s.channel for s in sed.sequences])
-        else:
-            # Ensure sequence editor is created in output scene.
-            output_scene.sequence_editor_create()
-
-        if self.tasks:
-            if self.render_options.output_scene:
-                self.tasks.append(FitResolutionToContentTask(scene=output_scene))
-            if self.render_options.render_output_scene:
-                self.tasks.append(
-                    SequenceRenderTask(scene=output_scene, is_modal=render_op_invoke)
-                )
 
     def render_view_update(self):
         """Ensure render view displays the entire image."""
