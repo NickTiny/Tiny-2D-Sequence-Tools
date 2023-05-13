@@ -108,13 +108,8 @@ class TINYRENDER_OT_batch_render(bpy.types.Operator):
         # Get window region.
         region = next(region for region in area.regions if region.type == "WINDOW")
         # Ensure the entire rendered image is visible in the render window.
-        bpy.ops.image.view_all(
-            {
-                "window": self.render_window,
-                "area": self.render_window.screen.areas[0],
-                "region": region,
-            }
-        )
+        with bpy.context.temp_override(windows=self.render_window, area=self.render_window.screen.areas[0], region=region):
+            bpy.ops.image.view_all()
 
     def cancel(self, context):
         """Called when the operator is cancelled, e.g when the user closes the
