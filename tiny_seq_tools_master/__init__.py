@@ -8,10 +8,10 @@ from tiny_seq_tools_master import (
 )
 
 bl_info = {
-    "name": "Tiny Sequencer Tools",
+    "name": "Tiny 2D Sequence Tools",
     "author": "Nick Alberelli ",
     "description": "Tools for creating multi-cam 2d animation sequences with Line Art",
-    "blender": (3, 2, 0),
+    "blender": (3, 3, 0),
     "version": (1, 1, 0,),
     "location": "Sequencer > Sidebar > Tiny Sequencer Tools",
     "warning": "",
