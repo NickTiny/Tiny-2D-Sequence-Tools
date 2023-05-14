@@ -4,6 +4,7 @@ from tiny_seq_tools_master import (
     constraint_to_cams,
     scene_strip_tools,
     core,
+    render,
 )
 
 bl_info = {
@@ -24,6 +25,7 @@ def register():
     tiny_status_tools.register()
     scene_strip_tools.register()
     core.register()
+    render.register()
 
 
 def unregister():
@@ -32,3 +34,4 @@ def unregister():
     tiny_status_tools.unregister()
     scene_strip_tools.unregister()
     core.unregister()
+    render.unregister()

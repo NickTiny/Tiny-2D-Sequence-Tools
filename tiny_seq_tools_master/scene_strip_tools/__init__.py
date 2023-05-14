@@ -1,4 +1,4 @@
-from tiny_seq_tools_master.scene_strip_tools import core, ops, ui, props
+from tiny_seq_tools_master.scene_strip_tools import ops, ui, props
 
 
 def register():
@@ -11,3 +11,4 @@ def unregister():
     ops.unregister()
     ui.unregister()
     props.unregister()
+    

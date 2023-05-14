@@ -3,6 +3,33 @@ import bpy
 from tiny_seq_tools_master.scene_strip_tools.core import make_render_scene
 from bpy.props import StringProperty
 
+class SEQUENCER_rename_scene_strips(bpy.types.Operator):
+    bl_idname = "sequencer.renmae_strips"
+    bl_label = "Rename Scene Strips"
+    bl_description = "Set a new name for scene strips, add prefixes in the order they appear in timeline."
+
+    prefix : bpy.props.StringProperty(name="Name Pefix", description="prefix to add to renamed scene strips, followed a number", default="SH")
+    suffix_length : bpy.props.IntProperty(name="Number Length", description="Length of number to follow prefix", default=4)
+    
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    def draw(self, context):
+       self.layout.label(text="Rename all strips to '{Prefix}0010'")
+       self.layout.prop(self,"prefix" )
+       self.layout.prop(self,"suffix_length" )
+       
+    
+    def execute(self, context):
+        sequences = [strip for strip in context.scene.sequence_editor.sequences_all if strip.type =="SCENE"]
+        sequences_sorted = sorted(sequences, key=lambda x: x.frame_final_start)
+        for index, seq in enumerate(sequences_sorted):
+           
+            index = str((index+1)*10)
+            seq.name = f"{self.prefix}{index.zfill(self.suffix_length)}"
+        return {'FINISHED'}
+    
 class SEQUENCER_preview_render(bpy.types.Operator):
     bl_idname = "sequencer.preview_render"
     bl_label = "Render Preview Video"
@@ -51,7 +78,7 @@ class SEQUENCER_setup_render(bpy.types.Operator):
 
 
 class SEQUENCER_full_render(bpy.types.Operator):
-    bl_idname = "sequencer.batch_render"
+    bl_idname = "sequencer.full_render_legacy"
     bl_label = "Render Scene"
     bl_description = "Render a sequencer video using Blender's native render. Will always match scene render settings."
 
@@ -112,6 +139,7 @@ class SEQUENCER_check_viewport_sync_errors(bpy.types.Operator):
             if strip.type == "SCENE" and not strip.mute:
                 if strip.animation_offset_start != 0:
                     error_msg += f"'{strip.name}' is out of sync. Frames: ({strip.frame_final_start}, {strip.frame_final_end})"
+                    
         if error_msg != "":
             self.report(
                 {"ERROR"},
@@ -120,7 +148,30 @@ class SEQUENCER_check_viewport_sync_errors(bpy.types.Operator):
             return {"CANCELLED"}
         self.report({"INFO"}, f"All Strips are in sync")
         return {"FINISHED"}
+    
+class SEQUENCER_fix_viewport_sync_errors(bpy.types.Operator):
+    bl_idname = "sequencer.fix_viewport_sync_errors"
+    bl_label = "Fix Sync Errors"
+    bl_description = "Fix Sync Errors will re-generate all scene strips to ensure they are in sync"
+    def execute(self, context):
+        sequences = context.scene.sequence_editor.sequences
+        source_strips = [strip for strip in sequences if strip.type == "SCENE"]
 
+        for source_strip in source_strips:
+            channel = source_strip.channel
+            scene = source_strip.id_data
+            source_strip.mute = True
+            new_strip = scene.sequence_editor.sequences.new_scene("Scene", bpy.context.scene, channel+1, scene.frame_start)
+            source_strip.name = f"old_{source_strip.name}"
+            new_strip.name = source_strip.name.replace("old_","")
+            new_strip.frame_final_start = source_strip.frame_final_start
+            new_strip.frame_final_end = source_strip.frame_final_end
+            new_strip.scene_input = source_strip.scene_input
+            new_strip.scene_camera = source_strip.scene_camera
+            scene.sequence_editor.sequences.remove(source_strip)
+            new_strip.channel = channel
+            
+        return {"FINISHED"}
 
 class SEQUENCER_refresh_viewport_camera(bpy.types.Operator):
     bl_idname = "sequencer.refresh_viewport_camera"
@@ -129,13 +180,15 @@ class SEQUENCER_refresh_viewport_camera(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        context.scene.frame_set(context.scene.frame_current + 1)
-        context.scene.frame_set(context.scene.frame_current - 1)
+        cur_frame = context.scene.frame_current_final
+        end_of_strip = context.active_sequence_strip.frame_final_end
+        context.scene.frame_set(end_of_strip + 1)
+        context.scene.frame_set(int(cur_frame))
         self.report({"INFO"}, "Viewport Refreshed")
         return {"FINISHED"}
 
 
-class THREEDPREVIEW_PT_add_scene_strip(bpy.types.Operator):
+class SEQUENCER_OT_add_scene_strip(bpy.types.Operator):
 
     bl_description = """Adds current camera as a scene strip to the Sequencer"""
     bl_idname = "view3d.add_scene_strip"
@@ -167,13 +220,15 @@ class THREEDPREVIEW_PT_add_scene_strip(bpy.types.Operator):
 
 
 classes = (
-    THREEDPREVIEW_PT_add_scene_strip,
+    SEQUENCER_OT_add_scene_strip,
     SEQUENCER_add_camera_from_view,
     SEQUENCER_full_render,
     SEQUENCER_setup_render,
     SEQUENCER_preview_render,
     SEQUENCER_check_viewport_sync_errors,
+    SEQUENCER_fix_viewport_sync_errors,
     SEQUENCER_refresh_viewport_camera,
+    SEQUENCER_rename_scene_strips,
 )
 
 
