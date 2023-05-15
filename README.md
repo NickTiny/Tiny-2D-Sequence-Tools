@@ -26,3 +26,19 @@ Tools for creating multi-cam 2d animation sequences. Rotate 2D Characters to 3D 
 4. In Sequencer SidePanel enable 'Use Sequence Line Art'
 5. Use Refresh Button to Update Line Art Items list
 6. Select a new thickness value to be set for the current sequence strip 
+
+## Save with Collabration Settings
+![save_with_collab](https://github.com/NickTiny/Tiny-2D-Sequence-Tools/assets/86638335/c0568650-094d-407f-b4a9-9318aa43346a)
+1. Hit CTRL+S or File>Save
+2. Under your Mouse a pop up will appear if your file doesn't meet collaboration standards
+3. Select each property to fix the problem in your file
+4. Re-attempt CTRL+S save if your settings are correct there will be no prompt
+
+## Rendering
+![image](https://github.com/NickTiny/Tiny-2D-Sequence-Tools/assets/86638335/09a38f9f-9a6a-46d7-9bee-c61979863da8)
+1. Set Engine to Workbench for Preview Quality Render, otherwise use Eevee
+2. Select a disired fraction of your resolution under resolution
+3. Enabling `Selection Only` will only render the highlighted clips in the VSE
+4. Use `Sequence Batch Render` to begin rendering
+
+**NOTE: Clips render without Sequencer Audio, audio will need to be re-added to video in a video sequencer**
