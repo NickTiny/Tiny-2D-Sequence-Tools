@@ -41,4 +41,4 @@ Tools for creating multi-cam 2d animation sequences. Rotate 2D Characters to 3D 
 3. Enabling `Selection Only` will only render the highlighted clips in the VSE
 4. Use `Sequence Batch Render` to begin rendering
 
-**NOTE: Clips render without Sequencer Audio, audio will need to be re-added to video in a video sequencer**
+**NOTE: Clips render without Sequencer Audio, audio**
